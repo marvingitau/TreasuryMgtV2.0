@@ -1,0 +1,30 @@
+enum 50238 TreasuryTransactionDocType
+{
+    Extensible = true;
+
+    value(0; Interest)
+    {
+        Caption = 'Accruing Interest';
+    }
+    value(1; Withholding)
+    {
+        Caption = 'Withholding';
+    }
+    value(2; "Remaining Amount")
+    {
+        Caption = 'Remaining Amount';
+    }
+    value(3; "Original Amount")
+    {
+        Caption = 'Original Amount';
+    }
+    value(4; "Repayment")
+    {
+        Caption = 'Repayment';
+    }
+    value(5; "Interest Paid")
+    {
+        Caption = 'Interest Paid';
+    }
+
+}
