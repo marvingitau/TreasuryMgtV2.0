@@ -22,14 +22,14 @@ pageextension 50230 AccountantRoleCenter extends 9027
                     ToolTip = 'Funder';
                 }
 
-                // action(TrsyJnl)
-                // {
-                //     ApplicationArea = Basic, Suite;
-                //     Caption = 'Treasury Journal';
-                //     Image = ResourceJournal;
-                //     RunObject = page "Trsy Journal";
-                //     ToolTip = 'Treasury Journal';
-                // }
+                action(TrsyJnl)
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Treasury Journal';
+                    Image = ResourceJournal;
+                    RunObject = page "Trsy Journal";
+                    ToolTip = 'Treasury Journal';
+                }
 
             }
         }

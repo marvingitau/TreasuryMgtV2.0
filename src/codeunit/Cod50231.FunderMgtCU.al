@@ -1,0 +1,398 @@
+codeunit 50231 FunderMgtCU
+{
+    trigger OnRun()
+    begin
+
+    end;
+
+    procedure CalculateInterest()
+    var
+        myLocalCounter: Integer;
+        monthlyInterest: Decimal;
+        witHldInterest: Decimal;
+        principleAcc: Code[20];
+        interestAccExpense: Code[20];
+        withholdingAcc: Code[20];
+        NextEntryNo: Integer;
+        funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
+        funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
+        funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
+        venPostingGroup: Record "Vendor Posting Group";
+        latestRemainingAmount: Decimal;
+        remainingDays: Integer;
+        endYearDate: Date;
+
+
+    begin
+        //Interest Rate Type (Fixed/Float)
+        //Interest Rate value
+        //***Interest Method
+        // (Annual Rate / 12) * Principal
+        //Funder Ldger Entry
+        latestRemainingAmount := 0;
+        funderLoan.Reset();
+        funderLoan.SetFilter(funderLoan."No.", '<>%1', '');
+        //funderLoan.SetFilter("Type of Vendor", '=%1', funderLoan."Type of Vendor"::Funder);
+        if funderLoan.Find('-') then begin
+            repeat
+                //Fixed Interest Type
+                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") OR (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
+                    funderLoan.TestField(PlacementDate);
+                    // vendor.TestField(InterestMethod);
+                    // funderLoan.TestField(TaxStatus);
+                    endYearDate := CALCDATE('CY', Today);
+                    remainingDays := endYearDate - funderLoan.PlacementDate;
+
+                    //Monthly interest depending on Interest Method
+                    monthlyInterest := 0;
+                    if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
+                        monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (30 / 360);
+                    end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/360" then begin
+                        monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 360);
+                    end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/364" then begin
+                        monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 364);
+                    end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/365" then begin
+                        monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 365);
+                    end;
+
+                    //withholding on interest
+                    //Depending on Tax Exceptions
+                    witHldInterest := 0;
+                    if funderLoan.TaxStatus = funderLoan.TaxStatus::Taxable then begin
+                        funderLoan.TestField(Withldtax);
+                        witHldInterest := (funderLoan.Withldtax / 100) * monthlyInterest;
+                    end;
+
+                    //Get Posting groups
+                    if not venPostingGroup.Get(funderLoan."Posting Group") then
+                        Error('Missing Posting Group: %1', funderLoan."No.");
+
+                    principleAcc := venPostingGroup."Payables Account";
+                    interestAccExpense := venPostingGroup."Interest Expense";
+                    if interestAccExpense = '' then
+                        Error('Missing Posting Group - Interest A/C: %1', funderLoan."No.");
+                    if principleAcc = '' then
+                        Error('Missing Posting Group - Principle A/C: %1', funderLoan."No.");
+
+                    if not generalSetup.FindFirst() then
+                        Error('Please Define Withholding Tax under General Setup');
+                    withholdingAcc := generalSetup.FunderWithholdingAcc;
+                    //Get the latest remaining amount
+                    funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Remaining Amount");
+                    if funderLegderEntry.FindLast() then
+                        latestRemainingAmount := funderLegderEntry."Remaining Amount";
+
+                    //funderLegderEntry.LockTable();
+                    funderLegderEntry.Reset();
+                    if funderLegderEntry.FindLast() then
+                        NextEntryNo := funderLegderEntry."Entry No." + 1;
+                    // else
+                    //     NextEntryNo := 2;
+
+                    funderLegderEntry.Init();
+                    funderLegderEntry."Entry No." := NextEntryNo;
+                    funderLegderEntry."Funder No." := funderLoan."No.";
+                    funderLegderEntry."Posting Date" := Today;
+                    funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
+                    funderLegderEntry.Description := 'Interest calculation' + Format(Today);
+                    funderLegderEntry.Amount := monthlyInterest;
+                    funderLegderEntry."Amount(LCY)" := monthlyInterest;
+                    funderLegderEntry."Remaining Amount" := (monthlyInterest - witHldInterest);
+                    funderLegderEntry.Insert();
+                    if (funderLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
+                        DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", '');//GROSS Interest
+                    //Commit();
+                    funderLegderEntry1.Init();
+                    funderLegderEntry1."Entry No." := NextEntryNo + 1;
+                    funderLegderEntry1."Funder No." := funderLoan."No.";
+                    funderLegderEntry1."Posting Date" := Today;
+                    funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
+                    funderLegderEntry1.Description := 'Withholding calculation' + Format(Today);
+                    funderLegderEntry1.Amount := witHldInterest;
+                    funderLegderEntry1."Amount(LCY)" := witHldInterest;
+                    funderLegderEntry1.Insert();
+                    if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
+                        DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", '');
+                    //Commit();
+
+                    funderLegderEntry2.Init();
+                    funderLegderEntry2."Entry No." := NextEntryNo + 2;
+                    funderLegderEntry2."Funder No." := funderLoan."No.";
+                    funderLegderEntry2."Posting Date" := Today;
+                    funderLegderEntry2."Document Type" := funderLegderEntry."Document Type"::"Remaining Amount";
+                    funderLegderEntry2.Description := 'Remaining Amount' + Format(Today);
+                    funderLegderEntry2.Amount := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
+                    funderLegderEntry2."Amount(LCY)" := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
+                    if latestRemainingAmount = 0 then begin
+                        funderLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
+                    end
+                    else begin
+                        funderLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + latestRemainingAmount);
+                    end;
+
+                    funderLegderEntry2.Insert();
+                end else begin
+                    Message('Select Interest Rate Type');
+                end;
+            until funderLoan.Next() = 0;
+            Message('Interest Calculated');
+        end;
+
+    end;
+
+
+    procedure CalculateInterest(FunderNo: Code[100])
+    var
+        myLocalCounter: Integer;
+        monthlyInterest: Decimal;
+        witHldInterest: Decimal;
+        principleAcc: Code[20];
+        interestAccExpense: Code[20];
+        interestAccPayable: Code[20];
+        withholdingAcc: Code[20];
+        NextEntryNo: Integer;
+        funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
+        funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
+        funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
+        venPostingGroup: Record "Vendor Posting Group";
+        latestRemainingAmount: Decimal;
+        remainingDays: Integer;
+        endYearDate: Date;
+
+
+    begin
+        //Interest Rate Type (Fixed/Float)
+        //Interest Rate value
+        //***Interest Method
+        // (Annual Rate / 12) * Principal
+        //Funder Ldger Entry
+        latestRemainingAmount := 0;
+        funderLoan.Reset();
+        funderLoan.SetRange(funderLoan."No.", FunderNo);
+        //funderLoan.SetFilter("Type of Vendor", '=%1', funderLoan."Type of Vendor"::Funder);
+        if funderLoan.Find('-') then begin
+            // repeat
+            //Fixed Interest Type
+            if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") OR (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
+                funderLoan.TestField(PlacementDate);
+                // vendor.TestField(InterestMethod);
+                // funderLoan.TestField(TaxStatus);
+                endYearDate := CALCDATE('CY', Today);
+                remainingDays := endYearDate - funderLoan.PlacementDate;
+
+                //Monthly interest depending on Interest Method
+                monthlyInterest := 0;
+                if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
+                    monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (30 / 360);
+                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/360" then begin
+                    monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 360);
+                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/364" then begin
+                    monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 364);
+                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/365" then begin
+                    monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 365);
+                end;
+
+                //withholding on interest
+                //Depending on Tax Exceptions
+                witHldInterest := 0;
+                if funderLoan.TaxStatus = funderLoan.TaxStatus::Taxable then begin
+                    funderLoan.TestField(Withldtax);
+                    witHldInterest := (funderLoan.Withldtax / 100) * monthlyInterest;
+                end;
+
+                //Get Posting groups
+                if not venPostingGroup.Get(funderLoan."Posting Group") then
+                    Error('Missing Posting Group: %1', funderLoan."No.");
+
+                principleAcc := venPostingGroup."Payables Account";
+                interestAccExpense := venPostingGroup."Interest Expense";
+                interestAccPayable := venPostingGroup."Interest Payable";
+                if interestAccExpense = '' then
+                    Error('Missing Posting Group - Expense Interest A/C: %1', funderLoan."No.");
+                if principleAcc = '' then
+                    Error('Missing Posting Group - Principle A/C: %1', funderLoan."No.");
+                if interestAccPayable = '' then
+                    Error('Missing Posting Group - Payable Interest A/C: %1', funderLoan."No.");
+
+                if not generalSetup.FindFirst() then
+                    Error('Please Define Withholding Tax under General Setup');
+                withholdingAcc := generalSetup.FunderWithholdingAcc;
+                //Get the latest remaining amount
+                funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Remaining Amount");
+                if funderLegderEntry.FindLast() then
+                    latestRemainingAmount := funderLegderEntry."Remaining Amount";
+
+                //funderLegderEntry.LockTable();
+                funderLegderEntry.Reset();
+                if funderLegderEntry.FindLast() then
+                    NextEntryNo := funderLegderEntry."Entry No." + 1;
+                // else
+                //     NextEntryNo := 2;
+
+                funderLegderEntry.Init();
+                funderLegderEntry."Entry No." := NextEntryNo;
+                funderLegderEntry."Funder No." := funderLoan."No.";
+                funderLegderEntry."Posting Date" := Today;
+                funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
+                funderLegderEntry.Description := 'Interest calculation' + Format(Today);
+                funderLegderEntry.Amount := monthlyInterest;
+                funderLegderEntry."Amount(LCY)" := monthlyInterest;
+                funderLegderEntry."Remaining Amount" := (monthlyInterest - witHldInterest);
+                funderLegderEntry.Insert();
+                if (funderLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
+                    DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", interestAccPayable);//GROSS Interest
+                                                                                                                                       //Commit();
+                funderLegderEntry1.Init();
+                funderLegderEntry1."Entry No." := NextEntryNo + 1;
+                funderLegderEntry1."Funder No." := funderLoan."No.";
+                funderLegderEntry1."Posting Date" := Today;
+                funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
+                funderLegderEntry1.Description := 'Withholding calculation' + Format(Today);
+                funderLegderEntry1.Amount := witHldInterest;
+                funderLegderEntry1."Amount(LCY)" := witHldInterest;
+                funderLegderEntry1.Insert();
+                if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
+                    DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable);
+                //Commit();
+
+                funderLegderEntry2.Init(); //
+                funderLegderEntry2."Entry No." := NextEntryNo + 2;
+                funderLegderEntry2."Funder No." := funderLoan."No.";
+                funderLegderEntry2."Posting Date" := Today;
+                funderLegderEntry2."Document Type" := funderLegderEntry."Document Type"::"Remaining Amount";
+                funderLegderEntry2.Description := 'Remaining Amount' + Format(Today);
+                funderLegderEntry2.Amount := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
+                funderLegderEntry2."Amount(LCY)" := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
+                if latestRemainingAmount = 0 then begin
+                    funderLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
+                end
+                else begin
+                    funderLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + latestRemainingAmount);
+                end;
+
+                funderLegderEntry2.Insert();
+            end else begin
+                Message('Select Interest Rate Type');
+            end;
+            // until funderLoan.Next() = 0;
+            Message('Interest Calculated');
+        end;
+
+    end;
+
+
+
+    procedure DirectGLPosting(Origin: Text[100]; GLAcc: Code[100]; Amount: Decimal; Desc: Text[100]; FunderNo: Code[20]; BankAc: Code[100])
+    var
+        GLEntry: Record "G/L Entry";
+        NextEntryNo: Integer;
+        JournalEntry: Record "Gen. Journal Line";
+        GLPost: Codeunit "Gen. Jnl.-Post Line";
+
+        principleAcc: Code[100];
+        interestAccExpense: Code[100];
+        interestAccPay: Code[100];
+        withholdingAcc: Code[20];
+        monthlyInterest: Decimal;
+        witHldInterest: Decimal;
+        venPostingGroup: Record "Vendor Posting Group";
+        funderLoan: Record "Funder Loan";
+    begin
+        JournalEntry.LockTable();
+        if JournalEntry.FindLast() then
+            NextEntryNo := JournalEntry."Line No." + 1
+        else
+            NextEntryNo := 1;
+
+        //**********************************************
+        //          Get Posting groups & Posting Accounts
+        //**********************************************
+        funderLoan.Reset();
+        if not funderLoan.Get(FunderNo) then
+            Error('Funder %1 not found', FunderNo);
+        if not venPostingGroup.Get(funderLoan."Posting Group") then
+            Error('Missing Posting Group: %1', funderLoan."No.");
+        interestAccExpense := venPostingGroup."Interest Expense";
+        if interestAccExpense = '' then
+            Error('Missing Posting Group - Interest Expense A/C: %1', funderLoan."No.");
+        interestAccPay := venPostingGroup."Interest Payable";
+        if interestAccPay = '' then
+            Error('Missing Posting Group - Interest Payable A/C: %1', funderLoan."No.");
+        principleAcc := venPostingGroup."Payables Account";
+        if principleAcc = '' then
+            Error('Missing Posting Group - Principle A/C: %1', funderLoan."No.");
+        if not generalSetup.FindFirst() then
+            Error('Please Define Withholding Tax under General Setup');
+        withholdingAcc := generalSetup.FunderWithholdingAcc;
+
+        JournalEntry.Init();
+        JournalEntry."Journal Template Name" := 'GENERAL';
+        JournalEntry."Journal Batch Name" := 'TREASURY';
+        JournalEntry."Line No." := NextEntryNo;
+        JournalEntry.Entry_ID := NextEntryNo;
+
+        //JournalEntry.Validate(JournalEntry.Amount);
+        JournalEntry."Posting Date" := Today;
+        JournalEntry.Creation_Date := Today;
+        JournalEntry."Document No." := FunderNo + '_Auto_' + Format(Today);
+        JournalEntry.Description := Desc;
+        if Origin = 'init' then begin  //*
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"Bank Account";
+            JournalEntry."Account No." := BankAc;
+            JournalEntry.amount := Round(Amount, 0.01, '=');
+            JournalEntry."Bal. Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Bal. Account No." := GLAcc;
+        end;
+        if Origin = 'interest' then begin
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Account No." := GLAcc;
+            JournalEntry.amount := Round(Amount, 0.01, '=');
+            JournalEntry."Bal. Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Bal. Account No." := BankAc;//interestAccPayable
+        end;
+        if Origin = 'withholding' then begin
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Account No." := GLAcc;
+            JournalEntry.amount := Round(Amount, 0.01, '=');
+            JournalEntry."Bal. Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Bal. Account No." := BankAc;//interestAccPayable
+        end;
+        // else begin
+        //     JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+        //     JournalEntry."Account No." := GLAcc;
+        //     JournalEntry.amount := Round(Amount, 0.01, '=');
+        //     JournalEntry."Bal. Account Type" := JournalEntry."Account Type"::"G/L Account";
+        //     JournalEntry."Bal. Account No." := '50102006';
+        // end;
+        GLPost.RunWithCheck(JournalEntry);
+        //JournalEntry.Insert();
+
+        // Get the next entry number
+        // GLEntry.LockTable();
+        // if GLEntry.FindLast() then
+        //     NextEntryNo := GLEntry."Entry No." + 1
+        // else
+        //     NextEntryNo := 1;
+
+        // // Initialize the G/L Entry
+        // GLEntry.Init();
+        // GLEntry."Entry No." := NextEntryNo;
+        // GLEntry."Posting Date" := Today();
+        // GLEntry."Document No." := DocNo + '_Trans';
+        // GLEntry."G/L Account No." := GLAcc;
+        // GLEntry.Amount := Amount;
+        // GLEntry.Description := 'Automatic Posting';
+        // // Insert the G/L Entry
+        // GLEntry.Insert();
+    end;
+
+    var
+        myGlobalCounter: Integer;
+        // vendor: Record Vendor;
+        funderLoan: Record "Funder Loan";
+        // debtor: Record Debtor;
+        // funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
+        funderPostingGroup: Record 93;
+        generalSetup: Record "General Setup";
+
+}

@@ -3,11 +3,13 @@ table 50232 "Funder Loan"
     DataClassification = ToBeClassified;
     LookupPageId = "Funder Loan Card";
     DrillDownPageId = "Funder Loan Card";
+    DataCaptionFields = "No.", "Loan Name";
     fields
     {
         field(1; "No."; Code[10])
         {
             //NotBlank = true;
+            DataClassification = ToBeClassified;
         }
         field(20; "Funder No."; Code[20])
         {
@@ -34,6 +36,10 @@ table 50232 "Funder Loan"
             DataClassification = ToBeClassified;
             Caption = 'Posting Group';
             TableRelation = "Vendor Posting Group".Code;
+        }
+        field(400; "Loan Name"; Code[100])
+        {
+            DataClassification = ToBeClassified;
         }
         field(500; "SupplierSysRefNo"; Code[100])
         {
@@ -200,8 +206,13 @@ table 50232 "Funder Loan"
         field(526; FundSource; Code[100])
         {
             DataClassification = ToBeClassified;
-            Caption = 'Funding Entry';
+
             TableRelation = "Bank Account"."No.";
+        }
+        field(535; Currency; Enum Currency)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Currency';
         }
     }
 

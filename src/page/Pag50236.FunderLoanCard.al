@@ -9,7 +9,7 @@ page 50236 "Funder Loan Card"
     {
         area(Content)
         {
-            group(GroupName)
+            group(General)
             {
                 field("No."; Rec."No.")
                 {
@@ -26,9 +26,10 @@ page 50236 "Funder Loan Card"
                     ApplicationArea = All;
                     Editable = false;
                 }
-                field(SupplierSysRefNo; Rec.SupplierSysRefNo)
+                field("Loan Name"; Rec."Loan Name")
                 {
                     ApplicationArea = All;
+                    ShowMandatory = true;
                 }
                 field(PlacementDate; Rec.PlacementDate)
                 {
@@ -43,20 +44,24 @@ page 50236 "Funder Loan Card"
                 {
 
                     ApplicationArea = All;
+                    Caption = 'Bank';
                 }
-                // field(DisbursedCurrency; Rec.DisbursedCurrency)
-                // {
-                //     Caption = 'Original Amount';
-                //     // Visible = false;
-                //     ApplicationArea = All;
-                //     Editable = false;
-                // }
+                field(Currency; Rec.Currency)
+                {
+                    Caption = 'Currency';
+                    // Visible = false;
+                    ApplicationArea = All;
+                    // Editable = false;
+                    Visible = isCurrencyVisible;
+                    ShowMandatory = isCurrencyVisible;
+                }
                 field(OrigAmntDisbLCY; Rec.OrigAmntDisbLCY)
                 {
                     // DrillDown = true;
                     // DrillDownPageId = FunderLedgerEntry;
                     // ToolTip = 'Original Amount';
-                    // ApplicationArea = All;
+                    ApplicationArea = All;
+                    Caption = 'Original Amount Disbursed';
                 }
 
                 field(OutstandingAmntDisbLCY; Rec.OutstandingAmntDisbLCY)
@@ -68,6 +73,7 @@ page 50236 "Funder Loan Card"
                     // ToolTip = '';
 
                     ApplicationArea = All;
+                    Caption = 'Outstanding Amount';
                 }
                 field(InterestRate; Rec.InterestRate)
                 {
@@ -91,7 +97,8 @@ page 50236 "Funder Loan Card"
                     // DrillDown = true;
                     // DrillDownPageId = FunderLedgerEntry;
                     // ToolTip = '';
-                    // ApplicationArea = Basic, Suite;
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Gross Interest';
                 }
 
                 field(NetInterestamount; Rec.NetInterestamount)
@@ -99,7 +106,8 @@ page 50236 "Funder Loan Card"
                     // DrillDown = true;
                     // DrillDownPageId = FunderLedgerEntry;
                     // ToolTip = '';
-                    // ApplicationArea = Basic, Suite;
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Net Interest';
                 }
                 // field(PortfolioFund; Rec.PortfolioFund)
                 // {
@@ -169,23 +177,46 @@ page 50236 "Funder Loan Card"
         }
     }
 
+    trigger OnInit()
+    begin
+        isCurrencyVisible := true;
+    end;
+
     trigger OnOpenPage()
+    var
+    begin
+        _funderNo := GlobalFilters.GetGlobalFilter();
+        if _funderNo <> '' then begin
+            if FunderTbl.Get(_funderNo) then begin
+                if FunderTbl."Funder Type" = FunderTbl."Funder Type"::Local then
+                    isCurrencyVisible := false;
+            end;
+        end;
+    end;
+
+    trigger OnInsertRecord(BelowxRec: Boolean): Boolean
     var
         FilterVal: Text[30];
     begin
-        // SelectedFilterValue := xRec.GETFILTER("Funder No.");
-        //Message(SelectedFilterValue);
-        FilterVal := GlobalFilters.GetGlobalFilter();
-        if FilterVal <> '' then begin
-            Rec."Funder No." := FilterVal;
+
+        if _funderNo <> '' then begin
+            // GenSetup.Get(1);
+            // GenSetup.TestField("Funder Loan No.");
+            // if Rec."No." = '' then
+            //     Rec."No." := NoSer.GetNextNo(GenSetup."Funder Loan No.", 0D, true);
+            Rec."Funder No." := _funderNo;
             Rec.Validate("Funder No.");
-            rec.Modify();
+            // Rec.Insert();
         end;
 
     end;
 
     var
         myInt: Integer;
-
+        GenSetup: Record "General Setup";
+        NoSer: Codeunit "No. Series";
         GlobalFilters: Codeunit GlobalFilters;
+        isCurrencyVisible: Boolean;
+        _funderNo: Text[30];
+        FunderTbl: Record Funders;
 }

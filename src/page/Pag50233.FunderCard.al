@@ -5,7 +5,7 @@ page 50233 "Funder Card"
     UsageCategory = Administration;
     SourceTable = Funders;
 
-    DataCaptionFields = Name, "No.";
+
     // DataCaptionExpression = '';
     layout
     {
@@ -24,6 +24,11 @@ page 50233 "Funder Card"
                 field(Name; Rec.Name)
                 {
                     ApplicationArea = All;
+                }
+                field("Posting Group"; Rec."Posting Group")
+                {
+                    ApplicationArea = All;
+                    ShowMandatory = true;
                 }
                 field("Funder Type"; Rec."Funder Type")
                 {

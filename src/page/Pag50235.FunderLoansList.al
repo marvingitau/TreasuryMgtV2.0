@@ -24,6 +24,10 @@ page 50235 "Funder Loans List"
                 {
                     ApplicationArea = All;
                 }
+                field("Loan Name"; Rec."Loan Name")
+                {
+                    ApplicationArea = All;
+                }
                 field("PlacementDate"; Rec."PlacementDate")
                 {
                     ApplicationArea = All;

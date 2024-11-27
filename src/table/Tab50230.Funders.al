@@ -4,6 +4,7 @@ table 50230 Funders
     Caption = 'Funders';
     LookupPageId = "Funder Card";
     DrillDownPageId = "Funder Card";
+    DataCaptionFields = "No.", Name;
     fields
     {
         field(1; "No."; Code[20])
@@ -20,6 +21,12 @@ table 50230 Funders
         {
             DataClassification = ToBeClassified;
             ToolTip = 'Full legal name of the counterparty (e.g., the business or individual with whom you are entering into an agreement).';
+        }
+        field(31; "Posting Group"; Text[200])
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Posting Group';
+            TableRelation = "Vendor Posting Group".Code;
         }
         field(40; "Counterparty Type"; Enum "Counterpart Types")
         {
