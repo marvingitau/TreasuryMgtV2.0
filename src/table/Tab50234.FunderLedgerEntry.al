@@ -79,6 +79,7 @@ table 50234 FunderLedgerEntry
             DataClassification = ToBeClassified;
             Caption = 'Remaining Amount';
         }
+
         field(14; "Modification Date"; Date)
         {
             DataClassification = ToBeClassified;
@@ -93,6 +94,20 @@ table 50234 FunderLedgerEntry
         {
             DataClassification = ToBeClassified;
             Caption = 'Document No';
+        }
+        field(20; "Remaining Amount(LCY)"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Remaining Amount';
+        }
+        field(21; "Loan No."; Code[20])
+        {
+            DataClassification = ToBeClassified;
+            TableRelation = "Funder Loan";
+        }
+        field(22; "Loan Name"; Text[100])
+        {
+            DataClassification = ToBeClassified;
         }
 
         field(49900; "Shortcut Dimension 1 Code"; Code[50])
@@ -172,7 +187,9 @@ table 50234 FunderLedgerEntry
 
     trigger OnInsert()
     begin
-
+        if "Currency Code" <> '' then begin
+            Message("Currency Code");
+        end;
     end;
 
     trigger OnModify()

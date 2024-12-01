@@ -25,6 +25,22 @@ page 50237 FunderLedgerEntry
                     ApplicationArea = All;
                     Caption = 'Funder No.';
                 }
+                field("Funder Name"; Rec."Funder Name")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Funder Name';
+                }
+                field("Loan No."; Rec."Loan No.")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Loan No.';
+                }
+                field("Loan Name"; Rec."Loan Name")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Loan Name';
+                }
+
                 field("Document Type"; Rec."Document Type")
                 {
                     ApplicationArea = All;
@@ -35,26 +51,32 @@ page 50237 FunderLedgerEntry
                     ApplicationArea = All;
                     Caption = 'Posting Date';
                 }
+                field("Currency Code"; Rec."Currency Code")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Currency Code';
+                }
                 field("Amount"; Rec."Amount")
                 {
                     ApplicationArea = All;
                     Caption = 'Amount';
                 }
-                field("Amount(LCY)"; Rec."Amount(LCY)")
-                {
-                    ApplicationArea = All;
-                    Caption = 'Amount(LCY)';
-                }
-                field("Remain Amount"; Rec."Remaining Amount")
-                {
-                    ApplicationArea = All;
-                    Caption = 'Remain Amount';
-                }
-                // field("Funder Name"; Rec."Funder Name")
+                // field("Amount(LCY)"; Rec."Amount(LCY)")
                 // {
                 //     ApplicationArea = All;
-                //     Caption = 'Funder Name';
+                //     Caption = 'Amount(LCY)';
                 // }
+                // field("Remain Amount"; Rec."Remaining Amount")
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Remain Amount';
+                // }
+                // field("Remaining Amount(LCY)"; Rec."Remaining Amount(LCY)")
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Remain Amount(LCY)';
+                // }
+
                 field(Description; Rec.Description)
                 {
                     ApplicationArea = All;

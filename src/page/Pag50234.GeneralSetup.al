@@ -16,10 +16,10 @@ page 50234 "General Setup"
             group(General)
             {
                 // Caption = 'General Setup';
-                // field(No; Rec.No)
-                // {
-                //     ApplicationArea = all;
-                // }
+                field(No; Rec.No)
+                {
+                    ApplicationArea = all;
+                }
                 field(WithholdingAcc; Rec.FunderWithholdingAcc)
                 {
                     Caption = 'Funder Withholding Tax A/c';
@@ -41,6 +41,11 @@ page 50234 "General Setup"
                 field("Funder Loan No."; Rec."Funder Loan No.")
                 {
                     Caption = 'Funder Loan No';
+                    ApplicationArea = All;
+                }
+                field("Treasury Jnl No."; Rec."Treasury Jnl No.")
+                {
+                    Caption = 'Treasury Jnl No.';
                     ApplicationArea = All;
                 }
             }

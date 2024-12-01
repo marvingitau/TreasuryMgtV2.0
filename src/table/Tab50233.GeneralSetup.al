@@ -8,7 +8,7 @@ table 50233 "General Setup"
         field(1; No; Integer)
         {
             Caption = 'No';
-            AutoIncrement = true;
+            // AutoIncrement = true;
         }
         field(2; FunderWithholdingAcc; Code[100])
         {
@@ -33,6 +33,12 @@ table 50233 "General Setup"
         field(30; "Funder Loan No."; Code[20])
         {
             Caption = 'Funder Loan No';
+            DataClassification = ToBeClassified;
+            TableRelation = "No. Series";
+        }
+        field(40; "Treasury Jnl No."; Code[20])
+        {
+            Caption = 'Treasury Jnl No.';
             DataClassification = ToBeClassified;
             TableRelation = "No. Series";
         }

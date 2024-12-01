@@ -25,6 +25,7 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                     Editable = false;
+                    Caption = 'Funder Name';
                 }
                 field("Loan Name"; Rec."Loan Name")
                 {

@@ -170,6 +170,22 @@ page 50233 "Funder Card"
 
                 end;
             }
+            action("Funder Ledger Entry")
+            {
+                ApplicationArea = Basic, Suite;
+                Caption = 'Funder Ledger';
+                Image = LedgerEntries;
+                // RunObject = Page "Funder Loans List";
+                //RunPageLink = "Funder No." = FIELD("No.");
+                trigger OnAction()
+                var
+                    funderLedgerEntry: Record FunderLedgerEntry;
+                begin
+                    funderLedgerEntry.SETRANGE(funderLedgerEntry."Funder No.", Rec."No.");
+                    PAGE.RUN(PAGE::FunderLedgerEntry, funderLedgerEntry);
+
+                end;
+            }
         }
     }
 

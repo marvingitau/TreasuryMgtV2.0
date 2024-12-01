@@ -159,7 +159,7 @@ table 50230 Funders
 
     trigger OnInsert()
     begin
-        GenSetup.Get(1);
+        GenSetup.Get(0);
         GenSetup.TestField("Funder No.");
         if "No." = '' then
             "No." := NoSer.GetNextNo(GenSetup."Funder No.", 0D, true);

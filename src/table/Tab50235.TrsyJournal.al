@@ -45,7 +45,7 @@ table 50235 "Trsy Journal"
             else
             if ("Account Type" = const(Employee)) Employee
             else
-            if ("Account Type" = const("Funder")) Funders;
+            if ("Account Type" = const("Funder")) "Funder Loan";
 
 
             DataClassification = ToBeClassified;
@@ -98,7 +98,7 @@ table 50235 "Trsy Journal"
             else
             if ("Bal. Account Type" = const(Employee)) Employee
             else
-            if ("Bal. Account Type" = const("Funder")) Funders;
+            if ("Bal. Account Type" = const("Funder")) "Funder Loan";
 
             DataClassification = ToBeClassified;
         }
@@ -200,7 +200,8 @@ table 50235 "Trsy Journal"
         {
             DataClassification = ToBeClassified;
             Caption = 'Transaction Type';
-            NotBlank = true;
+            // NotBlank = true;
+
         }
     }
 

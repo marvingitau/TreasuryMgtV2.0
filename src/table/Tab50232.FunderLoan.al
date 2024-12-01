@@ -29,7 +29,7 @@ table 50232 "Funder Loan"
         field(30; Name; Text[200])
         {
             DataClassification = ToBeClassified;
-            Caption = 'Funder Name';
+            // Caption = 'Funder Name';
         }
         field(40; "Posting Group"; Text[200])
         {
@@ -209,19 +209,25 @@ table 50232 "Funder Loan"
 
             TableRelation = "Bank Account"."No.";
         }
-        field(535; Currency; Enum Currency)
+        field(535; Currency; Code[20])
         {
             DataClassification = ToBeClassified;
             Caption = 'Currency';
+            TableRelation = Currency;
+
         }
     }
 
     keys
     {
-        key(PK; "No.")
+        key(PK; "No.", "Loan Name")
         {
             Clustered = true;
         }
+        // key(FK; "Loan Name")
+        // {
+        //     Unique = true;
+        // }
     }
 
     fieldgroups
@@ -235,7 +241,7 @@ table 50232 "Funder Loan"
 
     trigger OnInsert()
     begin
-        GenSetup.Get(1);
+        GenSetup.Get(0);
         GenSetup.TestField("Funder Loan No.");
         if "No." = '' then
             "No." := NoSer.GetNextNo(GenSetup."Funder Loan No.", 0D, true);

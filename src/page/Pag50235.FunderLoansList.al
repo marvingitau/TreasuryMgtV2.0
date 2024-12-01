@@ -16,6 +16,10 @@ page 50235 "Funder Loans List"
                 {
                     ApplicationArea = All;
                 }
+                field("Loan Name"; Rec."Loan Name")
+                {
+                    ApplicationArea = All;
+                }
                 field("Funder No."; Rec."Funder No.")
                 {
                     ApplicationArea = All;
@@ -23,11 +27,9 @@ page 50235 "Funder Loans List"
                 field(Name; Rec.Name)
                 {
                     ApplicationArea = All;
+                    Caption = 'Funder Name';
                 }
-                field("Loan Name"; Rec."Loan Name")
-                {
-                    ApplicationArea = All;
-                }
+
                 field("PlacementDate"; Rec."PlacementDate")
                 {
                     ApplicationArea = All;

@@ -69,10 +69,10 @@ page 50238 "Trsy Journal"
                 {
                     ApplicationArea = All;
                 }
-                field("Currency"; Rec."Currency Code")
-                {
-                    ApplicationArea = All;
-                }
+                // field("Currency"; Rec."Currency Code")
+                // {
+                //     ApplicationArea = All;
+                // }
                 field("Amount"; Rec.Amount)
                 {
                     ApplicationArea = All;
@@ -121,14 +121,30 @@ page 50238 "Trsy Journal"
                         TrsyCU: Codeunit "Treasury Mgt CU";
                     begin
                         TrsyCU.PostTrsyJnl();
+                        CurrPage.Update(true);
                     end;
                 }
             }
         }
     }
+    trigger OnOpenPage()
+    var
+    begin
+        _docNo := TrsyMgt.GenerateDocumentNumber();
+
+    end;
+
+    trigger OnNewRecord(BelowxRec: Boolean)
+    begin
+        Rec."Posting Date" := WorkDate();
+        Rec."Document No." := _docNo;
+    end;
+
     var
         GenJnlManagement: Codeunit GenJnlManagement;
+        TrsyMgt: Codeunit "Treasury Mgt CU";
 
     protected var
         CurrentJnlBatchName: Code[10];
+        _docNo: Code[20];
 }
