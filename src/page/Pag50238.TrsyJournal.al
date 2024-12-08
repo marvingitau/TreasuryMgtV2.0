@@ -69,10 +69,10 @@ page 50238 "Trsy Journal"
                 {
                     ApplicationArea = All;
                 }
-                // field("Currency"; Rec."Currency Code")
-                // {
-                //     ApplicationArea = All;
-                // }
+                field("Currency"; Rec."Currency Code")
+                {
+                    ApplicationArea = All;
+                }
                 field("Amount"; Rec.Amount)
                 {
                     ApplicationArea = All;

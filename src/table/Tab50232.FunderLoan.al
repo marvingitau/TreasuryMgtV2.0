@@ -61,21 +61,21 @@ table 50232 "Funder Loan"
         {
             // DataClassification = ToBeClassified;
             // Caption = 'Original Amount in disbursed';
-            // AutoFormatType = 1;
-            // CalcFormula = sum(FunderLedgerEntry."Remaining Amount" where("Funder No." = field("No."), "Document Type" = filter('Original Amount' | Repayment)));
-            // Caption = 'Original Amount';
-            // DecimalPlaces = 0 : 2;
-            // Editable = false;
-            // FieldClass = FlowField;
+            AutoFormatType = 1;
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter('Original Amount')));
+            Caption = 'Original Amount';
+            DecimalPlaces = 0 : 2;
+            Editable = false;
+            FieldClass = FlowField;
         }
         field(504; "OutstandingAmntDisbLCY"; Decimal)
         {
-            // AutoFormatType = 1;
-            // CalcFormula = sum(FunderLedgerEntry."Remaining Amount" where("Funder No." = field("No."), "Document Type" = filter(Interest | 'Original Amount' | Repayment | 'Interest Paid')));
-            // Caption = 'Outstanding Amount';
-            // DecimalPlaces = 0 : 2;
-            // Editable = false;
-            // FieldClass = FlowField;
+            AutoFormatType = 1;
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest | 'Original Amount' | Repayment | 'Interest Paid')));
+            Caption = 'Outstanding Amount';
+            DecimalPlaces = 0 : 2;
+            Editable = false;
+            FieldClass = FlowField;
 
         }
         field(505; "InterestRate"; Decimal)
@@ -110,19 +110,19 @@ table 50232 "Funder Loan"
         }
         field(511; "GrossInterestamount"; Decimal)
         {
-            // CalcFormula = sum(FunderLedgerEntry.Amount where("Funder No." = field("No."), "Document Type" = filter('Interest')));
-            // Caption = 'Gross Interest amount';
-            // DecimalPlaces = 0 : 2;
-            // Editable = false;
-            // FieldClass = FlowField;
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter('Interest')));
+            Caption = 'Gross Interest amount';
+            DecimalPlaces = 0 : 2;
+            Editable = false;
+            FieldClass = FlowField;
         }
         field(512; "NetInterestamount"; Decimal)
         {
-            // CalcFormula = sum(FunderLedgerEntry."Remaining Amount" where("Funder No." = field("No."), "Document Type" = filter('Interest')));
-            // Caption = 'Net Interest amount';
-            // DecimalPlaces = 0 : 2;
-            // Editable = false;
-            // FieldClass = FlowField;
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter('Interest' | 'Interest Paid')));
+            Caption = 'Net Interest amount';
+            DecimalPlaces = 0 : 2;
+            Editable = false;
+            FieldClass = FlowField;
         }
         field(513; "WithgTaxAmtAppld"; Decimal)
         {

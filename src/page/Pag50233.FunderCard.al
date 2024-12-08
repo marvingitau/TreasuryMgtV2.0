@@ -182,6 +182,7 @@ page 50233 "Funder Card"
                     funderLedgerEntry: Record FunderLedgerEntry;
                 begin
                     funderLedgerEntry.SETRANGE(funderLedgerEntry."Funder No.", Rec."No.");
+                    funderLedgerEntry.SetFilter(funderLedgerEntry."Document Type", '<>%1', funderLedgerEntry."Document Type"::"Remaining Amount");
                     PAGE.RUN(PAGE::FunderLedgerEntry, funderLedgerEntry);
 
                 end;

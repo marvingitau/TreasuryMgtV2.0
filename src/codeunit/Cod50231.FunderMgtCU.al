@@ -141,7 +141,7 @@ codeunit 50231 FunderMgtCU
     end;
 
 
-    procedure CalculateInterest(FunderNo: Code[100])
+    procedure CalculateInterest(FunderLoanNo: Code[100])
     var
         myLocalCounter: Integer;
         monthlyInterest: Decimal;
@@ -154,11 +154,16 @@ codeunit 50231 FunderMgtCU
         funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
         funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
         funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
+        funderLegderEntry3: Record FunderLedgerEntry;//Calculate every month
         venPostingGroup: Record "Vendor Posting Group";
         latestRemainingAmount: Decimal;
         remainingDays: Integer;
         endYearDate: Date;
-
+        _loanNo: Code[100];
+        _loanName: Code[100];
+        _totalOriginalAmount: Decimal;
+        _totalWithdrawalAmount: Decimal;
+        _differenceOriginalWithdrawal: Decimal;
 
     begin
         //Interest Rate Type (Fixed/Float)
@@ -168,9 +173,13 @@ codeunit 50231 FunderMgtCU
         //Funder Ldger Entry
         latestRemainingAmount := 0;
         funderLoan.Reset();
-        funderLoan.SetRange(funderLoan."No.", FunderNo);
+        funderLoan.SetRange(funderLoan."No.", FunderLoanNo);
         //funderLoan.SetFilter("Type of Vendor", '=%1', funderLoan."Type of Vendor"::Funder);
         if funderLoan.Find('-') then begin
+            _loanName := funderLoan."Loan Name";
+            _loanNo := funderLoan."No.";
+            if not funder.Get(funderLoan."Funder No.") then
+                Error('Funder %1 not found', funderLoan."Funder No.");
             // repeat
             //Fixed Interest Type
             if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") OR (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
@@ -180,16 +189,32 @@ codeunit 50231 FunderMgtCU
                 endYearDate := CALCDATE('CY', Today);
                 remainingDays := endYearDate - funderLoan.PlacementDate;
 
+                // Get Total of Original Amount (Principal)
+                funderLegderEntry3.Reset();
+                funderLegderEntry3.SetRange("Funder No.", funder."No.");
+                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Original Amount");
+                funderLegderEntry3.CalcSums(Amount);
+                _totalOriginalAmount := funderLegderEntry3.Amount;
+
+                funderLegderEntry3.Reset();
+                funderLegderEntry3.SetRange("Funder No.", funder."No.");
+                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::Repayment);
+                funderLegderEntry3.CalcSums(Amount);
+                _totalWithdrawalAmount := Abs(funderLegderEntry3.Amount);
+
+                _differenceOriginalWithdrawal := _totalOriginalAmount - _totalWithdrawalAmount; // Get the floating value
+
+
                 //Monthly interest depending on Interest Method
                 monthlyInterest := 0;
                 if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
-                    monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (30 / 360);
+                    monthlyInterest := ((funderLoan.InterestRate / 100) * _differenceOriginalWithdrawal) * (30 / 360);
                 end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/360" then begin
-                    monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 360);
+                    monthlyInterest := ((funderLoan.InterestRate / 100) * _differenceOriginalWithdrawal) * (remainingDays / 360);
                 end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/364" then begin
-                    monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 364);
+                    monthlyInterest := ((funderLoan.InterestRate / 100) * _differenceOriginalWithdrawal) * (remainingDays / 364);
                 end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/365" then begin
-                    monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 365);
+                    monthlyInterest := ((funderLoan.InterestRate / 100) * _differenceOriginalWithdrawal) * (remainingDays / 365);
                 end;
 
                 //withholding on interest
@@ -201,18 +226,18 @@ codeunit 50231 FunderMgtCU
                 end;
 
                 //Get Posting groups
-                if not venPostingGroup.Get(funderLoan."Posting Group") then
-                    Error('Missing Posting Group: %1', funderLoan."No.");
+                if not venPostingGroup.Get(funder."Posting Group") then
+                    Error('Missing Posting Group: %1', funder."No.");
 
                 principleAcc := venPostingGroup."Payables Account";
                 interestAccExpense := venPostingGroup."Interest Expense";
                 interestAccPayable := venPostingGroup."Interest Payable";
                 if interestAccExpense = '' then
-                    Error('Missing Posting Group - Expense Interest A/C: %1', funderLoan."No.");
+                    Error('Missing Posting Group - Expense Interest A/C: %1', funder."No.");
                 if principleAcc = '' then
-                    Error('Missing Posting Group - Principle A/C: %1', funderLoan."No.");
+                    Error('Missing Posting Group - Principle A/C: %1', funder."No.");
                 if interestAccPayable = '' then
-                    Error('Missing Posting Group - Payable Interest A/C: %1', funderLoan."No.");
+                    Error('Missing Posting Group - Payable Interest A/C: %1', funder."No.");
 
                 if not generalSetup.FindFirst() then
                     Error('Please Define Withholding Tax under General Setup');
@@ -231,7 +256,10 @@ codeunit 50231 FunderMgtCU
 
                 funderLegderEntry.Init();
                 funderLegderEntry."Entry No." := NextEntryNo;
-                funderLegderEntry."Funder No." := funderLoan."No.";
+                funderLegderEntry."Funder No." := funder."No.";
+                funderLegderEntry."Funder Name" := funder.Name;
+                funderLegderEntry."Loan Name" := _loanName;
+                funderLegderEntry."Loan No." := _loanNo;
                 funderLegderEntry."Posting Date" := Today;
                 funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
                 funderLegderEntry.Description := 'Interest calculation' + Format(Today);
@@ -245,6 +273,9 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry1.Init();
                 funderLegderEntry1."Entry No." := NextEntryNo + 1;
                 funderLegderEntry1."Funder No." := funderLoan."No.";
+                funderLegderEntry1."Funder Name" := funder.Name;
+                funderLegderEntry1."Loan Name" := _loanName;
+                funderLegderEntry1."Loan No." := _loanNo;
                 funderLegderEntry1."Posting Date" := Today;
                 funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
                 funderLegderEntry1.Description := 'Withholding calculation' + Format(Today);
@@ -258,6 +289,9 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry2.Init(); //
                 funderLegderEntry2."Entry No." := NextEntryNo + 2;
                 funderLegderEntry2."Funder No." := funderLoan."No.";
+                funderLegderEntry2."Funder Name" := funder.Name;
+                funderLegderEntry2."Loan Name" := _loanName;
+                funderLegderEntry2."Loan No." := _loanNo;
                 funderLegderEntry2."Posting Date" := Today;
                 funderLegderEntry2."Document Type" := funderLegderEntry."Document Type"::"Remaining Amount";
                 funderLegderEntry2.Description := 'Remaining Amount' + Format(Today);
@@ -390,6 +424,7 @@ codeunit 50231 FunderMgtCU
         myGlobalCounter: Integer;
         // vendor: Record Vendor;
         funderLoan: Record "Funder Loan";
+        funder: Record Funders;
         // debtor: Record Debtor;
         // funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
         funderPostingGroup: Record 93;

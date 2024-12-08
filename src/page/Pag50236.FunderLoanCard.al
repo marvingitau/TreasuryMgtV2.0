@@ -58,21 +58,18 @@ page 50236 "Funder Loan Card"
                 }
                 field(OrigAmntDisbLCY; Rec.OrigAmntDisbLCY)
                 {
-                    // DrillDown = true;
-                    // DrillDownPageId = FunderLedgerEntry;
-                    // ToolTip = 'Original Amount';
+                    DrillDown = true;
+                    DrillDownPageId = FunderLedgerEntry;
                     ApplicationArea = All;
                     Caption = 'Original Amount Disbursed';
                 }
 
                 field(OutstandingAmntDisbLCY; Rec.OutstandingAmntDisbLCY)
                 {
-                    // // ApplicationArea = Basic, Suite;
-                    // // Importance = Promoted;
-                    // DrillDown = true;
-                    // DrillDownPageId = FunderLedgerEntry;
-                    // ToolTip = '';
-
+                    // ApplicationArea = Basic, Suite;
+                    // Importance = Promoted;
+                    DrillDown = true;
+                    DrillDownPageId = FunderLedgerEntry;
                     ApplicationArea = All;
                     Caption = 'Outstanding Amount';
                 }
@@ -95,18 +92,18 @@ page 50236 "Funder Loan Card"
                 // }
                 field(GrossInterestamount; Rec.GrossInterestamount)
                 {
-                    // DrillDown = true;
-                    // DrillDownPageId = FunderLedgerEntry;
-                    // ToolTip = '';
+                    DrillDown = true;
+                    DrillDownPageId = FunderLedgerEntry;
+                    ToolTip = '';
                     ApplicationArea = Basic, Suite;
                     Caption = 'Gross Interest';
                 }
 
                 field(NetInterestamount; Rec.NetInterestamount)
                 {
-                    // DrillDown = true;
-                    // DrillDownPageId = FunderLedgerEntry;
-                    // ToolTip = '';
+                    DrillDown = true;
+                    DrillDownPageId = FunderLedgerEntry;
+                    ToolTip = '';
                     ApplicationArea = Basic, Suite;
                     Caption = 'Net Interest';
                 }
@@ -167,12 +164,18 @@ page 50236 "Funder Loan Card"
     {
         area(Processing)
         {
-            action(ActionName)
+            action("Compute Interest")
             {
-
+                ApplicationArea = Basic, Suite;
+                Image = Interaction;
+                //RunObject = codeunit FunderMgtCU::CalculateInterest();
+                Caption = 'Compute Interest';
+                ToolTip = 'Compute Interest ';
                 trigger OnAction()
+                var
+                    funderMgt: Codeunit FunderMgtCU;
                 begin
-
+                    funderMgt.CalculateInterest(Rec."No.");
                 end;
             }
         }
