@@ -1,9 +1,9 @@
-page 50231 "Portfolio List"
+page 50239 "Funder Loan Categories"
 {
     PageType = List;
     ApplicationArea = All;
     UsageCategory = Lists;
-    SourceTable = Portfolio;
+    SourceTable = "Funder Loan Category";
 
     layout
     {
@@ -18,24 +18,7 @@ page 50231 "Portfolio List"
                 field(Value; Rec.Value)
                 {
                     ApplicationArea = All;
-                    Caption = 'Title';
                 }
-                field(Abbreviation; Rec.Abbreviation)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Abbreviation';
-                }
-                field(InternalRef; Rec.InternalRef)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Internal Reference';
-                }
-                field(Status; Rec.Status)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Status';
-                }
-
             }
         }
         area(Factboxes)

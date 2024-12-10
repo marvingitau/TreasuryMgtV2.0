@@ -25,19 +25,24 @@ page 50233 "Funder Card"
                 {
                     ApplicationArea = All;
                 }
-                field("Posting Group"; Rec."Posting Group")
-                {
-                    ApplicationArea = All;
-                    ShowMandatory = true;
-                }
                 field("Funder Type"; Rec."Funder Type")
                 {
                     ApplicationArea = all;
                 }
-                field("Counterparty Type"; Rec."Counterparty Type")
+                field("Shortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
                 {
-                    ApplicationArea = All;
+                    ApplicationArea = all;
                 }
+                // field("Posting Group"; Rec."Posting Group")
+                // {
+                //     ApplicationArea = All;
+                //     ShowMandatory = true;
+                // }
+
+                // field("Counterparty Type"; Rec."Counterparty Type")
+                // {
+                //     ApplicationArea = All;
+                // }
                 field("Tax Identification Number"; Rec."Tax Identification Number")
                 {
                     ApplicationArea = All;
@@ -51,6 +56,10 @@ page 50233 "Funder Card"
                     ApplicationArea = All;
                 }
                 field("Legal Entity Identifier"; Rec."Legal Entity Identifier")
+                {
+                    ApplicationArea = All;
+                }
+                field("Country/Region"; Rec."Country/Region")
                 {
                     ApplicationArea = All;
                 }
@@ -148,28 +157,47 @@ page 50233 "Funder Card"
 
             }
         }
+
+        area(FactBoxes)
+        {
+            part("Attached Documents"; "Document Attachment Factbox")
+            {
+                ApplicationArea = All;
+                Caption = 'Attachments';
+                SubPageLink = "Table ID" = CONST(50230),
+                              "No." = FIELD("No.");
+            }
+            // systempart(FunderLinks; Links)
+            // {
+            //     ApplicationArea = RecordLinks;
+            // }
+            // systempart(FunderNotes; Notes)
+            // {
+            //     ApplicationArea = Notes;
+            // }
+        }
     }
 
     actions
     {
         area(Processing)
         {
-            action("Funder Loan")
-            {
-                ApplicationArea = Basic, Suite;
-                Caption = 'Funder Loan';
-                Image = CashReceiptJournal;
-                // RunObject = Page "Funder Loans List";
-                //RunPageLink = "Funder No." = FIELD("No.");
-                trigger OnAction()
-                var
-                    funderLoan: Record "Funder Loan";
-                begin
-                    funderLoan.SETRANGE(funderLoan."Funder No.", Rec."No.");
-                    PAGE.RUN(PAGE::"Funder Loans List", funderLoan);
+            // action("Funder Loan")
+            // {
+            //     ApplicationArea = Basic, Suite;
+            //     Caption = 'Funder Loan';
+            //     Image = CashReceiptJournal;
+            //     // RunObject = Page "Funder Loans List";
+            //     //RunPageLink = "Funder No." = FIELD("No.");
+            //     trigger OnAction()
+            //     var
+            //         funderLoan: Record "Funder Loan";
+            //     begin
+            //         funderLoan.SETRANGE(funderLoan."Funder No.", Rec."No.");
+            //         PAGE.RUN(PAGE::"Funder Loans List", funderLoan);
 
-                end;
-            }
+            //     end;
+            // }
             action("Funder Ledger Entry")
             {
                 ApplicationArea = Basic, Suite;
@@ -188,6 +216,86 @@ page 50233 "Funder Card"
                 end;
             }
         }
+        area(Navigation)
+        {
+
+            action("Funder Loan Open")
+            {
+                ApplicationArea = Basic, Suite;
+                Caption = 'Funder Loan (Open)';
+                Image = CashReceiptJournal;
+                // RunObject = Page "Funder Loans List";
+                //RunPageLink = "Funder No." = FIELD("No.");
+                trigger OnAction()
+                var
+                    funderLoan: Record "Funder Loan";
+                begin
+                    funderLoan.SETRANGE(funderLoan."Funder No.", Rec."No.");
+                    funderLoan.SETRANGE(funderLoan.Status, funderLoan.Status::Open);
+                    PAGE.RUN(PAGE::"Funder Loans List", funderLoan);
+
+                end;
+            }
+            action("Funder Loan Pending")
+            {
+                ApplicationArea = Basic, Suite;
+                Caption = 'Funder Loan (Pending)';
+                Image = CashReceiptJournal;
+                // RunObject = Page "Funder Loans List";
+                //RunPageLink = "Funder No." = FIELD("No.");
+                trigger OnAction()
+                var
+                    funderLoan: Record "Funder Loan";
+                begin
+                    funderLoan.SETRANGE(funderLoan."Funder No.", Rec."No.");
+                    funderLoan.SETRANGE(funderLoan.Status, funderLoan.Status::"Pending Approval");
+                    PAGE.RUN(PAGE::"Funder Loans List", funderLoan);
+
+                end;
+            }
+
+            action("Funder Loan Approved")
+            {
+                ApplicationArea = Basic, Suite;
+                Caption = 'Funder Loan (Approved)';
+                Image = CashReceiptJournal;
+                // RunObject = Page "Funder Loans List";
+                //RunPageLink = "Funder No." = FIELD("No.");
+                trigger OnAction()
+                var
+                    funderLoan: Record "Funder Loan";
+                begin
+                    funderLoan.SETRANGE(funderLoan."Funder No.", Rec."No.");
+                    funderLoan.SETRANGE(funderLoan.Status, funderLoan.Status::Approved);
+                    PAGE.RUN(PAGE::"Funder Loans List", funderLoan);
+
+                end;
+            }
+        }
+        area(Reporting)
+        {
+
+            action("attachment")
+            {
+                ApplicationArea = All;
+                Caption = 'Attachments';
+                Image = Attach;
+                ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                // Promoted = true;
+                // PromotedCategory = Report;
+                // PromotedIsBig = true;
+                trigger OnAction()
+                var
+                    DocumentAttachmentDetails: Page "Document Attachment Details";
+                    RecRef: RecordRef;
+                begin
+                    RecRef.GetTable(Rec);
+                    DocumentAttachmentDetails.OpenForRecRef(RecRef);
+                    DocumentAttachmentDetails.RunModal();
+                end;
+            }
+        }
+
     }
 
     var

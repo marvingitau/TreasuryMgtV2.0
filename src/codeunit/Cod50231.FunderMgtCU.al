@@ -226,7 +226,7 @@ codeunit 50231 FunderMgtCU
                 end;
 
                 //Get Posting groups
-                if not venPostingGroup.Get(funder."Posting Group") then
+                if not venPostingGroup.Get(funderLoan."Posting Group") then
                     Error('Missing Posting Group: %1', funder."No.");
 
                 principleAcc := venPostingGroup."Payables Account";

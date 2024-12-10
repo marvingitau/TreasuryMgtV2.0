@@ -116,8 +116,8 @@ codeunit 50232 "Treasury Mgt CU"
                                 Error('Funder = %1, dont exist.', funderLoan."Funder No.");
                             end;
                             //Get Posting groups
-                            if not venPostingGroup.Get(funder."Posting Group") then
-                                Error('Missing Posting Group: %1', funder."Posting Group");
+                            if not venPostingGroup.Get(funderLoan."Posting Group") then
+                                Error('Missing Posting Group: %1', funderLoan."Posting Group");
                             // interestAccExpense := venPostingGroup."Interest Expense";
                             // if interestAccExpense = '' then
                             //     Error('Missing Posting Group - Interest A/C: %1', funder."Posting Group");
@@ -139,8 +139,8 @@ codeunit 50232 "Treasury Mgt CU"
                                 Error('Funder = %1, dont exist.', funderLoan."Funder No.")
                             end;
                             //Get Posting groups
-                            if not venPostingGroup.Get(funder."Posting Group") then
-                                Error('Missing Posting Group: %1', funder."Posting Group");
+                            if not venPostingGroup.Get(funderLoan."Posting Group") then
+                                Error('Missing Posting Group: %1', funderLoan."Posting Group");
                             // interestAccExpense := venPostingGroup."Interest Expense";
                             // if interestAccExpense = '' then
                             //     Error('Missing Posting Group - Interest A/C: %1',funder."Posting Group");
@@ -271,7 +271,7 @@ codeunit 50232 "Treasury Mgt CU"
                                 // **********************************************
                                 //          Get Posting groups & Posting Accounts
                                 // **********************************************
-                                if not venPostingGroup.Get(funder."Posting Group") then
+                                if not venPostingGroup.Get(funderLoan."Posting Group") then
                                     Error('Missing Posting Group: %1', funder."No.");
                                 interestAccExpense := venPostingGroup."Interest Expense";
                                 if interestAccExpense = '' then
@@ -561,7 +561,7 @@ codeunit 50232 "Treasury Mgt CU"
                         //**********************************************
                         //          Get Posting groups & Posting Accounts
                         //**********************************************
-                        if not venPostingGroup.Get(funder."Posting Group") then
+                        if not venPostingGroup.Get(funderLoan."Posting Group") then
                             Error('Missing Posting Group: %1', funder."No.");
                         interestAccExpense := venPostingGroup."Interest Expense";
                         if interestAccExpense = '' then
@@ -590,7 +590,7 @@ codeunit 50232 "Treasury Mgt CU"
                         //**********************************************
                         //          Get Posting groups & Posting Accounts
                         //**********************************************
-                        if not venPostingGroup.Get(funder."Posting Group") then
+                        if not venPostingGroup.Get(funderLoan."Posting Group") then
                             Error('Missing Posting Group: %1', funder."No.");
                         interestAccExpense := venPostingGroup."Interest Expense";
                         if interestAccExpense = '' then
@@ -809,7 +809,7 @@ codeunit 50232 "Treasury Mgt CU"
                         //**********************************************
                         //          Get Posting groups & Posting Accounts
                         //**********************************************
-                        if not venPostingGroup.Get(funder."Posting Group") then
+                        if not venPostingGroup.Get(funderLoan."Posting Group") then
                             Error('Missing Posting Group: %1', funder."No.");
                         interestAccExpense := venPostingGroup."Interest Expense";
                         if interestAccExpense = '' then
@@ -839,7 +839,7 @@ codeunit 50232 "Treasury Mgt CU"
                         //**********************************************
                         //          Get Posting groups & Posting Accounts
                         //**********************************************
-                        if not venPostingGroup.Get(funder."Posting Group") then
+                        if not venPostingGroup.Get(funderLoan."Posting Group") then
                             Error('Missing Posting Group: %1', funder."No.");
                         interestAccExpense := venPostingGroup."Interest Expense";
                         if interestAccExpense = '' then

@@ -41,11 +41,17 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                 }
+                // field("Shortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
+                // {
+                //     ApplicationArea = All;
+                //     ShowMandatory = true;
+                // }
                 field(FundSource; Rec.FundSource)
                 {
 
                     ApplicationArea = All;
                     Caption = 'Bank';
+                    ShowMandatory = true;
                 }
                 field(Currency; Rec.Currency)
                 {
@@ -53,8 +59,13 @@ page 50236 "Funder Loan Card"
                     // Visible = false;
                     ApplicationArea = All;
                     // Editable = false;
-                    Visible = isCurrencyVisible;
-                    ShowMandatory = isCurrencyVisible;
+                    // Visible = isCurrencyVisible;
+                    // ShowMandatory = isCurrencyVisible;
+                    ShowMandatory = true;
+                }
+                field("Posting Group"; Rec."Posting Group")
+                {
+                    ApplicationArea = All;
                 }
                 field(OrigAmntDisbLCY; Rec.OrigAmntDisbLCY)
                 {
@@ -76,6 +87,7 @@ page 50236 "Funder Loan Card"
                 field(InterestRate; Rec.InterestRate)
                 {
                     ApplicationArea = All;
+                    ShowMandatory = true;
                 }
                 field(InterestMethod; Rec.InterestMethod)
                 {
@@ -85,6 +97,7 @@ page 50236 "Funder Loan Card"
                 field(InterestRateType; Rec.InterestRateType)
                 {
                     ApplicationArea = All;
+                    ShowMandatory = true;
                 }
                 // field(InterestRepaymentHz; Rec.InterestRepaymentHz)
                 // {
@@ -156,6 +169,10 @@ page 50236 "Funder Loan Card"
                 // {
                 //     ApplicationArea = All;
                 // }
+                field(Status; Rec.Status)
+                {
+                    ApplicationArea = All;
+                }
             }
         }
     }
@@ -178,8 +195,135 @@ page 50236 "Funder Loan Card"
                     funderMgt.CalculateInterest(Rec."No.");
                 end;
             }
+
+            group("Request Approval")
+            {
+                Caption = 'Request Approval';
+                Image = SendApprovalRequest;
+                action(SendApprovalRequest)
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Send A&pproval Request';
+                    Enabled = NOT OpenApprovalEntriesExist;
+                    Image = SendApprovalRequest;
+                    ToolTip = 'Request approval to change the record.';
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    trigger OnAction()
+
+                    var
+                        CustomWorkflowMgmt: Codeunit "Treasury Approval Mgt";
+                        RecRef: RecordRef;
+                    begin
+                        RecRef.GetTable(Rec);
+                        if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
+                            CustomWorkflowMgmt.OnSendWorkflowForApproval(RecRef);
+                    end;
+                }
+                action(CancelApprovalRequest)
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Cancel Approval Re&quest';
+                    Enabled = CanCancelApprovalForRecord;
+                    Image = CancelApprovalRequest;
+                    ToolTip = 'Cancel the approval request.';
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    trigger OnAction()
+                    var
+                        CustomWorkflowMgmt: Codeunit "Treasury Approval Mgt";
+                        RecRef: RecordRef;
+                    begin
+                        RecRef.GetTable(Rec);
+                        CustomWorkflowMgmt.OnCancelWorkflowForApproval(RecRef);
+                    end;
+                }
+            }
+
+        }
+        area(Reporting)
+        {
+            group(Approval)
+            {
+                Caption = 'Approval';
+                action(Approve)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Approve';
+                    Image = Approve;
+                    ToolTip = 'Approve the requested changes.';
+                    Promoted = true;
+                    PromotedCategory = New;
+                    Visible = OpenApprovalEntriesExistCurrUser;
+                    trigger OnAction()
+                    begin
+                        ApprovalsMgmt.ApproveRecordApprovalRequest(Rec.RecordId);
+                    end;
+                }
+                action(Reject)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Reject';
+                    Image = Reject;
+                    ToolTip = 'Reject the approval request.';
+                    Visible = OpenApprovalEntriesExistCurrUser;
+                    Promoted = true;
+                    PromotedCategory = New;
+                    trigger OnAction()
+                    begin
+                        ApprovalsMgmt.RejectRecordApprovalRequest(Rec.RecordId);
+                    end;
+                }
+                action(Delegate)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Delegate';
+                    Image = Delegate;
+                    ToolTip = 'Delegate the approval to a substitute approver.';
+                    Visible = OpenApprovalEntriesExistCurrUser;
+                    Promoted = true;
+                    PromotedCategory = New;
+                    trigger OnAction()
+
+                    begin
+                        ApprovalsMgmt.DelegateRecordApprovalRequest(Rec.RecordId);
+                    end;
+                }
+                action(Comment)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Comments';
+                    Image = ViewComments;
+                    ToolTip = 'View or add comments for the record.';
+                    Visible = OpenApprovalEntriesExistCurrUser;
+                    Promoted = true;
+
+                    PromotedCategory = New;
+
+
+                    trigger OnAction()
+                    begin
+                        ApprovalsMgmt.GetApprovalComment(Rec);
+                    end;
+                }
+                action(Approvals)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Approvals';
+                    Image = Approvals;
+                    ToolTip = 'View approval requests.';
+                    Promoted = true;
+                    PromotedCategory = New;
+                    Visible = HasApprovalEntries;
+                    trigger OnAction()
+                    begin
+                        ApprovalsMgmt.OpenApprovalEntriesPage(Rec.RecordId);
+                    end;
+                }
+            }
         }
     }
+
 
     trigger OnInit()
     begin
@@ -215,6 +359,14 @@ page 50236 "Funder Loan Card"
 
     end;
 
+    trigger OnAfterGetCurrRecord()
+    begin
+        OpenApprovalEntriesExistCurrUser := ApprovalsMgmt.HasOpenApprovalEntriesForCurrentUser(Rec.RecordId);
+        OpenApprovalEntriesExist := ApprovalsMgmt.HasOpenApprovalEntries(Rec.RecordId);
+        CanCancelApprovalForRecord := ApprovalsMgmt.CanCancelApprovalForRecord(Rec.RecordId);
+        HasApprovalEntries := ApprovalsMgmt.HasApprovalEntries(Rec.RecordId);
+    end;
+
     var
         myInt: Integer;
         GenSetup: Record "General Setup";
@@ -223,4 +375,9 @@ page 50236 "Funder Loan Card"
         isCurrencyVisible: Boolean;
         _funderNo: Text[30];
         FunderTbl: Record Funders;
+
+        OpenApprovalEntriesExistCurrUser, OpenApprovalEntriesExist, CanCancelApprovalForRecord
+        , HasApprovalEntries : Boolean;
+        ApprovalsMgmt: Codeunit "Approvals Mgmt.";
+
 }

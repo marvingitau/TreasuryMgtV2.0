@@ -15,6 +15,21 @@ table 50231 Portfolio
             DataClassification = ToBeClassified;
             Caption = 'Value';
         }
+        field(3; Abbreviation; Text[200])
+        {
+            DataClassification = ToBeClassified;
+
+        }
+        field(4; InternalRef; Text[200])
+        {
+            DataClassification = ToBeClassified;
+
+        }
+        field(5; Status; Enum PortfolioStatus)
+        {
+            DataClassification = ToBeClassified;
+
+        }
     }
 
     keys

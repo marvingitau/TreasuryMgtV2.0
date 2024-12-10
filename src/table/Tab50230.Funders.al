@@ -22,17 +22,17 @@ table 50230 Funders
             DataClassification = ToBeClassified;
             ToolTip = 'Full legal name of the counterparty (e.g., the business or individual with whom you are entering into an agreement).';
         }
-        field(31; "Posting Group"; Text[200])
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Posting Group';
-            TableRelation = "Vendor Posting Group".Code;
-        }
-        field(40; "Counterparty Type"; Enum "Counterpart Types")
-        {
-            DataClassification = ToBeClassified;
-            ToolTip = 'This could specify whether the counterparty is a customer, supplier, financial institution, or any other classification based on your systems design.';
-        }
+        // field(31; "Posting Group"; Text[200])
+        // {
+        //     DataClassification = ToBeClassified;
+        //     Caption = 'Posting Group';
+        //     TableRelation = "Vendor Posting Group".Code;
+        // }
+        // field(40; "Counterparty Type"; Enum "Counterpart Types")
+        // {
+        //     DataClassification = ToBeClassified;
+        //     ToolTip = 'This could specify whether the counterparty is a customer, supplier, financial institution, or any other classification based on your systems design.';
+        // }
         field(45; "Funder Type"; Enum "Funder Type")
         {
             DataClassification = ToBeClassified;
@@ -137,7 +137,18 @@ table 50230 Funders
         {
             DataClassification = ToBeClassified;
         }
+        field(280; "Country/Region"; Code[100])
+        {
+            DataClassification = ToBeClassified;
+            TableRelation = "Country/Region";
+        }
+        field(600; "Shortcut Dimension 1 Code"; Code[50])
+        {
+            CaptionClass = '1,1,1';
+            DataClassification = ToBeClassified;
+            TableRelation = "Dimension Value".Code WHERE("Global Dimension No." = CONST(1), "Dimension Value Type" = CONST(Standard), Blocked = CONST(false));
 
+        }
     }
 
     keys

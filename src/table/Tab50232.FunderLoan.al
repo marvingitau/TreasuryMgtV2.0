@@ -195,7 +195,7 @@ table 50232 "Funder Loan"
         {
             DataClassification = ToBeClassified;
             Caption = 'Category';
-            // TableRelation = Category.Code;
+            TableRelation = "Funder Loan Category".Code;
         }
         field(525; Type; Enum FundingType)
         {
@@ -216,6 +216,28 @@ table 50232 "Funder Loan"
             TableRelation = Currency;
 
         }
+
+        // field(600; "Shortcut Dimension 1 Code"; Code[50])
+        // {
+        //     CaptionClass = '1,1,1';
+        //     DataClassification = ToBeClassified;
+        //     TableRelation = "Dimension Value".Code WHERE("Global Dimension No." = CONST(1), "Dimension Value Type" = CONST(Standard), Blocked = CONST(false));
+
+        // }
+        field(610; Status; Enum "Loan Approval Status")
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(620; "Original Disbursed Amount"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(630; "Original Disbursed Amount(LCY)"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+
     }
 
     keys
@@ -245,6 +267,8 @@ table 50232 "Funder Loan"
         GenSetup.TestField("Funder Loan No.");
         if "No." = '' then
             "No." := NoSer.GetNextNo(GenSetup."Funder Loan No.", 0D, true);
+
+        "Status" := "Status"::Open;
     end;
 
     trigger OnModify()
