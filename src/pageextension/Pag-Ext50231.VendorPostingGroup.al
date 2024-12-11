@@ -13,6 +13,21 @@ pageextension 50231 "Vendor Posting Group" extends 111
                 ApplicationArea = All;
             }
         }
+        addafter("Credit Rounding Account")
+        {
+            field("Treasury Enabled (Local)"; Rec."Treasury Enabled (Local)")
+            {
+                Caption = 'Local A/C';
+                ToolTip = 'This is utilized by Treasury Module';
+                ApplicationArea = All;
+            }
+            field("Treasury Enabled (Foreign)"; Rec."Treasury Enabled (Foreign)")
+            {
+                Caption = 'Foreign A/C';
+                ToolTip = 'This is utilized by Treasury Module';
+                ApplicationArea = All;
+            }
+        }
     }
 
     actions

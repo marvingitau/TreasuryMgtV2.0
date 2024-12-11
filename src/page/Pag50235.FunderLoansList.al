@@ -46,24 +46,26 @@ page 50235 "Funder Loans List"
     {
         area(Processing)
         {
-            action(NewCardAction)
-            {
-                ApplicationArea = All;
-                Caption = 'Create New Card';
-                trigger OnAction()
-                var
+            // action(NewCardAction)
+            // {
+            //     ApplicationArea = All;
+            //     Caption = 'Create New Card';
+            //     trigger OnAction()
+            //     var
 
-                begin
-                    SelectedFilterValue := Rec.GETFILTER("Funder No.");
-                    Message(SelectedFilterValue);
-                    // Create a new record
-                    // NewRec.Init();
-                    // NewRec."Funder No." := SelectedFilterValue;
-                    // NewRec.Insert(true);
-                    // PAGE.RunModal(PAGE::"Funder Loan Card", NewRec);
-                    //PAGE::"Funder Loan Card".SetFilterValue(SelectedFilterValue);
-                end;
-            }
+            //     begin
+            //         SelectedFilterValue := Rec.GETFILTER("Funder No.");
+            //         Message(SelectedFilterValue);
+            //         // Create a new record
+            //         // NewRec.Init();
+            //         // NewRec."Funder No." := SelectedFilterValue;
+            //         // NewRec.Insert(true);
+            //         // PAGE.RunModal(PAGE::"Funder Loan Card", NewRec);
+            //         //PAGE::"Funder Loan Card".SetFilterValue(SelectedFilterValue);
+            //     end;
+            // }
+
+
         }
     }
     var

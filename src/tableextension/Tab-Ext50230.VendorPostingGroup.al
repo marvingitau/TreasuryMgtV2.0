@@ -33,6 +33,18 @@ tableextension 50230 "Vendor Posting Group" extends 93
             TableRelation = "G/L Account";
 
         }
+        field(50010; "Treasury Enabled (Local)"; Boolean)
+        {
+            // Caption = 'Interest Payable';
+            DataClassification = ToBeClassified;
+
+        }
+        field(50020; "Treasury Enabled (Foreign)"; Boolean)
+        {
+            // Caption = 'Interest Payable';
+            DataClassification = ToBeClassified;
+
+        }
 
     }
 

@@ -66,14 +66,19 @@ page 50236 "Funder Loan Card"
                 field("Posting Group"; Rec."Posting Group")
                 {
                     ApplicationArea = All;
+                    Editable = false;
                 }
-                field(OrigAmntDisbLCY; Rec.OrigAmntDisbLCY)
+                field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
                 {
-                    DrillDown = true;
-                    DrillDownPageId = FunderLedgerEntry;
                     ApplicationArea = All;
-                    Caption = 'Original Amount Disbursed';
                 }
+                // field(OrigAmntDisbLCY; Rec.OrigAmntDisbLCY)
+                // {
+                //     DrillDown = true;
+                //     DrillDownPageId = FunderLedgerEntry;
+                //     ApplicationArea = All;
+                //     Caption = 'Original Amount Disbursed';
+                // }
 
                 field(OutstandingAmntDisbLCY; Rec.OutstandingAmntDisbLCY)
                 {
@@ -172,6 +177,7 @@ page 50236 "Funder Loan Card"
                 field(Status; Rec.Status)
                 {
                     ApplicationArea = All;
+                    Editable = false;
                 }
             }
         }
@@ -181,20 +187,27 @@ page 50236 "Funder Loan Card"
     {
         area(Processing)
         {
-            action("Compute Interest")
+            group("Process Funder Loan")
             {
-                ApplicationArea = Basic, Suite;
+                Caption = 'Process Funder Loan';
                 Image = Interaction;
-                //RunObject = codeunit FunderMgtCU::CalculateInterest();
-                Caption = 'Compute Interest';
-                ToolTip = 'Compute Interest ';
-                trigger OnAction()
-                var
-                    funderMgt: Codeunit FunderMgtCU;
-                begin
-                    funderMgt.CalculateInterest(Rec."No.");
-                end;
+                action("Compute Interest")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Image = Interaction;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    Caption = 'Compute Interest';
+                    ToolTip = 'Compute Interest ';
+                    trigger OnAction()
+                    var
+                        funderMgt: Codeunit FunderMgtCU;
+                    begin
+                        funderMgt.CalculateInterest(Rec."No.");
+                    end;
+                }
             }
+
 
             group("Request Approval")
             {

@@ -180,29 +180,17 @@ page 50233 "Funder Card"
 
     actions
     {
+
         area(Processing)
         {
-            // action("Funder Loan")
-            // {
-            //     ApplicationArea = Basic, Suite;
-            //     Caption = 'Funder Loan';
-            //     Image = CashReceiptJournal;
-            //     // RunObject = Page "Funder Loans List";
-            //     //RunPageLink = "Funder No." = FIELD("No.");
-            //     trigger OnAction()
-            //     var
-            //         funderLoan: Record "Funder Loan";
-            //     begin
-            //         funderLoan.SETRANGE(funderLoan."Funder No.", Rec."No.");
-            //         PAGE.RUN(PAGE::"Funder Loans List", funderLoan);
 
-            //     end;
-            // }
             action("Funder Ledger Entry")
             {
                 ApplicationArea = Basic, Suite;
                 Caption = 'Funder Ledger';
                 Image = LedgerEntries;
+                PromotedCategory = Process;
+                Promoted = true;
                 // RunObject = Page "Funder Loans List";
                 //RunPageLink = "Funder No." = FIELD("No.");
                 trigger OnAction()
@@ -215,17 +203,16 @@ page 50233 "Funder Card"
 
                 end;
             }
-        }
-        area(Navigation)
-        {
-
             action("Funder Loan Open")
             {
                 ApplicationArea = Basic, Suite;
                 Caption = 'Funder Loan (Open)';
                 Image = CashReceiptJournal;
+                PromotedCategory = Process;
+                Promoted = true;
                 // RunObject = Page "Funder Loans List";
                 //RunPageLink = "Funder No." = FIELD("No.");
+
                 trigger OnAction()
                 var
                     funderLoan: Record "Funder Loan";
@@ -241,6 +228,8 @@ page 50233 "Funder Card"
                 ApplicationArea = Basic, Suite;
                 Caption = 'Funder Loan (Pending)';
                 Image = CashReceiptJournal;
+                PromotedCategory = Process;
+                Promoted = true;
                 // RunObject = Page "Funder Loans List";
                 //RunPageLink = "Funder No." = FIELD("No.");
                 trigger OnAction()
@@ -259,6 +248,8 @@ page 50233 "Funder Card"
                 ApplicationArea = Basic, Suite;
                 Caption = 'Funder Loan (Approved)';
                 Image = CashReceiptJournal;
+                PromotedCategory = Process;
+                Promoted = true;
                 // RunObject = Page "Funder Loans List";
                 //RunPageLink = "Funder No." = FIELD("No.");
                 trigger OnAction()

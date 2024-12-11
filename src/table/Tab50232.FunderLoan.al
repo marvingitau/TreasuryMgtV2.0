@@ -36,6 +36,7 @@ table 50232 "Funder Loan"
             DataClassification = ToBeClassified;
             Caption = 'Posting Group';
             TableRelation = "Vendor Posting Group".Code;
+
         }
         field(400; "Loan Name"; Code[100])
         {
@@ -214,6 +215,19 @@ table 50232 "Funder Loan"
             DataClassification = ToBeClassified;
             Caption = 'Currency';
             TableRelation = Currency;
+            trigger OnValidate()
+            begin
+                if Currency <> '' then begin
+                    vPostingGroup.Reset();
+                    vPostingGroup.SetRange(vPostingGroup."Treasury Enabled (Foreign)", true);
+                    if vPostingGroup.Find('-') then begin
+                        "Posting Group" := vPostingGroup.Code;
+                    end else begin
+                        Error('Please set the default Foreign Posting Group');
+                    end;
+                end;
+
+            end;
 
         }
 
@@ -232,6 +246,71 @@ table 50232 "Funder Loan"
         field(620; "Original Disbursed Amount"; Decimal)
         {
             DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                funderLegderEntry: Record FunderLedgerEntry;
+                looper: Record FunderLedgerEntry;
+                NextEntryNo: Integer;
+                FunderMgt: Codeunit FunderMgtCU;
+                venPostingGroup: Record "Vendor Posting Group";
+                principleAcc: Code[20];
+                interestAcc: Code[20];
+                ReversalEntry: Record "Reversal Entry";
+
+            begin
+                //Get Posting groups
+                if not venPostingGroup.Get("Posting Group") then
+                    Error('Missing Posting Group: %1', "No.");
+                if FundSource = '' then
+                    Error('Funder Entry Must have a value', FundSource);
+                principleAcc := venPostingGroup."Payables Account";
+                interestAcc := venPostingGroup."Interest Expense";
+
+                funderLegderEntry.Reset();
+                funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Original Amount");
+                funderLegderEntry.SetRange(funderLegderEntry."Funder No.", "No.");
+                if funderLegderEntry.Find('-') then begin
+                    funderLegderEntry."Modification Date" := Today;
+                    funderLegderEntry."Modification User" := UserId;
+                    funderLegderEntry.Amount := DisbursedCurrency;
+                    funderLegderEntry."Amount(LCY)" := DisbursedCurrency;
+                    funderLegderEntry."Remaining Amount" := DisbursedCurrency;
+                    funderLegderEntry.Modify();
+
+                    //  Clear(ReversalEntry);
+                    //     if Rec.Reversed then
+                    //         ReversalEntry.AlreadyReversedEntry(Rec.TableCaption, Rec."Entry No.");
+                    //     // CheckEntryPostedFromJournal();
+                    //       Rec.TestField("No.");
+                    //     ReversalEntry.ReverseTransaction(Rec."No.")
+
+
+                end else begin
+                    looper.LockTable();
+                    looper.Reset();
+                    if looper.FindLast() then
+                        NextEntryNo := looper."Entry No." + 1
+                    else
+                        NextEntryNo := 1;
+                    funderLegderEntry.Init();
+                    funderLegderEntry."Entry No." := NextEntryNo;
+                    funderLegderEntry."Funder No." := "No.";
+                    funderLegderEntry."Funder Name" := Name;
+                    funderLegderEntry."Posting Date" := Today;
+                    funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::"Original Amount";
+                    funderLegderEntry."Document No." := "No." + '_Auto_' + Format(Today);
+                    // funderLegderEntry."Transaction Type" := funderLegderEntry."Transaction Type"::"Original Amount";
+                    funderLegderEntry.Description := 'Original Amount' + Format(Today);
+                    funderLegderEntry.Amount := DisbursedCurrency;
+                    funderLegderEntry."Amount(LCY)" := DisbursedCurrency;
+                    funderLegderEntry."Remaining Amount" := DisbursedCurrency;
+                    funderLegderEntry.Insert();
+                    Commit();
+                    FunderMgt.DirectGLPosting('init', principleAcc, DisbursedCurrency, 'Original Amount', "No.", FundSource)
+                end;
+
+            end;
+
         }
         field(630; "Original Disbursed Amount(LCY)"; Decimal)
         {
@@ -260,6 +339,7 @@ table 50232 "Funder Loan"
     var
         GenSetup: Record "General Setup";
         NoSer: Codeunit "No. Series";
+        vPostingGroup: Record "Vendor Posting Group";
 
     trigger OnInsert()
     begin
@@ -269,6 +349,13 @@ table 50232 "Funder Loan"
             "No." := NoSer.GetNextNo(GenSetup."Funder Loan No.", 0D, true);
 
         "Status" := "Status"::Open;
+        vPostingGroup.Reset();
+        vPostingGroup.SetRange(vPostingGroup."Treasury Enabled (Local)", true);
+        if vPostingGroup.Find('-') then
+            "Posting Group" := vPostingGroup.Code
+        else
+            Error('Please set the default Local Posting Group');
+
     end;
 
     trigger OnModify()
