@@ -102,6 +102,7 @@ codeunit 50232 "Treasury Mgt CU"
                     JournalEntry.Creation_Date := TrsyJnl."Posting Date";
                     JournalEntry."Document No." := TrsyJnl."Document No.";
                     JournalEntry.Description := TrsyJnl.Description;
+                    JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
                     if (TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Funder) OR (TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"G/L Account") then begin
 
                         if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Funder then begin
@@ -310,6 +311,7 @@ codeunit 50232 "Treasury Mgt CU"
                                 JournalEntry.Creation_Date := TrsyJnl."Posting Date";
                                 JournalEntry."Document No." := TrsyJnl."Document No.";
                                 JournalEntry.Description := TrsyJnl.Description;
+                                JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
                                 if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"Bank Account" then begin
                                     JournalEntry."Account Type" := TrsyJnl."Account Type"::"Bank Account"; //@@@@ Debit Bank
                                     JournalEntry."Account No." := TrsyJnl."Account No.";
@@ -386,6 +388,7 @@ codeunit 50232 "Treasury Mgt CU"
                             JournalEntry.Creation_Date := TrsyJnl."Posting Date";
                             JournalEntry."Document No." := TrsyJnl."Document No.";
                             JournalEntry.Description := TrsyJnl.Description;
+                            JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
                             JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account";
                             JournalEntry."Account No." := interestAccPay;
                             JournalEntry.Amount := TrsyJnl.Amount;//@@@
@@ -673,6 +676,7 @@ codeunit 50232 "Treasury Mgt CU"
                 JournalEntry.Creation_Date := TrsyJnl."Posting Date";
                 JournalEntry."Document No." := TrsyJnl."Document No.";
                 JournalEntry.Description := TrsyJnl.Description;
+                JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
                 if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Funder then begin
                     JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
                     JournalEntry."Account No." := interestAccPay;
@@ -925,6 +929,7 @@ codeunit 50232 "Treasury Mgt CU"
                 JournalEntry.Creation_Date := TrsyJnl."Posting Date";
                 JournalEntry."Document No." := TrsyJnl."Document No.";
                 JournalEntry.Description := TrsyJnl.Description;
+                JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
                 if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Funder then begin
                     JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
                     JournalEntry."Account No." := interestAccPay;

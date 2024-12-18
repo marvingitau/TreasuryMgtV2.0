@@ -203,6 +203,13 @@ table 50235 "Trsy Journal"
             // NotBlank = true;
 
         }
+        field(600; "Shortcut Dimension 1 Code"; Code[50])
+        {
+            CaptionClass = '1,1,1';
+            DataClassification = ToBeClassified;
+            TableRelation = "Dimension Value".Code WHERE("Global Dimension No." = CONST(1), "Dimension Value Type" = CONST(Standard), Blocked = CONST(false));
+
+        }
     }
 
     keys

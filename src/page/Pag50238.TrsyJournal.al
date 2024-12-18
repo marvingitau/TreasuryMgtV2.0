@@ -90,6 +90,11 @@ page 50238 "Trsy Journal"
                     ApplicationArea = All;
                     ShowMandatory = true;
                 }
+                field("Shortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
+                {
+                    ApplicationArea = All;
+                    ShowMandatory = true;
+                }
 
 
             }
