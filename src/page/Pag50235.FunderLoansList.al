@@ -34,6 +34,14 @@ page 50235 "Funder Loans List"
                 {
                     ApplicationArea = All;
                 }
+                field(Currency; Rec.Currency)
+                {
+                    ApplicationArea = All;
+                }
+                field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
+                {
+                    ApplicationArea = All;
+                }
             }
         }
         area(Factboxes)

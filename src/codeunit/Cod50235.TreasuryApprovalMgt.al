@@ -107,7 +107,7 @@ codeunit 50235 "Treasury Approval Mgt"
                     RecRef.SetTable(CustomWorkflowHdr);
                     ApprovalEntryArgument."Document No." := CustomWorkflowHdr."No.";
                     ApprovalEntryArgument.Amount := CustomWorkflowHdr."Original Disbursed Amount";
-                    ApprovalEntryArgument."Amount (LCY)" := CustomWorkflowHdr."Original Disbursed Amount(LCY)";
+                    ApprovalEntryArgument."Amount (LCY)" := CustomWorkflowHdr."Original Disbursed Amount";
                 end;
         end;
     end;

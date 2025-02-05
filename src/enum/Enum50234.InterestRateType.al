@@ -2,11 +2,11 @@ enum 50234 InterestRateType
 {
     Extensible = true;
 
-    value(1; "Fixed Rate")
+    value(0; "Fixed Rate")
     {
         Caption = 'Fixed Rate';
     }
-    value(2; "Floating Rate")
+    value(1; "Floating Rate")
     {
         Caption = 'Floating Rate';
     }

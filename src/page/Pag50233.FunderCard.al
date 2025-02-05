@@ -32,12 +32,18 @@ page 50233 "Funder Card"
                 field("Shortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
                 {
                     ApplicationArea = all;
+                    ShowMandatory = true;
+                    trigger OnValidate()
+                    begin
+                        CurrPage.Update();
+                    end;
+
                 }
-                // field("Posting Group"; Rec."Posting Group")
-                // {
-                //     ApplicationArea = All;
-                //     ShowMandatory = true;
-                // }
+                field("Branch Name"; BranchName)
+                {
+                    ApplicationArea = All;
+                    Editable = false;
+                }
 
                 // field("Counterparty Type"; Rec."Counterparty Type")
                 // {
@@ -46,14 +52,17 @@ page 50233 "Funder Card"
                 field("Tax Identification Number"; Rec."Tax Identification Number")
                 {
                     ApplicationArea = All;
+                    Caption = 'KRA PIN';
                 }
                 field("Employer Identification Number"; Rec."Employer Identification Number")
                 {
                     ApplicationArea = All;
+                    Caption = 'ID';
                 }
                 field("VAT Number"; Rec."VAT Number")
                 {
                     ApplicationArea = All;
+                    Caption = 'Business Registration Number';
                 }
                 field("Legal Entity Identifier"; Rec."Legal Entity Identifier")
                 {
@@ -67,6 +76,21 @@ page 50233 "Funder Card"
             }
             group(Address)
             {
+                field("Primary Contact Name"; Rec."Primary Contact Name")
+                {
+                    ApplicationArea = All;
+                }
+                field("Phone Number"; Rec."Phone Number")
+                {
+                    ApplicationArea = All;
+                    ExtendedDatatype = PhoneNo;
+                }
+                field("Email Address"; Rec."Email Address")
+                {
+                    ApplicationArea = All;
+                    ExtendedDatatype = EMail;
+                    Caption = 'Contact Persons Email';
+                }
                 field("Physical Address"; Rec."Physical Address")
                 {
                     ApplicationArea = All;
@@ -78,38 +102,72 @@ page 50233 "Funder Card"
                 field("Mailing Address"; Rec."Mailing Address")
                 {
                     ApplicationArea = All;
+                    Caption = 'Email';
                 }
-
             }
-            group(Contacts)
-            {
-                field("Primary Contact Name"; Rec."Primary Contact Name")
-                {
-                    ApplicationArea = All;
-                }
-                field("Email Address"; Rec."Email Address")
-                {
-                    ApplicationArea = All;
-                    ExtendedDatatype = EMail;
-                }
-                field("Phone Number"; Rec."Phone Number")
-                {
-                    ApplicationArea = All;
-                    ExtendedDatatype = PhoneNo;
-                }
-                field("Fax Number"; Rec."Fax Number")
-                {
-                    ApplicationArea = All;
-                }
+            // group(Contacts)
+            // {
+            //     field("Primary Contact Name"; Rec."Primary Contact Name")
+            //     {
+            //         ApplicationArea = All;
+            //     }
 
-            }
+            //     field("Fax Number"; Rec."Fax Number")
+            //     {
+            //         ApplicationArea = All;
+            //     }
+
+            // }
             group("Bank Details")
             {
-                field("Bank Account Number"; Rec."Bank Account Number")
+
+                field("Bank Code"; Rec."Bank Code")
                 {
                     ApplicationArea = All;
+                    ShowMandatory = true;
+                    trigger OnValidate()
+                    begin
+                        // CurrPage.Banks.
+                        CurrPage.Update(true);
+
+                    end;
                 }
-                field("Bank Name"; Rec."Bank Name")
+                field("Bank Name"; BankName)
+                {
+                    ApplicationArea = All;
+                    Editable = false;
+                }
+                field("Bank Branch"; Rec."Bank Branch")
+                {
+                    ApplicationArea = All;
+                    // TableRelation= BankBranch.BankCode where FILTER('');
+                    // trigger OnLookup(var Text: Text): Boolean
+                    // begin
+                    //     // Message('lookup');
+                    // end;
+                    Editable = true;
+                    DrillDownPageId = "Bank Branch List";
+                    trigger OnDrillDown()
+                    var
+                        _bbranch: Record BankBranch;
+                    begin
+                        _bbranch.SetRange(BankCode, Rec."Bank Code");
+                        if Page.RunModal(Page::"Bank Branch List", _bbranch) = Action::LookupOK then begin
+                            // Branch selected, set the branch record to the selected branch
+                            Rec."Bank Branch" := _bbranch.BranchCode;
+                            BBranchName := _bbranch.BranchName;
+                            CurrPage.Update();
+                        end;
+
+                    end;
+
+                }
+                field("Bank Branch Name"; BBranchName)
+                {
+                    ApplicationArea = All;
+                    Editable = false;
+                }
+                field("Bank Account Number"; Rec."Bank Account Number")
                 {
                     ApplicationArea = All;
                 }
@@ -125,10 +183,10 @@ page 50233 "Funder Card"
                 {
                     ApplicationArea = All;
                 }
-                field("Payment Terms"; Rec."Payment Terms")
-                {
-                    ApplicationArea = All;
-                }
+                // field("Payment Terms"; Rec."Payment Terms")
+                // {
+                //     ApplicationArea = All;
+                // }
 
             }
             group("Other Details")
@@ -289,6 +347,31 @@ page 50233 "Funder Card"
 
     }
 
+    trigger OnAfterGetRecord()
+    begin
+        DimensionValue.Reset();
+        DimensionValue.SetRange(DimensionValue."Dimension Code", 'BRANCH');
+        DimensionValue.SetRange(DimensionValue.Code, Rec."Shortcut Dimension 1 Code");
+        if DimensionValue.Find('-') then
+            BranchName := DimensionValue.Name;
+
+        Banks.Reset();
+        Banks.SetRange(Banks.BankCode, Rec."Bank Code");
+        if Banks.Find('-') then
+            BankName := Banks.Name;
+
+        BankBranch.Reset();
+        BankBranch.SetRange(BranchCode, Rec."Bank Branch");
+        if BankBranch.Find('-') then
+            BBranchName := BankBranch.BranchName;
+    end;
+
     var
         myInt: Integer;
+        BranchName: Code[20];
+        BankName: Text[50];
+        BBranchName: Text[50];
+        DimensionValue: Record "Dimension Value";
+        Banks: Record Banks;
+        BankBranch: Record BankBranch;
 }

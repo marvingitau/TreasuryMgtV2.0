@@ -36,16 +36,32 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                     ShowMandatory = true;
+                    trigger OnValidate()
+                    begin
+                        if (Rec.PlacementDate <> 0D) and (Rec.MaturityDate <> 0D) then begin
+                            PlacementAndMaturityDifference := (Rec.MaturityDate - Rec.PlacementDate) + 1;
+                            Message('Loan Duration is %1', Format(PlacementAndMaturityDifference));
+                        end;
+                    end;
                 }
                 field(MaturityDate; Rec.MaturityDate)
                 {
                     ApplicationArea = All;
+                    trigger OnValidate()
+                    begin
+                        if (Rec.PlacementDate <> 0D) and (Rec.MaturityDate <> 0D) then begin
+
+                            PlacementAndMaturityDifference := (Rec.MaturityDate - Rec.PlacementDate) + 1;
+                            Message('Loan Duration is %1', Format(PlacementAndMaturityDifference));
+                        end;
+                    end;
                 }
-                // field("Shortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
-                // {
-                //     ApplicationArea = All;
-                //     ShowMandatory = true;
-                // }
+                field("Loan Duration"; PlacementAndMaturityDifference)
+                {
+                    ApplicationArea = All;
+                    Editable = false;
+                    Caption = 'Loan Duration (Days)';
+                }
                 field(FundSource; Rec.FundSource)
                 {
 
@@ -61,7 +77,7 @@ page 50236 "Funder Loan Card"
                     // Editable = false;
                     // Visible = isCurrencyVisible;
                     // ShowMandatory = isCurrencyVisible;
-                    ShowMandatory = true;
+                    // ShowMandatory = true;
                 }
                 field("Posting Group"; Rec."Posting Group")
                 {
@@ -89,11 +105,16 @@ page 50236 "Funder Loan Card"
                     ApplicationArea = All;
                     Caption = 'Outstanding Amount';
                 }
-                field(InterestRate; Rec.InterestRate)
+                field("Outstanding Interest"; Rec."Outstanding Interest")
                 {
+                    // ApplicationArea = Basic, Suite;
+                    // Importance = Promoted;
+                    DrillDown = true;
+                    DrillDownPageId = FunderLedgerEntry;
                     ApplicationArea = All;
-                    ShowMandatory = true;
+                    Caption = 'Outstanding Interest';
                 }
+
                 field(InterestMethod; Rec.InterestMethod)
                 {
                     ApplicationArea = All;
@@ -103,7 +124,39 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                     ShowMandatory = true;
+                    trigger OnValidate()
+                    begin
+                        if Rec.InterestRateType = Rec.InterestRateType::"Floating Rate" then
+                            isFloatRate := true
+                        else
+                            isFloatRate := false;
+                        CurrPage.Update();
+                    end;
                 }
+                field(InterestRate; Rec.InterestRate)
+                {
+                    ApplicationArea = All;
+                    ShowMandatory = true;
+                    Editable = not isFloatRate;
+                }
+                group(FloatInterestFields)
+                {
+                    Caption = 'Float Rate Related Fields';
+                    ShowCaption = true;
+                    field("Reference Rate"; Rec."Reference Rate")
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                        Editable = isFloatRate;
+                    }
+                    field(Margin; Rec.Margin)
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                        Editable = isFloatRate;
+                    }
+                }
+
                 // field(InterestRepaymentHz; Rec.InterestRepaymentHz)
                 // {
                 //     ApplicationArea = All;
@@ -153,17 +206,48 @@ page 50236 "Funder Loan Card"
                     ApplicationArea = All;
                 }
 
-                field(sTenor; Rec.StartTenor)
-                {
-                    ApplicationArea = All;
-                }
-                field(eTenor; Rec.EndTenor)
-                {
-                    ApplicationArea = All;
-                }
+                // field(sTenor; Rec.StartTenor)
+                // {
+                //     ApplicationArea = All;
+                // }
+                // field(eTenor; Rec.EndTenor)
+                // {
+                //     ApplicationArea = All;
+                // }
                 field(SecurityType; Rec.SecurityType)
                 {
                     ApplicationArea = All;
+                    trigger OnValidate()
+                    begin
+                        if Rec.SecurityType = Rec.SecurityType::"Senior secured" then begin
+                            isSecureLoanActive := true;
+                            isUnsecureLoanActive := false;
+                        end
+                        else begin
+                            isUnsecureLoanActive := true;
+                            isSecureLoanActive := false;
+                        end;
+                        CurrPage.Update();
+                    end;
+                }
+                field("Secured Loan"; Rec."Secured Loan")
+                {
+                    ApplicationArea = All;
+                    Editable = isSecureLoanActive;
+
+                }
+                field("Secured Loan Other"; Rec."Secured Loan Other")
+                {
+                    ApplicationArea = All;
+                    Editable = isSecureLoanActive;
+                    Caption = 'Secure Loan Other Option';
+
+                }
+                field("UnSecured Loan"; Rec."UnSecured Loan")
+                {
+                    ApplicationArea = All;
+                    Editable = isUnsecureLoanActive;
+
                 }
 
                 field(FormofSec; Rec.FormofSec)
@@ -177,9 +261,27 @@ page 50236 "Funder Loan Card"
                 field(Status; Rec.Status)
                 {
                     ApplicationArea = All;
-                    Editable = false;
+                    // Editable = false;
                 }
             }
+        }
+        area(FactBoxes)
+        {
+            part("Attached Documents"; "Document Attachment Factbox")
+            {
+                ApplicationArea = All;
+                Caption = 'Attachments';
+                SubPageLink = "Table ID" = CONST(50232),
+                              "No." = FIELD("No.");
+            }
+            // systempart(FunderLinks; Links)
+            // {
+            //     ApplicationArea = RecordLinks;
+            // }
+            // systempart(FunderNotes; Notes)
+            // {
+            //     ApplicationArea = Notes;
+            // }
         }
     }
 
@@ -191,6 +293,25 @@ page 50236 "Funder Loan Card"
             {
                 Caption = 'Process Funder Loan';
                 Image = Interaction;
+                action("Funder Ledger Entry")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Funder Ledger';
+                    Image = LedgerEntries;
+                    PromotedCategory = Process;
+                    Promoted = true;
+                    // RunObject = Page "Funder Loans List";
+                    //RunPageLink = "Funder No." = FIELD("No.");
+                    trigger OnAction()
+                    var
+                        funderLedgerEntry: Record FunderLedgerEntry;
+                    begin
+                        funderLedgerEntry.SETRANGE(funderLedgerEntry."Loan No.", Rec."No.");
+                        funderLedgerEntry.SetFilter(funderLedgerEntry."Document Type", '<>%1', funderLedgerEntry."Document Type"::"Remaining Amount");
+                        PAGE.RUN(PAGE::FunderLedgerEntry, funderLedgerEntry);
+
+                    end;
+                }
                 action("Compute Interest")
                 {
                     ApplicationArea = Basic, Suite;
@@ -334,6 +455,29 @@ page 50236 "Funder Loan Card"
                     end;
                 }
             }
+
+            group(Documents)
+            {
+                action("attachment")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Attachments';
+                    Image = Attach;
+                    ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    // Promoted = true;
+                    // PromotedCategory = Report;
+                    // PromotedIsBig = true;
+                    trigger OnAction()
+                    var
+                        DocumentAttachmentDetails: Page "Document Attachment Details";
+                        RecRef: RecordRef;
+                    begin
+                        RecRef.GetTable(Rec);
+                        DocumentAttachmentDetails.OpenForRecRef(RecRef);
+                        DocumentAttachmentDetails.RunModal();
+                    end;
+                }
+            }
         }
     }
 
@@ -341,6 +485,9 @@ page 50236 "Funder Loan Card"
     trigger OnInit()
     begin
         isCurrencyVisible := true;
+        isSecureLoanActive := false;
+        isUnsecureLoanActive := true;
+        isFloatRate := false;
     end;
 
     trigger OnOpenPage()
@@ -353,6 +500,11 @@ page 50236 "Funder Loan Card"
                     isCurrencyVisible := false;
             end;
         end;
+        if Rec.InterestRateType = Rec.InterestRateType::"Floating Rate" then
+            isFloatRate := true
+        else
+            isFloatRate := false;
+        //  Rec."Document Number" := TrsyMgt.GenerateDocumentNumber();
     end;
 
     trigger OnInsertRecord(BelowxRec: Boolean): Boolean
@@ -385,12 +537,17 @@ page 50236 "Funder Loan Card"
         GenSetup: Record "General Setup";
         NoSer: Codeunit "No. Series";
         GlobalFilters: Codeunit GlobalFilters;
-        isCurrencyVisible: Boolean;
+        isCurrencyVisible, isSecureLoanActive, isUnsecureLoanActive, isFloatRate : Boolean;
         _funderNo: Text[30];
         FunderTbl: Record Funders;
 
         OpenApprovalEntriesExistCurrUser, OpenApprovalEntriesExist, CanCancelApprovalForRecord
         , HasApprovalEntries : Boolean;
         ApprovalsMgmt: Codeunit "Approvals Mgmt.";
+        PlacementAndMaturityDifference: Integer;
 
+    protected var
+
+    // _docNo: Code[20];
+    // TrsyMgt: Codeunit "Treasury Mgt CU";
 }

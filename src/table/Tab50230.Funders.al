@@ -149,6 +149,17 @@ table 50230 Funders
             TableRelation = "Dimension Value".Code WHERE("Global Dimension No." = CONST(1), "Dimension Value Type" = CONST(Standard), Blocked = CONST(false));
 
         }
+
+        field(700; "Bank Code"; Code[200])
+        {
+            DataClassification = ToBeClassified;
+            TableRelation = Banks.BankCode;
+        }
+        field(701; "Bank Branch"; Code[200])
+        {
+            DataClassification = ToBeClassified;
+            // TableRelation = BankBranch.BankCode;
+        }
     }
 
     keys
@@ -167,6 +178,7 @@ table 50230 Funders
     var
         NoSer: Codeunit "No. Series";
         GenSetup: Record "General Setup";
+        DimensionValue: Record "Dimension Value";
 
     trigger OnInsert()
     begin
@@ -175,6 +187,11 @@ table 50230 Funders
         if "No." = '' then
             "No." := NoSer.GetNextNo(GenSetup."Funder No.", 0D, true);
 
+        DimensionValue.Reset();
+        DimensionValue.SetRange(DimensionValue."Dimension Code", 'BRANCH');
+        // DimensionValue.SetRange(DimensionValue.Code, Rec."Shortcut Dimension 1 Code");
+        if DimensionValue.FindFirst() then
+            "Shortcut Dimension 1 Code" := DimensionValue.Name;
     end;
 
     trigger OnModify()

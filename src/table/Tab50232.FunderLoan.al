@@ -72,7 +72,7 @@ table 50232 "Funder Loan"
         field(504; "OutstandingAmntDisbLCY"; Decimal)
         {
             AutoFormatType = 1;
-            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest | 'Original Amount' | Repayment | 'Interest Paid')));
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest | 'Original Amount' | Repayment | 'Interest Paid' | Withholding)));
             Caption = 'Outstanding Amount';
             DecimalPlaces = 0 : 2;
             Editable = false;
@@ -119,7 +119,7 @@ table 50232 "Funder Loan"
         }
         field(512; "NetInterestamount"; Decimal)
         {
-            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter('Interest' | 'Interest Paid')));
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter('Interest' | 'Interest Paid' | Withholding)));
             Caption = 'Net Interest amount';
             DecimalPlaces = 0 : 2;
             Editable = false;
@@ -225,6 +225,14 @@ table 50232 "Funder Loan"
                     end else begin
                         Error('Please set the default Foreign Posting Group');
                     end;
+                end else begin
+                    vPostingGroup.Reset();
+                    vPostingGroup.SetRange(vPostingGroup."Treasury Enabled (Local)", true);
+                    if vPostingGroup.Find('-') then begin
+                        "Posting Group" := vPostingGroup.Code;
+                    end else begin
+                        Error('Please set the default Local Posting Group');
+                    end;
                 end;
 
             end;
@@ -256,19 +264,22 @@ table 50232 "Funder Loan"
                 principleAcc: Code[20];
                 interestAcc: Code[20];
                 ReversalEntry: Record "Reversal Entry";
+                _docNo: Code[20];
+                TrsyMgt: Codeunit "Treasury Mgt CU";
 
             begin
+                _docNo := TrsyMgt.GenerateDocumentNumber();
                 //Get Posting groups
                 if not venPostingGroup.Get("Posting Group") then
                     Error('Missing Posting Group: %1', "No.");
                 if FundSource = '' then
-                    Error('Funder Entry Must have a value', FundSource);
+                    Error('Funder Entry (Bank) Must have a value', FundSource);
                 principleAcc := venPostingGroup."Payables Account";
                 interestAcc := venPostingGroup."Interest Expense";
 
                 funderLegderEntry.Reset();
                 funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Original Amount");
-                funderLegderEntry.SetRange(funderLegderEntry."Funder No.", "No.");
+                funderLegderEntry.SetRange(funderLegderEntry."Loan No.", "No.");
                 if funderLegderEntry.Find('-') then begin
                     funderLegderEntry."Modification Date" := Today;
                     funderLegderEntry."Modification User" := UserId;
@@ -294,27 +305,69 @@ table 50232 "Funder Loan"
                         NextEntryNo := 1;
                     funderLegderEntry.Init();
                     funderLegderEntry."Entry No." := NextEntryNo;
-                    funderLegderEntry."Funder No." := "No.";
+                    funderLegderEntry."Funder No." := "Funder No.";
                     funderLegderEntry."Funder Name" := Name;
+                    funderLegderEntry."Loan No." := "No.";
+                    funderLegderEntry."Loan Name" := "Loan Name";
                     funderLegderEntry."Posting Date" := Today;
                     funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::"Original Amount";
-                    funderLegderEntry."Document No." := "No." + '_Auto_' + Format(Today);
+                    funderLegderEntry."Document No." := _docNo;
                     // funderLegderEntry."Transaction Type" := funderLegderEntry."Transaction Type"::"Original Amount";
                     funderLegderEntry.Description := 'Original Amount' + Format(Today);
-                    funderLegderEntry.Amount := DisbursedCurrency;
-                    funderLegderEntry."Amount(LCY)" := DisbursedCurrency;
-                    funderLegderEntry."Remaining Amount" := DisbursedCurrency;
+                    funderLegderEntry."Currency Code" := Currency;
+                    funderLegderEntry.Amount := "Original Disbursed Amount";
+                    funderLegderEntry."Amount(LCY)" := "Original Disbursed Amount";
+                    funderLegderEntry."Remaining Amount" := "Original Disbursed Amount";
                     funderLegderEntry.Insert();
                     Commit();
-                    FunderMgt.DirectGLPosting('init', principleAcc, DisbursedCurrency, 'Original Amount', "No.", FundSource)
+                    FunderMgt.DirectGLPosting('init', principleAcc, "Original Disbursed Amount", 'Original Amount', "No.", FundSource, Currency, "Posting Group", _docNo)
                 end;
 
             end;
 
         }
-        field(630; "Original Disbursed Amount(LCY)"; Decimal)
+        // field(630; "Original Disbursed Amount(LCY)"; Decimal)
+        // {
+        //     DataClassification = ToBeClassified;
+        // }
+        field(630; "Document Number"; Code[20])
         {
             DataClassification = ToBeClassified;
+        }
+
+        field(730; "Secured Loan"; Option)
+        {
+            DataClassification = ToBeClassified;
+            OptionMembers = "Debenture","Parent Guarantee","Personal/Director Guarantee";
+        }
+        field(731; "Secured Loan Other"; Option)
+        {
+            DataClassification = ToBeClassified;
+            OptionMembers = "Debenture","Parent Guarantee","Personal/Director Guarantee";
+
+        }
+        field(830; "UnSecured Loan"; Option)
+        {
+            DataClassification = ToBeClassified;
+            OptionMembers = "Parent Guarantee","Unsecured";
+        }
+        //FLOATS
+        field(930; "Reference Rate"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(932; Margin; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(934; "Outstanding Interest"; Decimal)
+        {
+            AutoFormatType = 1;
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest)));
+            Caption = 'Outstanding Interest';
+            DecimalPlaces = 0 : 2;
+            Editable = false;
+            FieldClass = FlowField;
         }
 
     }
