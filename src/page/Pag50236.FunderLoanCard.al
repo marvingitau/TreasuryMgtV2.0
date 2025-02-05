@@ -178,10 +178,18 @@ page 50236 "Funder Loan Card"
                     ApplicationArea = Basic, Suite;
                     Caption = 'Net Interest';
                 }
-                // field(PortfolioFund; Rec.PortfolioFund)
-                // {
-                //     ApplicationArea = All;
-                // }
+                field(PeriodicPaymentOfInterest; Rec.PeriodicPaymentOfInterest)
+                {
+                    Caption = '*Payment Period (Interest) ';
+                    ApplicationArea = All;
+
+                }
+                field(PeriodicPaymentOfPrincipal; Rec.PeriodicPaymentOfPrincipal)
+                {
+                    Caption = '*Payment Period (Principal) ';
+                    ApplicationArea = All;
+
+                }
 
                 field(TaxStatus; Rec.TaxStatus)
                 {
@@ -456,6 +464,31 @@ page 50236 "Funder Loan Card"
                 }
             }
 
+            group(Reports)
+            {
+                action("Amortized Interest")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Amortized Interest';
+                    Image = Report2;
+                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
+                    RunObject = report "Interest Amortization";
+                    trigger OnAction()
+                    var
+                        _funderLoan: Record "Funder Loan";
+                    begin
+                        _funderLoan.Reset();
+                        _funderLoan.SetRange("No.", Rec."No.");
+                        // Report.Run(50230, true, false, _funderLoan);
+                    end;
+
+
+
+                }
+            }
             group(Documents)
             {
                 action("attachment")
@@ -505,6 +538,16 @@ page 50236 "Funder Loan Card"
         else
             isFloatRate := false;
         //  Rec."Document Number" := TrsyMgt.GenerateDocumentNumber();
+        if Rec.SecurityType = Rec.SecurityType::"Senior secured" then begin
+            isSecureLoanActive := true;
+            isUnsecureLoanActive := false;
+
+        end;
+
+        if Rec.SecurityType = Rec.SecurityType::"Senior Unsecured" then begin
+            isUnsecureLoanActive := true;
+            isSecureLoanActive := false;
+        end;
     end;
 
     trigger OnInsertRecord(BelowxRec: Boolean): Boolean

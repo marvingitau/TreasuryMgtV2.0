@@ -26,5 +26,9 @@ enum 50238 TreasuryTransactionDocType
     {
         Caption = 'Interest Paid';
     }
+    value(6; "Capitalized Interest")
+    {
+        Caption = 'Capitalized Interest';
+    }
 
 }

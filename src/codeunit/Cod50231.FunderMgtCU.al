@@ -22,7 +22,9 @@ codeunit 50231 FunderMgtCU
         remainingDays: Integer;
         endYearDate: Date;
 
-
+        _interestRate_Active: Decimal;
+        _principle: Decimal;
+        _funderLoan: Record "Funder Loan";
     begin
         //Interest Rate Type (Fixed/Float)
         //Interest Rate value
@@ -47,14 +49,29 @@ codeunit 50231 FunderMgtCU
 
                     //Monthly interest depending on Interest Method
                     monthlyInterest := 0;
+                    _interestRate_Active := 0;
+                    if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                        _interestRate_Active := funderLoan.InterestRate;
+                    if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
+                        _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
+
+                    if _interestRate_Active = 0 then
+                        Error('Interest Rate is Zero');
+
+                    _principle := 0;
+                    // _funderLoan.Reset();
+                    // _funderLoan.SetRange("No.");
+                    funderLoan.CalcFields(OrigAmntDisbLCY);
+                    _principle := funderLoan.OrigAmntDisbLCY;
+
                     if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
-                        monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (30 / 360);
+                        monthlyInterest := ((_interestRate_Active / 100) * funderLoan.DisbursedCurrency) * (30 / 360);
                     end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/360" then begin
-                        monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 360);
+                        monthlyInterest := ((_interestRate_Active / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 360);
                     end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/364" then begin
-                        monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 364);
+                        monthlyInterest := ((_interestRate_Active / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 364);
                     end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/365" then begin
-                        monthlyInterest := ((funderLoan.InterestRate / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 365);
+                        monthlyInterest := ((_interestRate_Active / 100) * funderLoan.DisbursedCurrency) * (remainingDays / 365);
                     end;
 
                     //withholding on interest
@@ -170,6 +187,7 @@ codeunit 50231 FunderMgtCU
         _totalWithdrawalAmount: Decimal;
         _differenceOriginalWithdrawal: Decimal;
 
+        _interestRate_Active: Decimal;
     begin
         //Interest Rate Type (Fixed/Float)
         //Interest Rate value
@@ -216,14 +234,21 @@ codeunit 50231 FunderMgtCU
 
                 //Monthly interest depending on Interest Method
                 monthlyInterest := 0;
+                _interestRate_Active := 0;
+                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                    _interestRate_Active := funderLoan.InterestRate;
+                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
+                    _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
+                if _interestRate_Active = 0 then
+                    Error('Interest Rate is Zero');
                 if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
-                    monthlyInterest := ((funderLoan.InterestRate / 100) * _differenceOriginalWithdrawal) * (30 / 360);
+                    monthlyInterest := ((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (30 / 360);
                 end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/360" then begin
-                    monthlyInterest := ((funderLoan.InterestRate / 100) * _differenceOriginalWithdrawal) * (remainingDays / 360);
+                    monthlyInterest := ((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 360);
                 end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/364" then begin
-                    monthlyInterest := ((funderLoan.InterestRate / 100) * _differenceOriginalWithdrawal) * (remainingDays / 364);
+                    monthlyInterest := ((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 364);
                 end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/365" then begin
-                    monthlyInterest := ((funderLoan.InterestRate / 100) * _differenceOriginalWithdrawal) * (remainingDays / 365);
+                    monthlyInterest := ((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 365);
                 end;
 
                 //withholding on interest

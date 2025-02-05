@@ -94,6 +94,7 @@ table 50232 "Funder Loan"
             DataClassification = ToBeClassified;
             Caption = 'Interest repayment frequency';
         }
+
         // field(508; "PortfolioFund"; Decimal)
         // {
         //     DataClassification = ToBeClassified;
@@ -363,8 +364,31 @@ table 50232 "Funder Loan"
         field(934; "Outstanding Interest"; Decimal)
         {
             AutoFormatType = 1;
-            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest)));
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter('Original Amount' | Repayment)));
             Caption = 'Outstanding Interest';
+            DecimalPlaces = 0 : 2;
+            Editable = false;
+            FieldClass = FlowField;
+        }
+
+        field(940; PeriodicPaymentOfInterest; Option)
+        {
+            DataClassification = ToBeClassified;
+            OptionMembers = "Monthly","Quarterly","Biannually","Annually";
+        }
+        field(941; PeriodicPaymentOfPrincipal; Option)
+        {
+            DataClassification = ToBeClassified;
+            OptionMembers = "Monthly","Quarterly","Biannually","Annually","Total at Due Date";
+        }
+
+        field(1000; "OriginalPlusAccrued"; Decimal)
+        {
+            // DataClassification = ToBeClassified;
+            // Caption = 'Original Amount in disbursed';
+            AutoFormatType = 1;
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter('Original Amount' | Interest)));
+            Caption = 'Original Amount + Accrued Intrest';
             DecimalPlaces = 0 : 2;
             Editable = false;
             FieldClass = FlowField;
