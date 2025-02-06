@@ -61,11 +61,11 @@ page 50237 FunderLedgerEntry
                     ApplicationArea = All;
                     Caption = 'Amount';
                 }
-                // field("Amount(LCY)"; Rec."Amount(LCY)")
-                // {
-                //     ApplicationArea = All;
-                //     Caption = 'Amount(LCY)';
-                // }
+                field("Amount(LCY)"; Rec."Amount(LCY)")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Amount(LCY)';
+                }
                 // field("Remain Amount"; Rec."Remaining Amount")
                 // {
                 //     ApplicationArea = All;

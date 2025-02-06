@@ -188,6 +188,7 @@ codeunit 50231 FunderMgtCU
         _differenceOriginalWithdrawal: Decimal;
 
         _interestRate_Active: Decimal;
+        _currentPrincipalAmnt: Decimal;
     begin
         //Interest Rate Type (Fixed/Float)
         //Interest Rate value
@@ -202,6 +203,8 @@ codeunit 50231 FunderMgtCU
         if funderLoan.Find('-') then begin
             _loanName := funderLoan."Loan Name";
             _loanNo := funderLoan."No.";
+            funderLoan.CalcFields(OutstandingAmntDisbLCY);
+            _currentPrincipalAmnt := funderLoan.OutstandingAmntDisbLCY;
             if not funder.Get(funderLoan."Funder No.") then
                 Error('Funder %1 not found', funderLoan."Funder No.");
             // repeat
@@ -241,6 +244,8 @@ codeunit 50231 FunderMgtCU
                     _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
                 if _interestRate_Active = 0 then
                     Error('Interest Rate is Zero');
+
+                _differenceOriginalWithdrawal := _currentPrincipalAmnt;
                 if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
                     monthlyInterest := ((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (30 / 360);
                 end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/360" then begin
@@ -369,6 +374,8 @@ codeunit 50231 FunderMgtCU
         witHldInterest: Decimal;
         venPostingGroup: Record "Vendor Posting Group";
         funderLoan: Record "Funder Loan";
+
+        _ConvertedCurrency: Decimal;
     begin
         JournalEntry.LockTable();
         if JournalEntry.FindLast() then
@@ -412,7 +419,10 @@ codeunit 50231 FunderMgtCU
         if not generalSetup.FindFirst() then
             Error('Please Define Withholding Tax under General Setup');
         withholdingAcc := generalSetup.FunderWithholdingAcc;
-
+        if Currency <> '' then
+            _ConvertedCurrency := ConvertCurrencyAmount(Currency, Amount)
+        else
+            _ConvertedCurrency := Amount;
         JournalEntry.Init();
         JournalEntry."Journal Template Name" := 'GENERAL';
         JournalEntry."Journal Batch Name" := 'TREASURY';
@@ -431,21 +441,24 @@ codeunit 50231 FunderMgtCU
         if Origin = 'init' then begin  //*
             JournalEntry."Account Type" := JournalEntry."Account Type"::"Bank Account";
             JournalEntry."Account No." := BankAc;
-            JournalEntry.amount := Round(Amount, 0.01, '=');
+            JournalEntry.Amount := Round(Amount, 0.01, '=');
+            JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
             JournalEntry."Bal. Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Bal. Account No." := GLAcc;
         end;
         if Origin = 'interest' then begin
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Account No." := GLAcc;
-            JournalEntry.amount := Round(Amount, 0.01, '=');
+            JournalEntry.Amount := Round(Amount, 0.01, '=');
+            JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
             JournalEntry."Bal. Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Bal. Account No." := BankAc;//interestAccPayable
         end;
         if Origin = 'withholding' then begin
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Account No." := GLAcc;
-            JournalEntry.amount := Round(Amount, 0.01, '=');
+            JournalEntry.Amount := Round(Amount, 0.01, '=');
+            JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
             JournalEntry."Bal. Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Bal. Account No." := BankAc;//interestAccPayable
         end;
@@ -477,6 +490,46 @@ codeunit 50231 FunderMgtCU
         // // Insert the G/L Entry
         // GLEntry.Insert();
     end;
+
+    procedure ConvertCurrencyAmount(var CurrencyCode: Code[10]; var Amount: Decimal): Decimal
+    var
+        Currency: Record "Currency";
+        CurrencyExchangeRate: Record "Currency Exchange Rate";
+        ExchangeRate: Decimal;
+        NewAmount: Decimal;
+        MaxDate: Date;
+    begin
+        if CurrencyCode <> '' then begin
+            if Currency.Get(CurrencyCode) then begin
+                // Try to get today's exchange rate
+                if CurrencyExchangeRate.Get(CurrencyCode, Today) then begin
+                    ExchangeRate := CurrencyExchangeRate."Exchange Rate Amount" / CurrencyExchangeRate."Relational Exch. Rate Amount";
+                end else begin
+                    // Find the latest available exchange rate
+                    CurrencyExchangeRate.SetCurrentKey("Currency Code", "Starting Date");
+                    CurrencyExchangeRate.SetRange("Currency Code", CurrencyCode);
+                    if CurrencyExchangeRate.FindLast then begin
+                        MaxDate := CurrencyExchangeRate."Starting Date";
+                        if CurrencyExchangeRate.Get(CurrencyCode, MaxDate) then begin
+                            ExchangeRate := CurrencyExchangeRate."Exchange Rate Amount" / CurrencyExchangeRate."Relational Exch. Rate Amount";
+                        end else
+                            Error('Exchange rate not found for currency %1 on the latest date', CurrencyCode);
+                    end else
+                        Error('Exchange rate not found for currency %1', CurrencyCode);
+                end;
+
+                if ExchangeRate <> 0 then begin
+                    // Convert the amount to the new currency
+                    NewAmount := Amount * (1 / ExchangeRate);
+                    exit(NewAmount);
+                end else
+                    Error('Exchange rate is zero for currency %1', CurrencyCode);
+            end else
+                Error('Currency not found for code %1', CurrencyCode);
+        end else
+            Error('Currency code is empty');
+    end;
+
 
     var
         myGlobalCounter: Integer;

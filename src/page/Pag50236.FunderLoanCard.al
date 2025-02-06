@@ -488,6 +488,28 @@ page 50236 "Funder Loan Card"
 
 
                 }
+                action("Amortized Payment")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Amortized Payment';
+                    Image = Report;
+                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
+                    RunObject = report "Payment Amortization";
+                    trigger OnAction()
+                    var
+                        _funderLoan: Record "Funder Loan";
+                    begin
+                        _funderLoan.Reset();
+                        _funderLoan.SetRange("No.", Rec."No.");
+                        // Report.Run(50230, true, false, _funderLoan);
+                    end;
+
+
+
+                }
             }
             group(Documents)
             {

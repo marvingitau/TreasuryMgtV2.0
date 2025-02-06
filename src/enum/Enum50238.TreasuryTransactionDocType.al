@@ -30,5 +30,9 @@ enum 50238 TreasuryTransactionDocType
     {
         Caption = 'Capitalized Interest';
     }
+    value(7; "Secondary Amount")
+    {
+        Caption = 'Secondary Amount';
+    }
 
 }

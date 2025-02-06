@@ -72,7 +72,7 @@ table 50232 "Funder Loan"
         field(504; "OutstandingAmntDisbLCY"; Decimal)
         {
             AutoFormatType = 1;
-            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest | 'Original Amount' | Repayment | 'Interest Paid' | Withholding)));
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest | 'Original Amount' | Repayment | 'Interest Paid' | Withholding | "Secondary Amount")));
             Caption = 'Outstanding Amount';
             DecimalPlaces = 0 : 2;
             Editable = false;
@@ -120,7 +120,7 @@ table 50232 "Funder Loan"
         }
         field(512; "NetInterestamount"; Decimal)
         {
-            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter('Interest' | 'Interest Paid' | Withholding)));
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter('Interest' | 'Interest Paid' | Withholding | "Capitalized Interest")));
             Caption = 'Net Interest amount';
             DecimalPlaces = 0 : 2;
             Editable = false;
@@ -267,7 +267,7 @@ table 50232 "Funder Loan"
                 ReversalEntry: Record "Reversal Entry";
                 _docNo: Code[20];
                 TrsyMgt: Codeunit "Treasury Mgt CU";
-
+                _ConvertedCurrency: Decimal;
             begin
                 _docNo := TrsyMgt.GenerateDocumentNumber();
                 //Get Posting groups
@@ -278,6 +278,11 @@ table 50232 "Funder Loan"
                 principleAcc := venPostingGroup."Payables Account";
                 interestAcc := venPostingGroup."Interest Expense";
 
+                if Currency <> '' then
+                    _ConvertedCurrency := FunderMgt.ConvertCurrencyAmount(Currency, "Original Disbursed Amount")
+                else
+                    _ConvertedCurrency := "Original Disbursed Amount";
+
                 funderLegderEntry.Reset();
                 funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Original Amount");
                 funderLegderEntry.SetRange(funderLegderEntry."Loan No.", "No.");
@@ -285,7 +290,7 @@ table 50232 "Funder Loan"
                     funderLegderEntry."Modification Date" := Today;
                     funderLegderEntry."Modification User" := UserId;
                     funderLegderEntry.Amount := DisbursedCurrency;
-                    funderLegderEntry."Amount(LCY)" := DisbursedCurrency;
+                    funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
                     funderLegderEntry."Remaining Amount" := DisbursedCurrency;
                     funderLegderEntry.Modify();
 
@@ -317,7 +322,7 @@ table 50232 "Funder Loan"
                     funderLegderEntry.Description := 'Original Amount' + Format(Today);
                     funderLegderEntry."Currency Code" := Currency;
                     funderLegderEntry.Amount := "Original Disbursed Amount";
-                    funderLegderEntry."Amount(LCY)" := "Original Disbursed Amount";
+                    funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
                     funderLegderEntry."Remaining Amount" := "Original Disbursed Amount";
                     funderLegderEntry.Insert();
                     Commit();
@@ -364,7 +369,7 @@ table 50232 "Funder Loan"
         field(934; "Outstanding Interest"; Decimal)
         {
             AutoFormatType = 1;
-            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter('Original Amount' | Repayment)));
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest | "Capitalized Interest" | "Interest Paid")));
             Caption = 'Outstanding Interest';
             DecimalPlaces = 0 : 2;
             Editable = false;
@@ -379,7 +384,8 @@ table 50232 "Funder Loan"
         field(941; PeriodicPaymentOfPrincipal; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = "Monthly","Quarterly","Biannually","Annually","Total at Due Date";
+            OptionMembers = "Monthly","Quarterly","Biannually","Annually";
+            //"Total at Due Date"
         }
 
         field(1000; "OriginalPlusAccrued"; Decimal)
@@ -449,5 +455,44 @@ table 50232 "Funder Loan"
     begin
 
     end;
+
+    // procedure ConvertCurrencyAmount(var CurrencyCode: Code[10]; var Amount: Decimal): Decimal
+    // var
+    //     Currency: Record "Currency";
+    //     CurrencyExchangeRate: Record "Currency Exchange Rate";
+    //     ExchangeRate: Decimal;
+    //     NewAmount: Decimal;
+    //     MaxDate: Date;
+    // begin
+    //     if CurrencyCode <> '' then begin
+    //         if Currency.Get(CurrencyCode) then begin
+    //             // Try to get today's exchange rate
+    //             if CurrencyExchangeRate.Get(CurrencyCode, Today) then begin
+    //                 ExchangeRate := CurrencyExchangeRate."Exchange Rate Amount" / CurrencyExchangeRate."Relational Exch. Rate Amount";
+    //             end else begin
+    //                 // Find the latest available exchange rate
+    //                 CurrencyExchangeRate.SetCurrentKey("Currency Code", "Starting Date");
+    //                 CurrencyExchangeRate.SetRange("Currency Code", CurrencyCode);
+    //                 if CurrencyExchangeRate.FindLast then begin
+    //                     MaxDate := CurrencyExchangeRate."Starting Date";
+    //                     if CurrencyExchangeRate.Get(CurrencyCode, MaxDate) then begin
+    //                         ExchangeRate := CurrencyExchangeRate."Exchange Rate Amount" / CurrencyExchangeRate."Relational Exch. Rate Amount";
+    //                     end else
+    //                         Error('Exchange rate not found for currency %1 on the latest date', CurrencyCode);
+    //                 end else
+    //                     Error('Exchange rate not found for currency %1', CurrencyCode);
+    //             end;
+
+    //             if ExchangeRate <> 0 then begin
+    //                 // Convert the amount to the new currency
+    //                 NewAmount := Amount * (1 / ExchangeRate);
+    //                 exit(NewAmount);
+    //             end else
+    //                 Error('Exchange rate is zero for currency %1', CurrencyCode);
+    //         end else
+    //             Error('Currency not found for code %1', CurrencyCode);
+    //     end else
+    //         Error('Currency code is empty');
+    // end;
 
 }

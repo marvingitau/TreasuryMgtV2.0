@@ -323,26 +323,53 @@ page 50233 "Funder Card"
         }
         area(Reporting)
         {
-
-            action("attachment")
+            group("Analysis and Docs")
             {
-                ApplicationArea = All;
-                Caption = 'Attachments';
-                Image = Attach;
-                ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
-                // Promoted = true;
-                // PromotedCategory = Report;
-                // PromotedIsBig = true;
-                trigger OnAction()
-                var
-                    DocumentAttachmentDetails: Page "Document Attachment Details";
-                    RecRef: RecordRef;
-                begin
-                    RecRef.GetTable(Rec);
-                    DocumentAttachmentDetails.OpenForRecRef(RecRef);
-                    DocumentAttachmentDetails.RunModal();
-                end;
+                action("ReEvaluateFX")
+                {
+                    ApplicationArea = All;
+                    Caption = 'ReEvaluateFX';
+                    Image = Report;
+                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
+                    RunObject = report ReEvaluateFX;
+
+                }
+                action("Capitalize Interest")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Capitalize Interest';
+                    Image = Report;
+                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
+                    RunObject = report "Capitalize Interest";
+
+                }
+                action("attachment")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Attachments';
+                    Image = Attach;
+                    ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    // Promoted = true;
+                    // PromotedCategory = Report;
+                    // PromotedIsBig = true;
+                    trigger OnAction()
+                    var
+                        DocumentAttachmentDetails: Page "Document Attachment Details";
+                        RecRef: RecordRef;
+                    begin
+                        RecRef.GetTable(Rec);
+                        DocumentAttachmentDetails.OpenForRecRef(RecRef);
+                        DocumentAttachmentDetails.RunModal();
+                    end;
+                }
             }
+
         }
 
     }

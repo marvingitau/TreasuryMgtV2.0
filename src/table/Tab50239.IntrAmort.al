@@ -30,6 +30,22 @@ table 50239 "Intr- Amort"
         {
             DataClassification = ToBeClassified;
         }
+        field(7; Amortization; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(8; TotalPayment; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(9; InterestRate; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(10; OutStandingAmt; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
     }
 
     keys

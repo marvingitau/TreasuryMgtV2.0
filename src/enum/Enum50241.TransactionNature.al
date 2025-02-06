@@ -16,6 +16,10 @@ enum 50241 TransactionNature
     value(4; "Repayment")
     {
     }
+    value(5; "Capitalized Interest")
+    {
+        Caption = 'Capitalized Interest';
+    }
 
 
 }

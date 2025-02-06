@@ -68,6 +68,8 @@ codeunit 50232 "Treasury Mgt CU"
         _loanName: Code[100];
         originalAmount: Decimal;
         _auxAmount: Decimal;
+
+        totalCapitalInterest: Decimal;
     begin
         JournalEntry.LockTable();
         if JournalEntry.FindLast() then
@@ -1028,48 +1030,557 @@ codeunit 50232 "Treasury Mgt CU"
 
         end;
 
+        TrsyJnl.Reset();
+        TrsyJnl.SetRange("Posting Date", 0D, Today);
+        TrsyJnl.SetRange(TrsyJnl."Transaction Nature", TrsyJnl."Transaction Nature"::"Capitalized Interest");
+        if TrsyJnl.Find('-') then begin
+            repeat
+                if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Funder then begin
+                    funderLoan.Reset();
+                    funderLoan.SetRange("No.", TrsyJnl."Bal. Account No.");
+                    if not funderLoan.Find('-') then// Get the Loan Details
+                        Error('Funder Loan = %1, dont exist.', TrsyJnl."Bal. Account No.");
+                    if funder.Get(funderLoan."Funder No.") then begin
 
-    end;
+                        //**********************************************
+                        //          Get Posting groups & Posting Accounts
+                        //**********************************************
+                        if not venPostingGroup.Get(funderLoan."Posting Group") then
+                            Error('Missing Posting Group: %1', funder."No.");
+                        interestAccExpense := venPostingGroup."Interest Expense";
+                        if interestAccExpense = '' then
+                            Error('Missing Posting Group - Interest Expense A/C: %1', funder."No.");
+                        interestAccPay := venPostingGroup."Interest Payable";
+                        if interestAccPay = '' then
+                            Error('Missing Posting Group - Interest Payable A/C: %1', funder."No.");
+                        principleAcc := venPostingGroup."Payables Account";
+                        if principleAcc = '' then
+                            Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                        if not generalSetup.FindFirst() then
+                            Error('Please Define Withholding Tax under General Setup');
+                        withholdingAcc := generalSetup.FunderWithholdingAcc;
+                        funderNo := funderLoan."Funder No.";
+                    end;
+                end;
+                if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Funder then begin
+                    funderLoan.Reset();
+                    funderLoan.SetRange("No.", TrsyJnl."Account No.");
+                    if not funderLoan.Find('-') then// Get the Loan Details
+                        Error('Funder Loan = %1, dont exist.', TrsyJnl."Account No.");
+                    _loanName := funderLoan.Name;
+                    _loanNo := funderLoan."No.";
+                    if funder.Get(funderLoan."Funder No.") then begin
 
-    procedure ConvertCurrencyAmount(var CurrencyCode: Code[10]; var Amount: Decimal): Decimal
-    var
-        Currency: Record "Currency";
-        CurrencyExchangeRate: Record "Currency Exchange Rate";
-        ExchangeRate: Decimal;
-        NewAmount: Decimal;
-        MaxDate: Date;
-    begin
-        if CurrencyCode <> '' then begin
-            if Currency.Get(CurrencyCode) then begin
-                // Try to get today's exchange rate
-                if CurrencyExchangeRate.Get(CurrencyCode, Today) then begin
-                    ExchangeRate := CurrencyExchangeRate."Exchange Rate Amount" / CurrencyExchangeRate."Relational Exch. Rate Amount";
+                        //**********************************************
+                        //          Get Posting groups & Posting Accounts
+                        //**********************************************
+                        if not venPostingGroup.Get(funderLoan."Posting Group") then
+                            Error('Missing Posting Group: %1', funder."No.");
+                        interestAccExpense := venPostingGroup."Interest Expense";
+                        if interestAccExpense = '' then
+                            Error('Missing Posting Group - Interest Expense A/C: %1', funder."No.");
+                        interestAccPay := venPostingGroup."Interest Payable";
+                        if interestAccPay = '' then
+                            Error('Missing Posting Group - Interest Payable A/C: %1', funder."No.");
+                        principleAcc := venPostingGroup."Payables Account";
+                        if principleAcc = '' then
+                            Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                        if not generalSetup.FindFirst() then
+                            Error('Please Define Withholding Tax under General Setup');
+                        withholdingAcc := generalSetup.FunderWithholdingAcc;
+                        funderNo := funderLoan."Funder No.";
+                    end;
+                end;
+                //Get Total Accrued Interest
+                funderLegderEntry2.Reset();
+                funderLegderEntry2.SetRange("Funder No.", funderNo);
+                funderLegderEntry2.SetRange(funderLegderEntry2."Document Type", funderLegderEntry2."Document Type"::Interest);
+                funderLegderEntry2.CalcSums(Amount);
+                totalAccruedInterest := funderLegderEntry2.Amount;
+
+                funderLegderEntry2.Reset();
+                funderLegderEntry2.SetRange("Funder No.", funderNo);
+                funderLegderEntry2.SetRange(funderLegderEntry2."Document Type", funderLegderEntry2."Document Type"::"Interest Paid");
+                funderLegderEntry2.CalcSums(Amount);
+                totalPaidInterest := Abs(funderLegderEntry2.Amount);
+
+                funderLegderEntry2.Reset();
+                funderLegderEntry2.SetRange("Funder No.", funderNo);
+                funderLegderEntry2.SetRange(funderLegderEntry2."Document Type", funderLegderEntry2."Document Type"::"Capitalized Interest");
+                funderLegderEntry2.CalcSums(Amount);
+                totalCapitalInterest := Abs(funderLegderEntry2.Amount);
+
+                differentAccrPaidInterest := totalAccruedInterest + totalPaidInterest + totalCapitalInterest; // Get the floating value
+                //Ensure Interest Paid does not negative Accrued Interest
+                if differentAccrPaidInterest > 0 then begin
+                    if differentAccrPaidInterest - Round(TrsyJnl.Amount, 0.01, '=') >= Round(TrsyJnl.Amount, 0.01, '=') then
+                        _amount := Round(TrsyJnl.Amount, 0.01, '=')
+                    else
+                        _amount := differentAccrPaidInterest
+
                 end else begin
-                    // Find the latest available exchange rate
-                    CurrencyExchangeRate.SetCurrentKey("Currency Code", "Starting Date");
-                    CurrencyExchangeRate.SetRange("Currency Code", CurrencyCode);
-                    if CurrencyExchangeRate.FindLast then begin
-                        MaxDate := CurrencyExchangeRate."Starting Date";
-                        if CurrencyExchangeRate.Get(CurrencyCode, MaxDate) then begin
-                            ExchangeRate := CurrencyExchangeRate."Exchange Rate Amount" / CurrencyExchangeRate."Relational Exch. Rate Amount";
-                        end else
-                            Error('Exchange rate not found for currency %1 on the latest date', CurrencyCode);
-                    end else
-                        Error('Exchange rate not found for currency %1', CurrencyCode);
+                    _amount := Round(0, 0.01, '=');
+                    Error('Zero Accrued Interest');
                 end;
 
-                if ExchangeRate <> 0 then begin
-                    // Convert the amount to the new currency
-                    NewAmount := Amount * ExchangeRate;
-                    exit(NewAmount);
-                end else
-                    Error('Exchange rate is zero for currency %1', CurrencyCode);
-            end else
-                Error('Currency not found for code %1', CurrencyCode);
-        end else
-            Error('Currency code is empty');
+                //Get the latest remaining amount
+                funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Remaining Amount");
+                funderLegderEntry.SetAscending(funderLegderEntry."Entry No.", true);
+                if funderLegderEntry.FindLast() then
+                    latestRemainingAmount := funderLegderEntry."Remaining Amount";
+                // Get the Original Amount
+                funderLegderEntry.Reset();
+                funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Original Amount");
+                funderLegderEntry.SetRange(funderLegderEntry."Funder No.", funderNo);
+                // funderLegderEntry.CalcSums(Amount);
+                if funderLegderEntry.FindSet() then
+                    repeat
+                        originalAmount := originalAmount + funderLegderEntry.Amount;
+                    until funderLegderEntry.Next() = 0;
+                //**********************************************
+                // Posting AMOUNT
+                //**********************************************
+
+                //**********************************************
+                //   Withholding on interest
+                //   Depending on Tax Exceptions
+                //**********************************************
+                witHldInterest := 0;
+                // if funder.TaxStatus = funder.TaxStatus::Taxable then begin
+                //     funder.TestField(Withldtax);
+                //     witHldInterest := (funder.Withldtax / 100) * _amount;
+                // end;
+
+                // **************
+                // INTEREST PAYABLE (Dr) | BANK (Cr)
+
+                JournalEntry.Init();
+                JournalEntry."Journal Template Name" := 'GENERAL';
+                JournalEntry."Journal Batch Name" := 'TREASURY';
+                // JournalEntry."Line No." := NextEntryNo + (Counter + 1);
+                // JournalEntry.Entry_ID := NextEntryNo + (Counter + 1);
+                JournalEntry."Posting Date" := TrsyJnl."Posting Date";
+                JournalEntry.Creation_Date := TrsyJnl."Posting Date";
+                JournalEntry."Document No." := TrsyJnl."Document No.";
+                JournalEntry.Description := TrsyJnl.Description;
+                JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Funder then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := interestAccPay;
+                end else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"G/L Account" then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := TrsyJnl."Account No.";
+                end else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"Bank Account" then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"Bank Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := TrsyJnl."Account No.";
+                end
+                else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Debtor then begin
+                end;
+
+
+
+                JournalEntry.Amount := _amount;
+                JournalEntry.Validate(JournalEntry.Amount);
+                if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Funder then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := interestAccPay;
+                end else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"G/L Account" then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                end else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"Bank Account" then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"Bank Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                end
+                else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Debtor then begin
+                end;
+                // JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"; //@@@@@@@ Credit Bank
+                // JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                if TrsyJnl."Currency Code" <> '' then
+                    JournalEntry."Currency Code" := TrsyJnl."Currency Code";
+                GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
+
+
+
+                //*****************************
+                //Funder Ledger Entries
+                //*****************************
+
+                looper.LockTable();
+                looper.Reset();
+                if looper.FindLast() then
+                    funderEntryCounter := looper."Entry No." + 1
+                else
+                    funderEntryCounter := 1;
+
+
+                funderLegderEntry.Init();
+                funderLegderEntry."Entry No." := funderEntryCounter;
+                funderLegderEntry."Funder No." := funder."No.";
+                funderLegderEntry."Funder Name" := funder.Name;
+                funderLegderEntry."Loan No." := _loanNo;
+                funderLegderEntry."Loan Name" := _loanName;
+
+                if TrsyJnl."Currency Code" <> '' then
+                    funderLegderEntry."Currency Code" := TrsyJnl."Currency Code";
+                funderLegderEntry."Posting Date" := Today;
+                funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::"Capitalized Interest";
+                funderLegderEntry."Document No." := TrsyJnl."Document No.";
+                funderLegderEntry.Description := 'Interest Capitalization' + Format(Today) + TrsyJnl.Description;
+                funderLegderEntry.Amount := -(_amount);
+                funderLegderEntry."Amount(LCY)" := -(_amount);
+                funderLegderEntry."Remaining Amount" := -(_amount);
+                funderLegderEntry.Insert();
+
+                funderLegderEntry1.Init();
+                funderLegderEntry1."Entry No." := funderEntryCounter + 1;
+                funderLegderEntry1."Funder No." := funder."No.";
+                funderLegderEntry1."Funder Name" := funder.Name;
+                funderLegderEntry1."Loan No." := _loanNo;
+                funderLegderEntry1."Loan Name" := _loanName;
+
+                if TrsyJnl."Currency Code" <> '' then
+                    funderLegderEntry1."Currency Code" := TrsyJnl."Currency Code";
+                funderLegderEntry1."Posting Date" := TrsyJnl."Posting Date";
+                funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::"Secondary Amount";
+                funderLegderEntry."Document No." := TrsyJnl."Document No.";
+                funderLegderEntry1.Description := 'Addional Original from Capitalization' + Format(Today) + TrsyJnl.Description;
+                funderLegderEntry1.Amount := _amount;
+                funderLegderEntry1."Amount(LCY)" := _amount;
+                funderLegderEntry1.Insert();
+
+            // funderLegderEntry2.Init();
+            // funderLegderEntry2."Entry No." := funderEntryCounter + 2;
+            // funderLegderEntry2."Funder No." := funder."No.";
+            // funderLegderEntry2."Funder Name" := funder.Name;
+            // funderLegderEntry2."Loan No." := _loanNo;
+            // funderLegderEntry2."Loan Name" := _loanName;
+
+            // if TrsyJnl."Currency Code" <> '' then
+            //     funderLegderEntry2."Currency Code" := TrsyJnl."Currency Code";
+            // funderLegderEntry2."Posting Date" := TrsyJnl."Posting Date";
+            // funderLegderEntry2."Document Type" := funderLegderEntry."Document Type"::"Remaining Amount";
+            // funderLegderEntry."Document No." := TrsyJnl."Document No.";
+            // funderLegderEntry2.Description := 'Remaining Amount' + Format(Today) + TrsyJnl.Description;
+            // funderLegderEntry2.Amount := ((-_amount + witHldInterest) + originalAmount);
+            // funderLegderEntry2."Amount(LCY)" := ((-_amount + witHldInterest) + originalAmount);
+            // if latestRemainingAmount = 0 then begin
+            //     funderLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + originalAmount);
+            // end
+            // else begin
+            //     funderLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + latestRemainingAmount);
+            // end;
+            // funderLegderEntry2.Insert();
+
+
+            until TrsyJnl.Next() = 0;
+            TrsyJnl.Reset();
+            TrsyJnl.SetFilter("Account No.", '<>%1', '');
+            if TrsyJnl.Find('-') then begin
+                repeat
+                // TrsyJnl.Delete();
+                until TrsyJnl.Next() = 0;
+            end;
+            Message('Interest Capitalization Posting Done');
+        end;
+
+
     end;
 
+    procedure PostCapitalization()
+    var
+        GLEntry: Record "G/L Entry";
+        NextEntryNo: Integer;
+        JournalEntry: Record "Gen. Journal Line";
+        GLPost: Codeunit "Gen. Jnl.-Post Line";
+        TrsyJnl: Record "Trsy Journal";
+        Counter: Integer;
+        funder: Record Funders;
+        funderLoan: Record "Funder Loan";
+        funderLoan2: Record "Funder Loan";
+        totalAccruedInterest: Decimal;
+        totalPaidInterest: Decimal;
+        differentAccrPaidInterest: Decimal;
+        totalOriginalAmount: Decimal;
+        totalWithdrawalAmount: Decimal;
+        differenceOriginalWithdrawal: Decimal;
+        funderEntryCounter: Integer;
+        debtorEntryCounter: Integer;
+        funderLegderEntry: Record FunderLedgerEntry;
+        funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
+        funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
+        looper: Record FunderLedgerEntry;
+        venPostingGroup: record "Vendor Posting Group";
+        principleAcc: Code[100];
+        interestAccExpense: Code[100];
+        interestAccPay: Code[100];
+        withholdingAcc: Code[20];
+        monthlyInterest: Decimal;
+        witHldInterest: Decimal;
+        _amount: Decimal;
+        latestRemainingAmount: Decimal;
+        _accruingIntrestNo: Integer;
+        TotalProcessed: Integer;
+        BatchSize: Integer;
+        CurrentBatchCount: Integer;
+        TotalDebit: Decimal;
+        TotalCredit: Decimal;
+        generalSetup: Record "General Setup";
+        funderNo: Code[100];
+        funderName: Text[100];
+        _loanNo: Code[100];
+        _loanName: Code[100];
+        originalAmount: Decimal;
+        _auxAmount: Decimal;
+    begin
+        // TrsyJnl."Account Type":=TrsyJnl."Account Type"::Funder;
+        TrsyJnl.Reset();
+        // TrsyJnl.SetRange("Posting Date", 0D, Today);
+        TrsyJnl.SetRange(TrsyJnl."Transaction Nature", TrsyJnl."Transaction Nature"::"Capitalized Interest");
+        if TrsyJnl.Find('-') then begin
+            repeat
+                if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Funder then begin
+                    funderLoan.Reset();
+                    funderLoan.SetRange("No.", TrsyJnl."Bal. Account No.");
+                    if not funderLoan.Find('-') then// Get the Loan Details
+                        Error('Funder Loan = %1, dont exist.', TrsyJnl."Bal. Account No.");
+                    if funder.Get(funderLoan."Funder No.") then begin
+
+                        //**********************************************
+                        //          Get Posting groups & Posting Accounts
+                        //**********************************************
+                        if not venPostingGroup.Get(funderLoan."Posting Group") then
+                            Error('Missing Posting Group: %1', funder."No.");
+                        interestAccExpense := venPostingGroup."Interest Expense";
+                        if interestAccExpense = '' then
+                            Error('Missing Posting Group - Interest Expense A/C: %1', funder."No.");
+                        interestAccPay := venPostingGroup."Interest Payable";
+                        if interestAccPay = '' then
+                            Error('Missing Posting Group - Interest Payable A/C: %1', funder."No.");
+                        principleAcc := venPostingGroup."Payables Account";
+                        if principleAcc = '' then
+                            Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                        if not generalSetup.FindFirst() then
+                            Error('Please Define Withholding Tax under General Setup');
+                        withholdingAcc := generalSetup.FunderWithholdingAcc;
+                        funderNo := funderLoan."Funder No.";
+                    end;
+                end;
+                if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Funder then begin
+                    funderLoan.Reset();
+                    funderLoan.SetRange("No.", TrsyJnl."Account No.");
+                    if not funderLoan.Find('-') then// Get the Loan Details
+                        Error('Funder Loan = %1, dont exist.', TrsyJnl."Account No.");
+                    _loanName := funderLoan.Name;
+                    _loanNo := funderLoan."No.";
+                    if funder.Get(funderLoan."Funder No.") then begin
+
+                        //**********************************************
+                        //          Get Posting groups & Posting Accounts
+                        //**********************************************
+                        if not venPostingGroup.Get(funderLoan."Posting Group") then
+                            Error('Missing Posting Group: %1', funder."No.");
+                        interestAccExpense := venPostingGroup."Interest Expense";
+                        if interestAccExpense = '' then
+                            Error('Missing Posting Group - Interest Expense A/C: %1', funder."No.");
+                        interestAccPay := venPostingGroup."Interest Payable";
+                        if interestAccPay = '' then
+                            Error('Missing Posting Group - Interest Payable A/C: %1', funder."No.");
+                        principleAcc := venPostingGroup."Payables Account";
+                        if principleAcc = '' then
+                            Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                        if not generalSetup.FindFirst() then
+                            Error('Please Define Withholding Tax under General Setup');
+                        withholdingAcc := generalSetup.FunderWithholdingAcc;
+                        funderNo := funderLoan."Funder No.";
+                    end;
+                end;
+                //Get Total Accrued Interest
+                funderLegderEntry2.Reset();
+                funderLegderEntry2.SetRange("Funder No.", funderNo);
+                funderLegderEntry2.SetRange(funderLegderEntry2."Document Type", funderLegderEntry2."Document Type"::Interest);
+                funderLegderEntry2.CalcSums(Amount);
+                totalAccruedInterest := funderLegderEntry2.Amount;
+
+                funderLegderEntry2.Reset();
+                funderLegderEntry2.SetRange("Funder No.", funderNo);
+                funderLegderEntry2.SetRange(funderLegderEntry2."Document Type", funderLegderEntry2."Document Type"::"Capitalized Interest");
+                funderLegderEntry2.CalcSums(Amount);
+                totalPaidInterest := Abs(funderLegderEntry2.Amount);
+
+                differentAccrPaidInterest := totalAccruedInterest - totalPaidInterest; // Get the floating value
+                //Ensure Interest Paid does not negative Accrued Interest
+                if differentAccrPaidInterest > 0 then begin
+                    if differentAccrPaidInterest - Round(TrsyJnl.Amount, 0.01, '=') >= Round(TrsyJnl.Amount, 0.01, '=') then
+                        _amount := Round(TrsyJnl.Amount, 0.01, '=')
+                    else
+                        _amount := differentAccrPaidInterest
+
+                end else begin
+                    _amount := Round(0, 0.01, '=');
+                    Error('Zero Accrued Interest');
+                end;
+
+                //Get the latest remaining amount
+                funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Remaining Amount");
+                funderLegderEntry.SetAscending(funderLegderEntry."Entry No.", true);
+                if funderLegderEntry.FindLast() then
+                    latestRemainingAmount := funderLegderEntry."Remaining Amount";
+                // Get the Original Amount
+                funderLegderEntry.Reset();
+                funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Original Amount");
+                funderLegderEntry.SetRange(funderLegderEntry."Funder No.", funderNo);
+                // funderLegderEntry.CalcSums(Amount);
+                if funderLegderEntry.FindSet() then
+                    repeat
+                        originalAmount := originalAmount + funderLegderEntry.Amount;
+                    until funderLegderEntry.Next() = 0;
+                //**********************************************
+                // Posting AMOUNT
+                //**********************************************
+
+                //**********************************************
+                //   Withholding on interest
+                //   Depending on Tax Exceptions
+                //**********************************************
+                witHldInterest := 0;
+                // if funder.TaxStatus = funder.TaxStatus::Taxable then begin
+                //     funder.TestField(Withldtax);
+                //     witHldInterest := (funder.Withldtax / 100) * _amount;
+                // end;
+
+                // **************
+                // INTEREST PAYABLE (Dr) | BANK (Cr)
+
+                JournalEntry.Init();
+                JournalEntry."Journal Template Name" := 'GENERAL';
+                JournalEntry."Journal Batch Name" := 'TREASURY';
+                // JournalEntry."Line No." := NextEntryNo + (Counter + 1);
+                // JournalEntry.Entry_ID := NextEntryNo + (Counter + 1);
+                JournalEntry."Posting Date" := TrsyJnl."Posting Date";
+                JournalEntry.Creation_Date := TrsyJnl."Posting Date";
+                JournalEntry."Document No." := TrsyJnl."Document No.";
+                JournalEntry.Description := TrsyJnl.Description;
+                JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Funder then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := interestAccPay;
+                end else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"G/L Account" then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := TrsyJnl."Account No.";
+                end else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"Bank Account" then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"Bank Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := TrsyJnl."Account No.";
+                end
+                else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Debtor then begin
+                end;
+
+
+
+                JournalEntry.Amount := _amount;
+                JournalEntry.Validate(JournalEntry.Amount);
+                if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Funder then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := interestAccPay;
+                end else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"G/L Account" then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                end else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"Bank Account" then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"Bank Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                end
+                else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Debtor then begin
+                end;
+                // JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"; //@@@@@@@ Credit Bank
+                // JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                if TrsyJnl."Currency Code" <> '' then
+                    JournalEntry."Currency Code" := TrsyJnl."Currency Code";
+                GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
+
+
+
+                //*****************************
+                //Funder Ledger Entries
+                //*****************************
+
+                looper.LockTable();
+                looper.Reset();
+                if looper.FindLast() then
+                    funderEntryCounter := looper."Entry No." + 1
+                else
+                    funderEntryCounter := 1;
+
+
+                funderLegderEntry.Init();
+                funderLegderEntry."Entry No." := funderEntryCounter;
+                funderLegderEntry."Funder No." := funder."No.";
+                funderLegderEntry."Funder Name" := funder.Name;
+                funderLegderEntry."Loan No." := _loanNo;
+                funderLegderEntry."Loan Name" := _loanName;
+
+                if TrsyJnl."Currency Code" <> '' then
+                    funderLegderEntry."Currency Code" := TrsyJnl."Currency Code";
+                funderLegderEntry."Posting Date" := Today;
+                funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::"Capitalized Interest";
+                funderLegderEntry."Document No." := TrsyJnl."Document No.";
+                funderLegderEntry.Description := 'Interest Capitalization' + Format(Today) + TrsyJnl.Description;
+                funderLegderEntry.Amount := -(_amount);
+                funderLegderEntry."Amount(LCY)" := -(_amount);
+                funderLegderEntry."Remaining Amount" := -(_amount);
+                funderLegderEntry.Insert();
+
+            // funderLegderEntry1.Init();
+            // funderLegderEntry1."Entry No." := funderEntryCounter + 1;
+            // funderLegderEntry1."Funder No." := funder."No.";
+            // funderLegderEntry1."Funder Name" := funder.Name;
+            // funderLegderEntry1."Loan No." := _loanNo;
+            // funderLegderEntry1."Loan Name" := _loanName;
+
+            // if TrsyJnl."Currency Code" <> '' then
+            //     funderLegderEntry1."Currency Code" := TrsyJnl."Currency Code";
+            // funderLegderEntry1."Posting Date" := TrsyJnl."Posting Date";
+            // funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
+            // funderLegderEntry."Document No." := TrsyJnl."Document No.";
+            // funderLegderEntry1.Description := 'Withholding calculation' + Format(Today) + TrsyJnl.Description;
+            // funderLegderEntry1.Amount := witHldInterest;
+            // funderLegderEntry1."Amount(LCY)" := witHldInterest;
+            // funderLegderEntry1.Insert();
+
+            // funderLegderEntry2.Init();
+            // funderLegderEntry2."Entry No." := funderEntryCounter + 2;
+            // funderLegderEntry2."Funder No." := funder."No.";
+            // funderLegderEntry2."Funder Name" := funder.Name;
+            // funderLegderEntry2."Loan No." := _loanNo;
+            // funderLegderEntry2."Loan Name" := _loanName;
+
+            // if TrsyJnl."Currency Code" <> '' then
+            //     funderLegderEntry2."Currency Code" := TrsyJnl."Currency Code";
+            // funderLegderEntry2."Posting Date" := TrsyJnl."Posting Date";
+            // funderLegderEntry2."Document Type" := funderLegderEntry."Document Type"::"Remaining Amount";
+            // funderLegderEntry."Document No." := TrsyJnl."Document No.";
+            // funderLegderEntry2.Description := 'Remaining Amount' + Format(Today) + TrsyJnl.Description;
+            // funderLegderEntry2.Amount := ((-_amount + witHldInterest) + originalAmount);
+            // funderLegderEntry2."Amount(LCY)" := ((-_amount + witHldInterest) + originalAmount);
+            // if latestRemainingAmount = 0 then begin
+            //     funderLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + originalAmount);
+            // end
+            // else begin
+            //     funderLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + latestRemainingAmount);
+            // end;
+            // funderLegderEntry2.Insert();
+
+
+            until TrsyJnl.Next() = 0;
+            TrsyJnl.Reset();
+            TrsyJnl.SetFilter("Account No.", '<>%1', '');
+            if TrsyJnl.Find('-') then begin
+                repeat
+                // TrsyJnl.Delete();
+                until TrsyJnl.Next() = 0;
+            end;
+            Message('Interest Capitalization Posting Done');
+        end;
+
+    end;
 
 
     var
