@@ -46,6 +46,14 @@ table 50239 "Intr- Amort"
         {
             DataClassification = ToBeClassified;
         }
+        field(11; WithHldTaxAmt; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(12; NetInterest; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
     }
 
     keys

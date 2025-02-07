@@ -1286,6 +1286,7 @@ codeunit 50232 "Treasury Mgt CU"
 
     end;
 
+    //---------- UNUSED
     procedure PostCapitalization()
     var
         GLEntry: Record "G/L Entry";

@@ -148,12 +148,22 @@ page 50236 "Funder Loan Card"
                         ApplicationArea = All;
                         ShowMandatory = true;
                         Editable = isFloatRate;
+                        trigger OnValidate()
+                        begin
+                            Rec.InterestRate := Rec."Reference Rate" + Rec.Margin;
+                            CurrPage.Update();
+                        end;
                     }
                     field(Margin; Rec.Margin)
                     {
                         ApplicationArea = All;
                         ShowMandatory = true;
                         Editable = isFloatRate;
+                        trigger OnValidate()
+                        begin
+                            Rec.InterestRate := Rec."Reference Rate" + Rec.Margin;
+                            CurrPage.Update();
+                        end;
                     }
                 }
 

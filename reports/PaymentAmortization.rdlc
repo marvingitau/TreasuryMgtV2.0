@@ -33,7 +33,7 @@
             </Paragraphs>
             <rd:DefaultName>Textbox1</rd:DefaultName>
             <Top>0.18278in</Top>
-            <Left>3.04389in</Left>
+            <Left>3.60409in</Left>
             <Height>0.25in</Height>
             <Width>0.61111in</Width>
             <Style>
@@ -50,22 +50,22 @@
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>1.11574in</Width>
+                  <Width>1.1713in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.11574in</Width>
+                  <Width>1.1713in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.11574in</Width>
+                  <Width>1.1713in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1in</Width>
+                  <Width>1.05556in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1in</Width>
+                  <Width>1.05556in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1in</Width>
+                  <Width>1.22917in</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
@@ -425,7 +425,9 @@
                               <TextRuns>
                                 <TextRun>
                                   <Value>=Fields!OutStandingAmt.Value</Value>
-                                  <Style />
+                                  <Style>
+                                    <Format>#,0.00;- #,0.00</Format>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
@@ -471,9 +473,9 @@
             </TablixRowHierarchy>
             <DataSetName>DataSet_Result</DataSetName>
             <Top>0.85639in</Top>
-            <Left>0.09945in</Left>
+            <Left>0.7013in</Left>
             <Height>0.44444in</Height>
-            <Width>6.34722in</Width>
+            <Width>6.85419in</Width>
             <ZIndex>1</ZIndex>
             <Style>
               <Border>
@@ -485,7 +487,7 @@
         <Height>2in</Height>
         <Style />
       </Body>
-      <Width>6.78in</Width>
+      <Width>8.05007in</Width>
       <Page>
         <Style />
       </Page>

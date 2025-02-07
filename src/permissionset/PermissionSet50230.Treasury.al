@@ -1,5 +1,4 @@
 // namespace Trsy;
-
 permissionset 50230 Treasury
 {
     Assignable = true;
@@ -31,5 +30,18 @@ permissionset 50230 Treasury
         page FunderLedgerEntry = X,
         page "General Setup" = X,
         page "Portfolio List" = X,
-        page "Trsy Journal" = X;
+        page "Trsy Journal" = X,
+        tabledata BankBranch = RIMD,
+        tabledata Banks = RIMD,
+        tabledata "Intr- Amort" = RIMD,
+        table BankBranch = X,
+        table Banks = X,
+        table "Intr- Amort" = X,
+        report "Capitalize Interest" = X,
+        report "Interest Amortization" = X,
+        report "Payment Amortization" = X,
+        report ReEvaluateFX = X,
+        codeunit "Treasury Amortization" = X,
+        page "Bank Branch List" = X,
+        page "Bank List" = X;
 }

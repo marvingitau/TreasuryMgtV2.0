@@ -344,18 +344,18 @@ table 50232 "Funder Loan"
         field(730; "Secured Loan"; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = "Debenture","Parent Guarantee","Personal/Director Guarantee";
+            OptionMembers = " ","Debenture","Parent Guarantee","Personal/Director Guarantee";
         }
         field(731; "Secured Loan Other"; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = "Debenture","Parent Guarantee","Personal/Director Guarantee";
+            OptionMembers = " ","Debenture","Parent Guarantee","Personal/Director Guarantee";
 
         }
         field(830; "UnSecured Loan"; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = "Parent Guarantee","Unsecured";
+            OptionMembers = " ","Parent Guarantee","Unsecured";
         }
         //FLOATS
         field(930; "Reference Rate"; Decimal)
@@ -384,7 +384,7 @@ table 50232 "Funder Loan"
         field(941; PeriodicPaymentOfPrincipal; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = "Monthly","Quarterly","Biannually","Annually";
+            OptionMembers = "Monthly","Quarterly","Biannually","Annually","Total at Due Date";
             //"Total at Due Date"
         }
 
