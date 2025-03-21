@@ -79,10 +79,17 @@ page 50236 "Funder Loan Card"
                     // ShowMandatory = isCurrencyVisible;
                     // ShowMandatory = true;
                 }
+                // field(CustomFX; Rec.CustomFX)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Custom Foreign Exchage';
+                //     ToolTip = 'This field indicate a negotiated Foreign Exchange Amount under Treasury Currencies';
+                //     // Editable = false;
+                // }
                 field("Posting Group"; Rec."Posting Group")
                 {
                     ApplicationArea = All;
-                    Editable = false;
+                    // Editable = false;
                 }
                 field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
                 {
@@ -151,6 +158,7 @@ page 50236 "Funder Loan Card"
                         trigger OnValidate()
                         begin
                             Rec.InterestRate := Rec."Reference Rate" + Rec.Margin;
+                            Rec.Modify();
                             CurrPage.Update();
                         end;
                     }
@@ -162,6 +170,7 @@ page 50236 "Funder Loan Card"
                         trigger OnValidate()
                         begin
                             Rec.InterestRate := Rec."Reference Rate" + Rec.Margin;
+                            Rec.Modify();
                             CurrPage.Update();
                         end;
                     }
@@ -207,6 +216,10 @@ page 50236 "Funder Loan Card"
                 }
 
                 field(Withldtax; Rec.Withldtax)
+                {
+                    ApplicationArea = All;
+                }
+                field(InvestmentTenor; Rec.InvestmentTenor)
                 {
                     ApplicationArea = All;
                 }
@@ -272,14 +285,33 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                 }
-                // field(EnableGLPosting; Rec.EnableGLPosting)
-                // {
-                //     ApplicationArea = All;
-                // }
+                field(PlacementMaturity; Rec.PlacementMaturity)
+                {
+                    Caption = 'Placement Maturity Term';
+                    ApplicationArea = All;
+                }
                 field(Status; Rec.Status)
                 {
                     ApplicationArea = All;
                     // Editable = false;
+                }
+            }
+            group("G/L Mapping")
+            {
+                field("Payables Account"; Rec."Payables Account")
+                {
+
+                    ApplicationArea = All;
+                }
+                field("Interest Expense"; Rec."Interest Expense")
+                {
+
+                    ApplicationArea = All;
+                }
+                field("Interest Payable"; Rec."Interest Payable")
+                {
+
+                    ApplicationArea = All;
                 }
             }
         }
@@ -347,7 +379,6 @@ page 50236 "Funder Loan Card"
                 }
             }
 
-
             group("Request Approval")
             {
                 Caption = 'Request Approval';
@@ -392,7 +423,26 @@ page 50236 "Funder Loan Card"
                 }
             }
 
+            group(Communication)
+            {
+                Caption = 'Communications';
+                Image = MapSetup;
+                action("Send Confirmation")
+                {
+                    Image = Confirm;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    // PromotedIsBig = true;
+                    trigger OnAction()
+                    var
+                        EmailingCU: Codeunit "Treasury Emailing";
+                    begin
+                        EmailingCU.SendConfirmationEmailWithAttachment(Rec."No.")
+                    end;
+                }
+            }
         }
+
         area(Reporting)
         {
             group(Approval)
@@ -529,9 +579,9 @@ page 50236 "Funder Loan Card"
                     Caption = 'Attachments';
                     Image = Attach;
                     ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
-                    // Promoted = true;
-                    // PromotedCategory = Report;
-                    // PromotedIsBig = true;
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
                     trigger OnAction()
                     var
                         DocumentAttachmentDetails: Page "Document Attachment Details";
@@ -542,8 +592,29 @@ page 50236 "Funder Loan Card"
                         DocumentAttachmentDetails.RunModal();
                     end;
                 }
+                action(Confirmation)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Confirmation';
+                    Image = Attach;
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    // RunObject = report "Investment Confirmation";
+                    PromotedIsBig = true;
+                    trigger OnAction()
+                    var
+                        InvestConfRp: Report "Investment Confirmation";
+                        ReportFlag: Record "Report Flags";
+                    begin
+                        // InvestConfRp.SetFunderNoFilter(Rec."No.");
+
+
+                        Report.Run(Report::"Investment Confirmation");
+                    end;
+                }
             }
         }
+
     }
 
 
@@ -557,6 +628,7 @@ page 50236 "Funder Loan Card"
 
     trigger OnOpenPage()
     var
+        ReportFlag: Record "Report Flags";
     begin
         _funderNo := GlobalFilters.GetGlobalFilter();
         if _funderNo <> '' then begin
@@ -565,8 +637,11 @@ page 50236 "Funder Loan Card"
                     isCurrencyVisible := false;
             end;
         end;
-        if Rec.InterestRateType = Rec.InterestRateType::"Floating Rate" then
+        if Rec.InterestRateType = Rec.InterestRateType::"Floating Rate" then begin
+            Rec.InterestRate := Rec."Reference Rate" + Rec.Margin;
+            Rec.Modify();
             isFloatRate := true
+        end
         else
             isFloatRate := false;
         //  Rec."Document Number" := TrsyMgt.GenerateDocumentNumber();
@@ -580,6 +655,28 @@ page 50236 "Funder Loan Card"
             isUnsecureLoanActive := true;
             isSecureLoanActive := false;
         end;
+
+        ReportFlag.Reset();
+        ReportFlag.SetFilter("Line No.", '<>%1', 0);
+        if ReportFlag.Find('-') then begin
+            repeat
+                ReportFlag.Delete();
+            until ReportFlag.Next() = 0;
+        end;
+        ReportFlag.Init();
+        ReportFlag."Funder Loan No." := Rec."No.";
+        ReportFlag.Insert();
+    end;
+
+    trigger OnNextRecord(Steps: Integer): Integer
+    begin
+        if Rec.InterestRateType = Rec.InterestRateType::"Floating Rate" then begin
+            Rec.InterestRate := Rec."Reference Rate" + Rec.Margin;
+            Rec.Modify();
+            isFloatRate := true
+        end
+        else
+            isFloatRate := false;
     end;
 
     trigger OnInsertRecord(BelowxRec: Boolean): Boolean

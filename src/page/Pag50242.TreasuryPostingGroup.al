@@ -1,39 +1,43 @@
-page 50231 "Portfolio List"
+page 50242 "Treasury Posting Group"
 {
     PageType = List;
     ApplicationArea = All;
     UsageCategory = Lists;
-    SourceTable = Portfolio;
-
+    SourceTable = 50240;
+    Caption = 'Treasury G/L Mapping';
     layout
     {
         area(Content)
         {
-            repeater(GroupName)
+            repeater(General)
             {
                 field(Code; Rec.Code)
                 {
                     ApplicationArea = All;
                 }
-                field(Value; Rec.Value)
+                field(Description; Rec.Description)
                 {
                     ApplicationArea = All;
-                    Caption = 'Title';
                 }
-                field(Abbreviation; Rec.Abbreviation)
+                field("Payables Account"; Rec."Payables Account")
                 {
                     ApplicationArea = All;
-                    Caption = 'Abbreviation';
                 }
-                field(InternalRef; Rec.InternalRef)
+                field("Interest Expense"; Rec."Interest Expense")
                 {
                     ApplicationArea = All;
-                    Caption = 'Internal Reference';
                 }
-                field(Status; Rec.Status)
+                field("Interest Payable"; Rec."Interest Payable")
                 {
                     ApplicationArea = All;
-                    Caption = 'Status';
+                }
+                field("Treasury Enabled (Local)"; Rec."Treasury Enabled (Local)")
+                {
+                    ApplicationArea = All;
+                }
+                field("Treasury Enabled (Foreign)"; Rec."Treasury Enabled (Foreign)")
+                {
+                    ApplicationArea = All;
                 }
 
             }

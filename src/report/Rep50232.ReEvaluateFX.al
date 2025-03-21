@@ -39,7 +39,7 @@ report 50232 ReEvaluateFX
                         // Error('No Funder Ledger Entry For %1', FunderLoan."No.");
                         if funderLedgEntry.Find('-') then begin
                             OldValue := funderLedgEntry."Amount(LCY)";
-                            NewValue := FunderMgt.ConvertCurrencyAmount(FunderLoan.Currency, funderLedgEntry.Amount);
+                            NewValue := FunderMgt.ConvertCurrencyAmount(FunderLoan.Currency, funderLedgEntry.Amount, FunderLoan.CustomFX);
                             Difference := NewValue - OldValue;
                             Original := funderLedgEntry.Amount;
                         end;

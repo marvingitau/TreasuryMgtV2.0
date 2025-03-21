@@ -6,7 +6,13 @@ report 50230 "Interest Amortization"
 
     dataset
     {
+        dataitem("Funder Loan"; "Funder Loan")
+        {
+            // column(No_; "No.")
+            // {
 
+            // }
+        }
         dataitem(Loan; "Intr- Amort")
         {
             // RequestFilterFields = "No.";
@@ -36,8 +42,7 @@ report 50230 "Interest Amortization"
 
     requestpage
     {
-        AboutTitle = 'Teaching tip title';
-        AboutText = 'Teaching tip content';
+
         layout
         {
             area(Content)
@@ -123,6 +128,12 @@ report 50230 "Interest Amortization"
         _withHoldingTax_Amnt: Decimal;
     begin
         // Filters := FunderLoanTbl.GetFilter("No.");
+        ReportFlag.Reset();
+        ReportFlag.SetFilter("Line No.", '<>%1', 0);
+        if not ReportFlag.FindFirst() then
+            Error('No Report Flag Added');
+        FunderNo := ReportFlag."Funder Loan No.";
+
         FunderLoanTbl.Reset();
         FunderLoanTbl.SetRange("No.", FunderNo);
         if not FunderLoanTbl.Find('-') then
@@ -798,5 +809,6 @@ report 50230 "Interest Amortization"
     var
         FunderNo: Code[20];
         FunderLoanTbl: Record "Funder Loan";
+        ReportFlag: Record "Report Flags";
 
 }

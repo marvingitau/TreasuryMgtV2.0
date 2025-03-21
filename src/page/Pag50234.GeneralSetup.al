@@ -13,22 +13,50 @@ page 50234 "General Setup"
     {
         area(Content)
         {
-            group(General)
+            group(Treasury)
             {
-                // Caption = 'General Setup';
-                field(No; Rec.No)
+
+                field("Trsy Recipient mail"; Rec."Trsy Recipient mail")
                 {
                     ApplicationArea = all;
+                    ToolTip = 'Email Send Alerts too';
                 }
-                field(WithholdingAcc; Rec.FunderWithholdingAcc)
+                field("Trsy Recipient Name"; Rec."Trsy Recipient Name")
                 {
-                    Caption = 'Funder Withholding Tax A/c';
-                    ApplicationArea = All;
+                    ApplicationArea = all;
+                    ToolTip = 'Name to Send Alerts too';
                 }
-                field(DebtorWithholdingAcc; Rec.DebtorWithholdingAcc)
+                field("Trsy Recipient mail1"; Rec."Trsy Recipient mail1")
                 {
-                    Caption = 'Debtor Withholding Tax A/c';
-                    ApplicationArea = All;
+                    ApplicationArea = all;
+                    ToolTip = 'Email 1 Send Alerts too';
+                }
+                field("Trsy Recipient Name1"; Rec."Trsy Recipient Name1")
+                {
+                    ApplicationArea = all;
+                    ToolTip = 'Name 1 to Send Alerts too';
+                }
+                // field(WithholdingAcc; Rec.FunderWithholdingAcc)
+                // {
+                //     Caption = 'Funder Withholding Tax A/c';
+                //     ApplicationArea = All;
+                // }
+                // field(DebtorWithholdingAcc; Rec.DebtorWithholdingAcc)
+                // {
+                //     Caption = 'Debtor Withholding Tax A/c';
+                //     ApplicationArea = All;
+                // }
+                field("Intr. Pay. Rem. Waiting Time"; Rec."Intr. Pay. Rem. Waiting Time")
+                {
+                    Caption = 'Time to Interest Reminder Alert(Days)';
+                    ToolTip = 'Time (Days) before Interest Payment Reminder alert is sent ';
+                    ApplicationArea = all;
+                }
+                field("Placement Rem. Waiting Time"; Rec."Placemnt. Matur Rem. Time")
+                {
+                    Caption = 'Time to Placement Maturity Reminder Alert(Days)';
+                    ToolTip = 'Time (Days) before Placement Maturity Payment Reminder alert is sent ';
+                    ApplicationArea = all;
                 }
             }
             group(Numbering)
@@ -46,6 +74,11 @@ page 50234 "General Setup"
                 field("Treasury Jnl No."; Rec."Treasury Jnl No.")
                 {
                     Caption = 'Treasury Jnl No.';
+                    ApplicationArea = All;
+                }
+                field("Related Party"; Rec."Related Party")
+                {
+                    // Caption = 'Treasury Jnl No.';
                     ApplicationArea = All;
                 }
             }

@@ -1,8 +1,8 @@
 table 50232 "Funder Loan"
 {
     DataClassification = ToBeClassified;
-    LookupPageId = "Funder Loan Card";
-    DrillDownPageId = "Funder Loan Card";
+    LookupPageId = "Funder Loans List";
+    DrillDownPageId = "Funder Loans List";
     DataCaptionFields = "No.", "Loan Name";
     fields
     {
@@ -35,7 +35,7 @@ table 50232 "Funder Loan"
         {
             DataClassification = ToBeClassified;
             Caption = 'Posting Group';
-            TableRelation = "Vendor Posting Group".Code;
+            TableRelation = "Treasury Posting Group".Code;
 
         }
         field(400; "Loan Name"; Code[100])
@@ -72,7 +72,7 @@ table 50232 "Funder Loan"
         field(504; "OutstandingAmntDisbLCY"; Decimal)
         {
             AutoFormatType = 1;
-            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest | 'Original Amount' | Repayment | 'Interest Paid' | Withholding | "Secondary Amount")));
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter('Original Amount' | Repayment | "Secondary Amount")));
             Caption = 'Outstanding Amount';
             DecimalPlaces = 0 : 2;
             Editable = false;
@@ -216,7 +216,7 @@ table 50232 "Funder Loan"
             DataClassification = ToBeClassified;
             Caption = 'Currency';
             TableRelation = Currency;
-            trigger OnValidate()
+            /*trigger OnValidate()
             begin
                 if Currency <> '' then begin
                     vPostingGroup.Reset();
@@ -236,7 +236,7 @@ table 50232 "Funder Loan"
                     end;
                 end;
 
-            end;
+            end;*/
 
         }
 
@@ -261,9 +261,10 @@ table 50232 "Funder Loan"
                 looper: Record FunderLedgerEntry;
                 NextEntryNo: Integer;
                 FunderMgt: Codeunit FunderMgtCU;
-                venPostingGroup: Record "Vendor Posting Group";
+                venPostingGroup: Record "Treasury Posting Group";
                 principleAcc: Code[20];
                 interestAcc: Code[20];
+                interestAccPay: Code[20];
                 ReversalEntry: Record "Reversal Entry";
                 _docNo: Code[20];
                 TrsyMgt: Codeunit "Treasury Mgt CU";
@@ -271,15 +272,25 @@ table 50232 "Funder Loan"
             begin
                 _docNo := TrsyMgt.GenerateDocumentNumber();
                 //Get Posting groups
-                if not venPostingGroup.Get("Posting Group") then
-                    Error('Missing Posting Group: %1', "No.");
+                /*if not venPostingGroup.Get("Posting Group") then
+                    Error('Missing Posting Group: %1', "No.");*/
                 if FundSource = '' then
                     Error('Funder Entry (Bank) Must have a value', FundSource);
-                principleAcc := venPostingGroup."Payables Account";
-                interestAcc := venPostingGroup."Interest Expense";
+                // principleAcc := venPostingGroup."Payables Account";
+                // interestAcc := venPostingGroup."Interest Expense";
+                principleAcc := "Payables Account";
+                interestAcc := "Interest Expense";
+                interestAccPay := "Interest Payable";
+
+                if principleAcc = '' then
+                    Error('Missing G/L - Principle A/C');
+                if interestAcc = '' then
+                    Error('Missing G/L - Interest Expense A/C');
+                if interestAccPay = '' then
+                    Error('Missing G/L - Interest Payable A/C');
 
                 if Currency <> '' then
-                    _ConvertedCurrency := FunderMgt.ConvertCurrencyAmount(Currency, "Original Disbursed Amount")
+                    _ConvertedCurrency := FunderMgt.ConvertCurrencyAmount(Currency, "Original Disbursed Amount", CustomFX)
                 else
                     _ConvertedCurrency := "Original Disbursed Amount";
 
@@ -399,7 +410,83 @@ table 50232 "Funder Loan"
             Editable = false;
             FieldClass = FlowField;
         }
+        field(2000; CustomFX; Boolean)
+        {
+            DataClassification = ToBeClassified;
+        }
 
+
+        field(2609; InvestmentTenor; Option)
+        {
+            OptionMembers = "12","15","18","24";
+            DataClassification = ToBeClassified;
+        }
+        field(2610; PoliticalExposure; Boolean)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(2700; "Extension Paradign"; Text[50])
+        {
+            ToolTip = 'Indicates operations related to this extension';
+            InitValue = 'FunderLoan';
+            DataClassification = ToBeClassified;
+            //Used by the attachment Document
+        }
+
+        //Funder Posting G/L Accounts
+        field(2800; "Payables Account"; Code[20])
+        {
+            Caption = 'Payables Account';
+            TableRelation = "G/L Account";
+            trigger OnValidate()
+            begin
+                vPostingGroup.Reset();
+                vPostingGroup.SetRange(vPostingGroup.Code, "No.");
+                if vPostingGroup.Find('-') then begin
+                    vPostingGroup."Payables Account" := "Payables Account";
+                    vPostingGroup.Modify();
+                end;
+            end;
+        }
+        field(2801; "Interest Expense"; Code[20])
+        {
+            Caption = 'Interest Expense';
+            TableRelation = "G/L Account";
+            trigger OnValidate()
+            begin
+                vPostingGroup.Reset();
+                vPostingGroup.SetRange(vPostingGroup.Code, "No.");
+                if vPostingGroup.Find('-') then begin
+                    vPostingGroup."Interest Expense" := "Interest Expense";
+                    vPostingGroup.Modify();
+                end;
+            end;
+        }
+        field(2802; "Interest Payable"; Code[20])
+        {
+            Caption = 'Interest Payable';
+            TableRelation = "G/L Account";
+            trigger OnValidate()
+            begin
+                vPostingGroup.Reset();
+                vPostingGroup.SetRange(vPostingGroup.Code, "No.");
+                if vPostingGroup.Find('-') then begin
+                    vPostingGroup."Interest Payable" := "Interest Payable";
+                    vPostingGroup.Modify();
+                end;
+            end;
+        }
+
+        field(2810; PlacementMaturity; Option)
+        {
+            DataClassification = ToBeClassified;
+            OptionMembers = " ",Principal,Interest,"Principal + Interest",Terminate;
+        }
+        field(2820; "Confirmation Date"; Date)
+        {
+            DataClassification = ToBeClassified;
+
+        }
     }
 
     keys
@@ -422,7 +509,7 @@ table 50232 "Funder Loan"
     var
         GenSetup: Record "General Setup";
         NoSer: Codeunit "No. Series";
-        vPostingGroup: Record "Vendor Posting Group";
+        vPostingGroup: Record "Treasury Posting Group";
 
     trigger OnInsert()
     begin
@@ -433,11 +520,19 @@ table 50232 "Funder Loan"
 
         "Status" := "Status"::Open;
         vPostingGroup.Reset();
-        vPostingGroup.SetRange(vPostingGroup."Treasury Enabled (Local)", true);
+        vPostingGroup.SetRange(Code, "No.");
+        // vPostingGroup.SetRange(vPostingGroup."Treasury Enabled (Local)", true);
         if vPostingGroup.Find('-') then
             "Posting Group" := vPostingGroup.Code
-        else
-            Error('Please set the default Local Posting Group');
+        else begin
+            vPostingGroup.Init();
+            vPostingGroup.Code := "No.";
+            vPostingGroup.Insert();
+
+            "Posting Group" := vPostingGroup.Code;
+        end;
+
+        // Error('Please set the default Local Posting Group');
 
     end;
 

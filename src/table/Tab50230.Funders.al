@@ -26,7 +26,7 @@ table 50230 Funders
         // {
         //     DataClassification = ToBeClassified;
         //     Caption = 'Posting Group';
-        //     TableRelation = "Vendor Posting Group".Code;
+        //     TableRelation = "Treasury Posting Group".Code;
         // }
         // field(40; "Counterparty Type"; Enum "Counterpart Types")
         // {
@@ -67,16 +67,24 @@ table 50230 Funders
         {
             DataClassification = ToBeClassified;
         }
+        field(111; "Postal Address"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(112; "Postal Code"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
         field(120; "Primary Contact Name"; Text[50])
         {
             DataClassification = ToBeClassified;
             ToolTip = 'A key individual for communication purposes.';
         }
-        field(130; "Email Address"; Text[50])
-        {
-            DataClassification = ToBeClassified;
-            ExtendedDatatype = EMail;
-        }
+        // field(130; "Email Address"; Text[50])
+        // {
+        //     DataClassification = ToBeClassified;
+        //     ExtendedDatatype = EMail;
+        // }
         field(140; "Phone Number"; Code[100])
         {
             DataClassification = ToBeClassified;
@@ -142,6 +150,20 @@ table 50230 Funders
             DataClassification = ToBeClassified;
             TableRelation = "Country/Region";
         }
+        //Personal Detail Individual
+        field(290; "IndOccupation"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(291; "IndNatureOfBusiness"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(292; IndEmployer; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+
         field(600; "Shortcut Dimension 1 Code"; Code[50])
         {
             CaptionClass = '1,1,1';
@@ -159,6 +181,60 @@ table 50230 Funders
         {
             DataClassification = ToBeClassified;
             // TableRelation = BankBranch.BankCode;
+        }
+
+        // Neext of Kin
+
+        field(2500; NextofKinName; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(2501; NextofKinPhone; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(2502; NextOfKinIdPassport; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(2503; NextOfKinRelation; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        // Joint Application
+        // field(2504; PersonalDetName; Text[250])
+        // {
+        //     DataClassification = ToBeClassified;
+        // }
+        //utilize same name for all
+        field(2505; PersonalDetIDPassport; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(2506; PersonalDetOccupation; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(2507; PersonalDetNatOfBus; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(2509; KRA; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(2510; PersonalDetEmployer; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(3000; FunderType; Option)
+        {
+            OptionMembers = Individual,"Joint Application",Corporate;
+            DataClassification = ToBeClassified;
+        }
+        field(3010; CompanyNo; Text[250])
+        {
+            DataClassification = ToBeClassified;
         }
     }
 

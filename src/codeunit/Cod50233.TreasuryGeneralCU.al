@@ -5,10 +5,26 @@ codeunit 50233 TreasuryGeneralCU
 
     end;
 
-    [EventSubscriber(ObjectType::Page, Page::"Document Attachment Factbox", 'OnBeforeDrillDown', '', false, false)]
+    // [EventSubscriber(ObjectType::Page, Page::"Doc. Attachment List Factbox", OnBeforeDocumentAttachmentDetailsRunModal, '', false, false)]
+    // local procedure OnBeforeDocumentAttachmentDetailsRunModal(DocumentAttachment: Record "Document Attachment"; var RecRef: RecordRef);
+    // var
+    //     funder: Record "Funders";
+    // begin
+    //     case DocumentAttachment."Table ID" of
+    //         DATABASE::"Funders":
+    //             begin
+    //                 RecRef.Open(DATABASE::"Funders");
+    //                 if funder.Get(DocumentAttachment."No.") then
+    //                     RecRef.GetTable(funder);
+    //             end;
+    //     end;
+    // end;
+
+    [EventSubscriber(ObjectType::Page, Page::"Document Attachment Factbox", OnBeforeDrillDown, '', false, false)]
     local procedure OnBeforeDrillDown(DocumentAttachment: Record "Document Attachment"; var RecRef: RecordRef);
     var
         funder: Record "Funders";
+        _portfolio: Record Portfolio;
     begin
         case DocumentAttachment."Table ID" of
             DATABASE::"Funders":
@@ -16,6 +32,12 @@ codeunit 50233 TreasuryGeneralCU
                     RecRef.Open(DATABASE::"Funders");
                     if funder.Get(DocumentAttachment."No.") then
                         RecRef.GetTable(funder);
+                end;
+            Database::Portfolio:
+                begin
+                    RecRef.Open(DATABASE::Portfolio);
+                    if funder.Get(DocumentAttachment."No.") then
+                        RecRef.GetTable(_portfolio);
                 end;
         end;
     end;
@@ -33,6 +55,12 @@ codeunit 50233 TreasuryGeneralCU
                     RecNo := FieldRef.Value;
                     DocumentAttachment.SetRange("No.", RecNo);
                 end;
+            DATABASE::Portfolio:
+                begin
+                    FieldRef := RecRef.Field(1);
+                    RecNo := FieldRef.Value;
+                    DocumentAttachment.SetRange("No.", RecNo);
+                end;
         end;
     end;
 
@@ -44,6 +72,12 @@ codeunit 50233 TreasuryGeneralCU
     begin
         case RecRef.Number of
             DATABASE::Funders:
+                begin
+                    FieldRef := RecRef.Field(1);
+                    RecNo := FieldRef.Value;
+                    DocumentAttachment.Validate("No.", RecNo);
+                end;
+            DATABASE::Portfolio:
                 begin
                     FieldRef := RecRef.Field(1);
                     RecNo := FieldRef.Value;

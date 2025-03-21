@@ -4,7 +4,7 @@ page 50233 "Funder Card"
     ApplicationArea = All;
     UsageCategory = Administration;
     SourceTable = Funders;
-
+    Caption = 'Funder/Supplier Card';
 
     // DataCaptionExpression = '';
     layout
@@ -24,100 +24,345 @@ page 50233 "Funder Card"
                 field(Name; Rec.Name)
                 {
                     ApplicationArea = All;
-                }
-                field("Funder Type"; Rec."Funder Type")
-                {
-                    ApplicationArea = all;
-                }
-                field("Shortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
-                {
-                    ApplicationArea = all;
+                    Caption = 'Full Name';
                     ShowMandatory = true;
+                }
+                field(FunderType; Rec.FunderType)
+                {
+                    ApplicationArea = all;
+                    Caption = 'Funder Type';
                     trigger OnValidate()
                     begin
-                        CurrPage.Update();
+                        UpdateFastTabVisibility();
                     end;
-
                 }
-                field("Branch Name"; BranchName)
-                {
-                    ApplicationArea = All;
-                    Editable = false;
-                }
-
-                // field("Counterparty Type"; Rec."Counterparty Type")
+                // field("Funder Type"; Rec."Funder Type")
                 // {
-                //     ApplicationArea = All;
+                //     ApplicationArea = all;
                 // }
-                field("Tax Identification Number"; Rec."Tax Identification Number")
-                {
-                    ApplicationArea = All;
-                    Caption = 'KRA PIN';
-                }
-                field("Employer Identification Number"; Rec."Employer Identification Number")
-                {
-                    ApplicationArea = All;
-                    Caption = 'ID';
-                }
-                field("VAT Number"; Rec."VAT Number")
-                {
-                    ApplicationArea = All;
-                    Caption = 'Business Registration Number';
-                }
-                field("Legal Entity Identifier"; Rec."Legal Entity Identifier")
-                {
-                    ApplicationArea = All;
-                }
-                field("Country/Region"; Rec."Country/Region")
-                {
-                    ApplicationArea = All;
-                }
-
             }
-            group(Address)
+            group("Personal Detail (Individual)")
             {
-                field("Primary Contact Name"; Rec."Primary Contact Name")
+                Visible = ShowIndividualFastTab;
+                group("Personal Detail General")
                 {
-                    ApplicationArea = All;
+
+                    field("Shortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
+                    {
+                        ApplicationArea = all;
+                        ShowMandatory = true;
+                        trigger OnValidate()
+                        begin
+                            CurrPage.Update();
+                        end;
+
+                    }
+                    field("Branch Name"; BranchName)
+                    {
+                        ApplicationArea = All;
+                        Editable = false;
+                    }
+
+                    // field("Counterparty Type"; Rec."Counterparty Type")
+                    // {
+                    //     ApplicationArea = All;
+                    // }
+                    field("Tax Identification Number"; Rec.KRA)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'KRA PIN';
+                        ShowMandatory = true;
+                    }
+                    field("Employer Identification Number"; Rec."Employer Identification Number")
+                    {
+                        ApplicationArea = All;
+                        Caption = 'ID/Passport No.';
+                        ShowMandatory = true;
+                    }
+                    field(IndOccupation; Rec.IndOccupation)
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                        Caption = 'Occupation';
+                    }
+                    field(IndNatureOfBusiness; Rec.IndNatureOfBusiness)
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                        Caption = 'Nature of Business';
+                    }
+                    field(IndEmployer; Rec.IndEmployer)
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                        Caption = 'Employer';
+                    }
+                    // field("VAT Number"; Rec."VAT Number")
+                    // {
+                    //     ApplicationArea = All;
+                    //     Caption = 'Business Registration Number';
+                    // }
+                    // field("Legal Entity Identifier"; Rec."Legal Entity Identifier")
+                    // {
+                    //     ApplicationArea = All;
+                    // }
+                    // field("Country/Region"; Rec."Country/Region")
+                    // {
+                    //     ApplicationArea = All;
+                    // }
                 }
-                field("Phone Number"; Rec."Phone Number")
+
+                group(Address)
                 {
-                    ApplicationArea = All;
-                    ExtendedDatatype = PhoneNo;
+                    field("Physical Address"; Rec."Physical Address")
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Residential Address/Registered Office';
+                        ShowMandatory = true;
+                    }
+                    field("Phone Number"; Rec."Phone Number")
+                    {
+                        ApplicationArea = All;
+                        ExtendedDatatype = PhoneNo;
+                        ShowMandatory = true;
+                    }
+                    field("Postal Address"; Rec."Postal Address")
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field("Postal Code"; Rec."Postal Code")
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field("Mailing Address"; Rec."Mailing Address")
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Email';
+                        ShowMandatory = true;
+                    }
+                    // field("Pri Contact Name"; Rec."Primary Contact Name")
+                    // {
+                    //     ApplicationArea = All;
+                    //     ShowMandatory = false;
+                    // }
+
+                    // field("Email Address"; Rec."Email Address")
+                    // {
+                    //     ApplicationArea = All;
+                    //     ExtendedDatatype = EMail;
+                    //     Caption = 'Contact Persons Email';
+                    // }
+
+                    // field("Billing Address"; Rec."Billing Address")
+                    // {
+                    //     ApplicationArea = All;
+                    // }
+
                 }
-                field("Email Address"; Rec."Email Address")
+                /*group(Contacts)
                 {
-                    ApplicationArea = All;
-                    ExtendedDatatype = EMail;
-                    Caption = 'Contact Persons Email';
+                    field("Primary Contact Name"; Rec."Primary Contact Name")
+                    {
+                        ApplicationArea = All;
+                    }
+
+                    field("Fax Number"; Rec."Fax Number")
+                    {
+                        ApplicationArea = All;
+                    }
+
+                }*/
+                group("Next of Kin")
+                {
+                    field(NextofKinName; Rec.NextofKinName)
+                    {
+                        Caption = 'Name';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field(NextOfKinRelation; Rec.NextOfKinRelation)
+                    {
+                        Caption = 'Relation';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field(NextOfKinIdPassport; Rec.NextOfKinIdPassport)
+                    {
+                        Caption = 'Passport/ID No.';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field(NextofKinPhone; Rec.NextofKinPhone)
+                    {
+                        Caption = 'Phone';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
                 }
-                field("Physical Address"; Rec."Physical Address")
+
+            }
+            group("Personal Detail (Joint Applications)")
+            {
+                Visible = ShowJointFastTab;
+                group("Joint General")
                 {
-                    ApplicationArea = All;
+
+                    field(PersonalDetIDPassport; Rec.PersonalDetIDPassport)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'ID/Passport';
+                        ShowMandatory = true;
+
+                    }
+                    field(PersonalDetKRA; Rec.KRA)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'KRA Pin No.';
+                        ShowMandatory = true;
+                    }
+                    field(PersonalDetOccupation; Rec.PersonalDetOccupation)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Occupation';
+                        ShowMandatory = true;
+                    }
+                    field(PersonalDetNatOfBus; Rec.PersonalDetNatOfBus)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Nature of Business';
+                        ShowMandatory = true;
+                    }
+                    field(PersonalDetEmployer; Rec.PersonalDetEmployer)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Employer';
+                        ShowMandatory = true;
+                    }
                 }
-                field("Billing Address"; Rec."Billing Address")
+                group("Joint Contact")
                 {
-                    ApplicationArea = All;
+                    field("Joint Physical Address"; Rec."Physical Address")
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Residential Address/Registered Office';
+                        ShowMandatory = true;
+                    }
+                    field("Joint Phone Number"; Rec."Phone Number")
+                    {
+                        ApplicationArea = All;
+                        ExtendedDatatype = PhoneNo;
+                        ShowMandatory = true;
+                    }
+                    field("Joint Postal Address"; Rec."Postal Address")
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field("Joint Postal Code"; Rec."Postal Code")
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field("Joint Mailing Address"; Rec."Mailing Address")
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Email';
+                        ShowMandatory = true;
+                    }
+
                 }
-                field("Mailing Address"; Rec."Mailing Address")
+                group("Joint Next of Kin")
                 {
-                    ApplicationArea = All;
-                    Caption = 'Email';
+                    field(JointNextofKinName; Rec.NextofKinName)
+                    {
+                        Caption = 'Name';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field(JointNextOfKinRelation; Rec.NextOfKinRelation)
+                    {
+                        Caption = 'Relation';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field(JointNextOfKinIdPassport; Rec.NextOfKinIdPassport)
+                    {
+                        Caption = 'Passport/ID No.';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field(JointNextofKinPhone; Rec.NextofKinPhone)
+                    {
+                        Caption = 'Phone';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
                 }
             }
-            // group(Contacts)
-            // {
-            //     field("Primary Contact Name"; Rec."Primary Contact Name")
-            //     {
-            //         ApplicationArea = All;
-            //     }
+            group("Corporate Details (Corporates)")
+            {
+                Visible = ShowCorporateFastTab;
+                group("Corporate General")
+                {
 
-            //     field("Fax Number"; Rec."Fax Number")
-            //     {
-            //         ApplicationArea = All;
-            //     }
+                    field(CompanyNo; Rec.CompanyNo)
+                    {
+                        Caption = 'Company No.';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field("Company KRA"; Rec.KRA)
+                    {
+                        Caption = 'KRA Pin No.';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field("Corporate Contact Name"; Rec."Primary Contact Name")
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Contact Person';
+                        ShowMandatory = true;
+                    }
+                }
+                group("Corporate Contact")
+                {
+                    field("Corporate Physical Address"; Rec."Physical Address")
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Residential Address/Registered Office';
+                        ShowMandatory = true;
+                    }
+                    field("Corporate Phone Number"; Rec."Phone Number")
+                    {
+                        ApplicationArea = All;
+                        ExtendedDatatype = PhoneNo;
+                        ShowMandatory = true;
+                    }
+                    field("Corporate Postal Address"; Rec."Postal Address")
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field("Corporate Postal Code"; Rec."Postal Code")
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field("Corporate Mailing Address"; Rec."Mailing Address")
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Email';
+                        ShowMandatory = true;
+                    }
 
-            // }
+
+
+
+                }
+
+            }
             group("Bank Details")
             {
 
@@ -189,7 +434,7 @@ page 50233 "Funder Card"
                 // }
 
             }
-            group("Other Details")
+            /*group("Other Details")
             {
                 field("KYC Details"; Rec."KYC Details")
                 {
@@ -213,7 +458,8 @@ page 50233 "Funder Card"
                     ApplicationArea = All;
                 }
 
-            }
+            }*/
+
         }
 
         area(FactBoxes)
@@ -261,6 +507,28 @@ page 50233 "Funder Card"
 
                 end;
             }
+            action(BeneficiaryTrustee)
+            {
+                ApplicationArea = Basic, Suite;
+                Image = Users;
+                Promoted = true;
+                PromotedCategory = Process;
+                Caption = 'Beneficiary & Trustees';
+                ToolTip = 'Beneficiary & Trustees ';
+                // RunObject = page "Funder Loan Ben. Trus.";
+                trigger OnAction()
+                var
+                    btTbl: Record "Funder Ben/Trus";
+
+                begin
+                    btTbl.Reset();
+                    btTbl.SetRange("Funder No.", Rec."No.");
+                    PAGE.Run(Page::"Funder Ben. Trus.", btTbl);
+                end;
+
+            }
+
+
             action("Funder Loan Open")
             {
                 ApplicationArea = Basic, Suite;
@@ -300,7 +568,6 @@ page 50233 "Funder Card"
 
                 end;
             }
-
             action("Funder Loan Approved")
             {
                 ApplicationArea = Basic, Suite;
@@ -392,13 +659,34 @@ page 50233 "Funder Card"
         if BankBranch.Find('-') then
             BBranchName := BankBranch.BranchName;
     end;
+    // Trigger to update FastTab visibility when the record is loaded
+    trigger OnAfterGetCurrRecord()
+    begin
+        UpdateFastTabVisibility();
+    end;
+    // Trigger to update FastTab visibility when the page is opened
+    trigger OnOpenPage()
+    begin
+        UpdateFastTabVisibility();
+    end;
+    // Local procedure to update FastTab visibility
+    local procedure UpdateFastTabVisibility()
+    begin
+        // Show the Shipping FastTab only if the Country/Region Code is "US"
+        ShowIndividualFastTab := Rec.FunderType = Rec.FunderType::Individual;
+        ShowJointFastTab := Rec.FunderType = Rec.FunderType::"Joint Application";
+        ShowCorporateFastTab := Rec.FunderType = Rec.FunderType::Corporate;
+    end;
 
     var
         myInt: Integer;
-        BranchName: Code[20];
+        BranchName: Code[250];
         BankName: Text[50];
         BBranchName: Text[50];
         DimensionValue: Record "Dimension Value";
         Banks: Record Banks;
         BankBranch: Record BankBranch;
+        ShowIndividualFastTab: Boolean;
+        ShowJointFastTab: Boolean;
+        ShowCorporateFastTab: Boolean;
 }

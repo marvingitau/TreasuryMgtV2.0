@@ -46,7 +46,7 @@ codeunit 50232 "Treasury Mgt CU"
         funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
         funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
         looper: Record FunderLedgerEntry;
-        venPostingGroup: record "Vendor Posting Group";
+        venPostingGroup: record "Treasury Posting Group";
         principleAcc: Code[100];
         interestAccExpense: Code[100];
         interestAccPay: Code[100];
@@ -119,14 +119,14 @@ codeunit 50232 "Treasury Mgt CU"
                                 Error('Funder = %1, dont exist.', funderLoan."Funder No.");
                             end;
                             //Get Posting groups
-                            if not venPostingGroup.Get(funderLoan."Posting Group") then
-                                Error('Missing Posting Group: %1', funderLoan."Posting Group");
+                            // if not venPostingGroup.Get(funderLoan."Posting Group") then
+                            //     Error('Missing Posting Group: %1', funderLoan."Posting Group");
                             // interestAccExpense := venPostingGroup."Interest Expense";
                             // if interestAccExpense = '' then
-                            //     Error('Missing Posting Group - Interest A/C: %1', funder."Posting Group");
-                            principleAcc := venPostingGroup."Payables Account";
+                            //     Error('Missing Interest A/C: %1', funder."Posting Group");
+                            principleAcc := funderLoan."Payables Account";
                             if principleAcc = '' then
-                                Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                                Error('Missing Principle A/C: %1', funder."No.");
 
 
                         end;
@@ -142,14 +142,14 @@ codeunit 50232 "Treasury Mgt CU"
                                 Error('Funder = %1, dont exist.', funderLoan."Funder No.")
                             end;
                             //Get Posting groups
-                            if not venPostingGroup.Get(funderLoan."Posting Group") then
-                                Error('Missing Posting Group: %1', funderLoan."Posting Group");
-                            // interestAccExpense := venPostingGroup."Interest Expense";
-                            // if interestAccExpense = '' then
-                            //     Error('Missing Posting Group - Interest A/C: %1',funder."Posting Group");
-                            principleAcc := venPostingGroup."Payables Account";
+                            // if not venPostingGroup.Get(funderLoan."Posting Group") then
+                            //     Error('Missing Posting Group: %1', funderLoan."Posting Group");
+                            // // interestAccExpense := venPostingGroup."Interest Expense";
+                            // // if interestAccExpense = '' then
+                            // //     Error('Missing Interest A/C: %1',funder."Posting Group");
+                            principleAcc := funderLoan."Payables Account";
                             if principleAcc = '' then
-                                Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                                Error('Missing Principle A/C: %1', funder."No.");
 
 
                         end;
@@ -274,17 +274,17 @@ codeunit 50232 "Treasury Mgt CU"
                                 // **********************************************
                                 //          Get Posting groups & Posting Accounts
                                 // **********************************************
-                                if not venPostingGroup.Get(funderLoan."Posting Group") then
-                                    Error('Missing Posting Group: %1', funder."No.");
-                                interestAccExpense := venPostingGroup."Interest Expense";
+                                // if not venPostingGroup.Get(funderLoan."Posting Group") then
+                                //     Error('Missing Posting Group: %1', funder."No.");
+                                interestAccExpense := funderLoan."Interest Expense";
                                 if interestAccExpense = '' then
-                                    Error('Missing Posting Group - Interest Expense A/C: %1', funder."No.");
-                                interestAccPay := venPostingGroup."Interest Payable";
+                                    Error('Missing Interest Expense A/C: %1', funder."No.");
+                                interestAccPay := funderLoan."Interest Payable";
                                 if interestAccPay = '' then
-                                    Error('Missing Posting Group - Interest Payable A/C: %1', funder."No.");
-                                principleAcc := venPostingGroup."Payables Account";
+                                    Error('Missing Interest Payable A/C: %1', funder."No.");
+                                principleAcc := funderLoan."Payables Account";
                                 if principleAcc = '' then
-                                    Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                                    Error('Missing Principle A/C: %1', funder."No.");
                                 if not generalSetup.FindFirst() then
                                     Error('Please Define Withholding Tax under General Setup');
                                 withholdingAcc := generalSetup.FunderWithholdingAcc;
@@ -566,17 +566,17 @@ codeunit 50232 "Treasury Mgt CU"
                         //**********************************************
                         //          Get Posting groups & Posting Accounts
                         //**********************************************
-                        if not venPostingGroup.Get(funderLoan."Posting Group") then
-                            Error('Missing Posting Group: %1', funder."No.");
-                        interestAccExpense := venPostingGroup."Interest Expense";
+                        // if not venPostingGroup.Get(funderLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', funder."No.");
+                        interestAccExpense := funderLoan."Interest Expense";
                         if interestAccExpense = '' then
-                            Error('Missing Posting Group - Interest Expense A/C: %1', funder."No.");
-                        interestAccPay := venPostingGroup."Interest Payable";
+                            Error('Missing Interest Expense A/C: %1', funder."No.");
+                        interestAccPay := funderLoan."Interest Payable";
                         if interestAccPay = '' then
-                            Error('Missing Posting Group - Interest Payable A/C: %1', funder."No.");
-                        principleAcc := venPostingGroup."Payables Account";
+                            Error('Missing Interest Payable A/C: %1', funder."No.");
+                        principleAcc := funderLoan."Payables Account";
                         if principleAcc = '' then
-                            Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                            Error('Missing Principle A/C: %1', funder."No.");
                         if not generalSetup.FindFirst() then
                             Error('Please Define Withholding Tax under General Setup');
                         withholdingAcc := generalSetup.FunderWithholdingAcc;
@@ -595,17 +595,17 @@ codeunit 50232 "Treasury Mgt CU"
                         //**********************************************
                         //          Get Posting groups & Posting Accounts
                         //**********************************************
-                        if not venPostingGroup.Get(funderLoan."Posting Group") then
-                            Error('Missing Posting Group: %1', funder."No.");
-                        interestAccExpense := venPostingGroup."Interest Expense";
+                        // if not venPostingGroup.Get(funderLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', funder."No.");
+                        interestAccExpense := funderLoan."Interest Expense";
                         if interestAccExpense = '' then
-                            Error('Missing Posting Group - Interest Expense A/C: %1', funder."No.");
-                        interestAccPay := venPostingGroup."Interest Payable";
+                            Error('Missing Interest Expense A/C: %1', funder."No.");
+                        interestAccPay := funderLoan."Interest Payable";
                         if interestAccPay = '' then
-                            Error('Missing Posting Group - Interest Payable A/C: %1', funder."No.");
-                        principleAcc := venPostingGroup."Payables Account";
+                            Error('Missing Interest Payable A/C: %1', funder."No.");
+                        principleAcc := funderLoan."Payables Account";
                         if principleAcc = '' then
-                            Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                            Error('Missing Principle A/C: %1', funder."No.");
                         if not generalSetup.FindFirst() then
                             Error('Please Define Withholding Tax under General Setup');
                         withholdingAcc := generalSetup.FunderWithholdingAcc;
@@ -815,17 +815,17 @@ codeunit 50232 "Treasury Mgt CU"
                         //**********************************************
                         //          Get Posting groups & Posting Accounts
                         //**********************************************
-                        if not venPostingGroup.Get(funderLoan."Posting Group") then
-                            Error('Missing Posting Group: %1', funder."No.");
-                        interestAccExpense := venPostingGroup."Interest Expense";
+                        // if not venPostingGroup.Get(funderLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', funder."No.");
+                        interestAccExpense := funderLoan."Interest Expense";
                         if interestAccExpense = '' then
-                            Error('Missing Posting Group - Interest Expense A/C: %1', funder."No.");
-                        interestAccPay := venPostingGroup."Interest Payable";
+                            Error('Missing Interest Expense A/C: %1', funder."No.");
+                        interestAccPay := funderLoan."Interest Payable";
                         if interestAccPay = '' then
-                            Error('Missing Posting Group - Interest Payable A/C: %1', funder."No.");
-                        principleAcc := venPostingGroup."Payables Account";
+                            Error('Missing Interest Payable A/C: %1', funder."No.");
+                        principleAcc := funderLoan."Payables Account";
                         if principleAcc = '' then
-                            Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                            Error('Missing Principle A/C: %1', funder."No.");
                         if not generalSetup.FindFirst() then
                             Error('Please Define Withholding Tax under General Setup');
                         withholdingAcc := generalSetup.FunderWithholdingAcc;
@@ -845,17 +845,17 @@ codeunit 50232 "Treasury Mgt CU"
                         //**********************************************
                         //          Get Posting groups & Posting Accounts
                         //**********************************************
-                        if not venPostingGroup.Get(funderLoan."Posting Group") then
-                            Error('Missing Posting Group: %1', funder."No.");
-                        interestAccExpense := venPostingGroup."Interest Expense";
+                        // if not venPostingGroup.Get(funderLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', funder."No.");
+                        interestAccExpense := funderLoan."Interest Expense";
                         if interestAccExpense = '' then
-                            Error('Missing Posting Group - Interest Expense A/C: %1', funder."No.");
-                        interestAccPay := venPostingGroup."Interest Payable";
+                            Error('Missing Interest Expense A/C: %1', funder."No.");
+                        interestAccPay := funderLoan."Interest Payable";
                         if interestAccPay = '' then
-                            Error('Missing Posting Group - Interest Payable A/C: %1', funder."No.");
-                        principleAcc := venPostingGroup."Payables Account";
+                            Error('Missing Interest Payable A/C: %1', funder."No.");
+                        principleAcc := funderLoan."Payables Account";
                         if principleAcc = '' then
-                            Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                            Error('Missing Principle A/C: %1', funder."No.");
                         if not generalSetup.FindFirst() then
                             Error('Please Define Withholding Tax under General Setup');
                         withholdingAcc := generalSetup.FunderWithholdingAcc;
@@ -1045,17 +1045,17 @@ codeunit 50232 "Treasury Mgt CU"
                         //**********************************************
                         //          Get Posting groups & Posting Accounts
                         //**********************************************
-                        if not venPostingGroup.Get(funderLoan."Posting Group") then
-                            Error('Missing Posting Group: %1', funder."No.");
-                        interestAccExpense := venPostingGroup."Interest Expense";
+                        // if not venPostingGroup.Get(funderLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', funder."No.");
+                        interestAccExpense := funderLoan."Interest Expense";
                         if interestAccExpense = '' then
-                            Error('Missing Posting Group - Interest Expense A/C: %1', funder."No.");
-                        interestAccPay := venPostingGroup."Interest Payable";
+                            Error('Missing Interest Expense A/C: %1', funder."No.");
+                        interestAccPay := funderLoan."Interest Payable";
                         if interestAccPay = '' then
-                            Error('Missing Posting Group - Interest Payable A/C: %1', funder."No.");
-                        principleAcc := venPostingGroup."Payables Account";
+                            Error('Missing Interest Payable A/C: %1', funder."No.");
+                        principleAcc := funderLoan."Payables Account";
                         if principleAcc = '' then
-                            Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                            Error('Missing Principle A/C: %1', funder."No.");
                         if not generalSetup.FindFirst() then
                             Error('Please Define Withholding Tax under General Setup');
                         withholdingAcc := generalSetup.FunderWithholdingAcc;
@@ -1074,17 +1074,17 @@ codeunit 50232 "Treasury Mgt CU"
                         //**********************************************
                         //          Get Posting groups & Posting Accounts
                         //**********************************************
-                        if not venPostingGroup.Get(funderLoan."Posting Group") then
-                            Error('Missing Posting Group: %1', funder."No.");
-                        interestAccExpense := venPostingGroup."Interest Expense";
+                        // if not venPostingGroup.Get(funderLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', funder."No.");
+                        interestAccExpense := funderLoan."Interest Expense";
                         if interestAccExpense = '' then
-                            Error('Missing Posting Group - Interest Expense A/C: %1', funder."No.");
-                        interestAccPay := venPostingGroup."Interest Payable";
+                            Error('Missing Interest Expense A/C: %1', funder."No.");
+                        interestAccPay := funderLoan."Interest Payable";
                         if interestAccPay = '' then
-                            Error('Missing Posting Group - Interest Payable A/C: %1', funder."No.");
-                        principleAcc := venPostingGroup."Payables Account";
+                            Error('Missing Interest Payable A/C: %1', funder."No.");
+                        principleAcc := funderLoan."Payables Account";
                         if principleAcc = '' then
-                            Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                            Error('Missing Principle A/C: %1', funder."No.");
                         if not generalSetup.FindFirst() then
                             Error('Please Define Withholding Tax under General Setup');
                         withholdingAcc := generalSetup.FunderWithholdingAcc;
@@ -1310,7 +1310,7 @@ codeunit 50232 "Treasury Mgt CU"
         funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
         funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
         looper: Record FunderLedgerEntry;
-        venPostingGroup: record "Vendor Posting Group";
+        venPostingGroup: record "Treasury Posting Group";
         principleAcc: Code[100];
         interestAccExpense: Code[100];
         interestAccPay: Code[100];
@@ -1349,17 +1349,17 @@ codeunit 50232 "Treasury Mgt CU"
                         //**********************************************
                         //          Get Posting groups & Posting Accounts
                         //**********************************************
-                        if not venPostingGroup.Get(funderLoan."Posting Group") then
-                            Error('Missing Posting Group: %1', funder."No.");
-                        interestAccExpense := venPostingGroup."Interest Expense";
+                        // if not venPostingGroup.Get(funderLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', funder."No.");
+                        interestAccExpense := funderLoan."Interest Expense";
                         if interestAccExpense = '' then
-                            Error('Missing Posting Group - Interest Expense A/C: %1', funder."No.");
-                        interestAccPay := venPostingGroup."Interest Payable";
+                            Error('Missing Interest Expense A/C: %1', funder."No.");
+                        interestAccPay := funderLoan."Interest Payable";
                         if interestAccPay = '' then
-                            Error('Missing Posting Group - Interest Payable A/C: %1', funder."No.");
-                        principleAcc := venPostingGroup."Payables Account";
+                            Error('Missing Interest Payable A/C: %1', funder."No.");
+                        principleAcc := funderLoan."Payables Account";
                         if principleAcc = '' then
-                            Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                            Error('Missing Principle A/C: %1', funder."No.");
                         if not generalSetup.FindFirst() then
                             Error('Please Define Withholding Tax under General Setup');
                         withholdingAcc := generalSetup.FunderWithholdingAcc;
@@ -1378,17 +1378,17 @@ codeunit 50232 "Treasury Mgt CU"
                         //**********************************************
                         //          Get Posting groups & Posting Accounts
                         //**********************************************
-                        if not venPostingGroup.Get(funderLoan."Posting Group") then
-                            Error('Missing Posting Group: %1', funder."No.");
-                        interestAccExpense := venPostingGroup."Interest Expense";
+                        // if not venPostingGroup.Get(funderLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', funder."No.");
+                        interestAccExpense := funderLoan."Interest Expense";
                         if interestAccExpense = '' then
-                            Error('Missing Posting Group - Interest Expense A/C: %1', funder."No.");
-                        interestAccPay := venPostingGroup."Interest Payable";
+                            Error('Missing Interest Expense A/C: %1', funder."No.");
+                        interestAccPay := funderLoan."Interest Payable";
                         if interestAccPay = '' then
-                            Error('Missing Posting Group - Interest Payable A/C: %1', funder."No.");
-                        principleAcc := venPostingGroup."Payables Account";
+                            Error('Missing Interest Payable A/C: %1', funder."No.");
+                        principleAcc := funderLoan."Payables Account";
                         if principleAcc = '' then
-                            Error('Missing Posting Group - Principle A/C: %1', funder."No.");
+                            Error('Missing Principle A/C: %1', funder."No.");
                         if not generalSetup.FindFirst() then
                             Error('Please Define Withholding Tax under General Setup');
                         withholdingAcc := generalSetup.FunderWithholdingAcc;

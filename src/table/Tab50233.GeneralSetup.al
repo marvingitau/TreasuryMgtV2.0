@@ -42,6 +42,37 @@ table 50233 "General Setup"
             DataClassification = ToBeClassified;
             TableRelation = "No. Series";
         }
+        field(60; "Trsy Recipient mail"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(61; "Trsy Recipient Name"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(65; "Trsy Recipient mail1"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(66; "Trsy Recipient Name1"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(70; "Intr. Pay. Rem. Waiting Time"; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(80; "Placemnt. Matur Rem. Time"; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(90; "Related Party"; Code[20])
+        {
+            Caption = 'Related Party/Customer';
+            DataClassification = ToBeClassified;
+            TableRelation = "No. Series";
+        }
+
 
     }
 

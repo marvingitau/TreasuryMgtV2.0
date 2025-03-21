@@ -5,6 +5,8 @@ page 50230 "Funder List"
     UsageCategory = Lists;
     SourceTable = Funders;
     CardPageId = "Funder Card";
+    Caption = 'Funder/Supplier List';
+
     layout
     {
         area(Content)

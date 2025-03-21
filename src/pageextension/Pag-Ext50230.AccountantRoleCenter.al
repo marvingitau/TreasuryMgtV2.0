@@ -13,6 +13,14 @@ pageextension 50230 AccountantRoleCenter extends 9027
             group("Treasury Management")
             {
                 Caption = 'Treasury Management';
+                action(PortfolioList)
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Portfolio';
+                    Image = ResourceJournal;
+                    RunObject = page 50246;
+                    ToolTip = 'Portfolio';
+                }
                 action(Funder)
                 {
                     ApplicationArea = Basic, Suite;
@@ -21,7 +29,6 @@ pageextension 50230 AccountantRoleCenter extends 9027
                     RunObject = Page "Funder List";
                     ToolTip = 'Funder';
                 }
-
                 action(TrsyJnl)
                 {
                     ApplicationArea = Basic, Suite;
@@ -30,6 +37,23 @@ pageextension 50230 AccountantRoleCenter extends 9027
                     RunObject = page "Trsy Journal";
                     ToolTip = 'Treasury Journal';
                 }
+                // action(GLMapping)
+                // {
+                //     ApplicationArea = Basic, Suite;
+                //     Caption = 'G/L Mapping';
+                //     Image = ResourceJournal;
+                //     RunObject = page "Treasury Posting Group";
+                //     ToolTip = 'G/L Mapping';
+                // }
+                // action(TrsCurrency)
+                // {
+                //     ApplicationArea = Basic, Suite;
+                //     Caption = 'Treasury Foreign Exchange';
+                //     Image = ResourceJournal;
+                //     RunObject = page "Treasury Currencies";
+                //     ToolTip = 'Treasury Foreign Exchange';
+                // }
+
 
             }
         }
