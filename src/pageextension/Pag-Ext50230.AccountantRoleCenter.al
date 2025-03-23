@@ -29,6 +29,22 @@ pageextension 50230 AccountantRoleCenter extends 9027
                     RunObject = Page "Funder List";
                     ToolTip = 'Funder';
                 }
+                action(RElatedParty)
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Relatedparty/Customer';
+                    Image = ResourceJournal;
+                    RunObject = page "Related Party List";
+                    ToolTip = 'Relatedparty/Customer';
+                }
+                action("Funder Loans")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Funder Loans';
+                    Image = ResourceJournal;
+                    RunObject = page 50271;
+                    ToolTip = 'Funder Loans';
+                }
                 action(TrsyJnl)
                 {
                     ApplicationArea = Basic, Suite;

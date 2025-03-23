@@ -15,60 +15,75 @@
     <ReportSection>
       <Body>
         <ReportItems>
-          <Textbox Name="Textbox1">
-            <CanGrow>true</CanGrow>
-            <KeepTogether>true</KeepTogether>
-            <Paragraphs>
-              <Paragraph>
-                <TextRuns>
-                  <TextRun>
-                    <Value>Payment</Value>
-                    <Style />
-                  </TextRun>
-                </TextRuns>
-                <Style>
-                  <TextAlign>Center</TextAlign>
-                </Style>
-              </Paragraph>
-            </Paragraphs>
-            <rd:DefaultName>Textbox1</rd:DefaultName>
-            <Top>0.2257in</Top>
-            <Left>3.63891in</Left>
-            <Height>0.25in</Height>
-            <Width>0.61111in</Width>
-            <Style>
-              <Border>
-                <Style>None</Style>
-              </Border>
-              <PaddingLeft>2pt</PaddingLeft>
-              <PaddingRight>2pt</PaddingRight>
-              <PaddingTop>2pt</PaddingTop>
-              <PaddingBottom>2pt</PaddingBottom>
-            </Style>
-          </Textbox>
           <Tablix Name="Tablix1">
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>1.1713in</Width>
+                  <Width>0.91319in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.1713in</Width>
+                  <Width>1.22222in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.1713in</Width>
+                  <Width>1.51389in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.05556in</Width>
+                  <Width>1.26968in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.05556in</Width>
+                  <Width>0.95255in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.22917in</Width>
+                  <Width>1.2581in</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
+                <TablixRow>
+                  <Height>0.25in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox16">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Payment</Value>
+                                  <Style>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox16</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <BackgroundColor>LightBlue</BackgroundColor>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                        <ColSpan>6</ColSpan>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                  </TablixCells>
+                </TablixRow>
                 <TablixRow>
                   <Height>0.22222in</Height>
                   <TablixCells>
@@ -82,7 +97,9 @@
                               <TextRuns>
                                 <TextRun>
                                   <Value>Value Date</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
@@ -112,7 +129,9 @@
                               <TextRuns>
                                 <TextRun>
                                   <Value>Interest</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
@@ -142,7 +161,9 @@
                               <TextRuns>
                                 <TextRun>
                                   <Value>Amortization</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
@@ -172,7 +193,9 @@
                               <TextRuns>
                                 <TextRun>
                                   <Value>Total Payment</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
@@ -202,7 +225,9 @@
                               <TextRuns>
                                 <TextRun>
                                   <Value>Interest Rate</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
@@ -232,7 +257,9 @@
                               <TextRuns>
                                 <TextRun>
                                   <Value>Out Standing Amt</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
@@ -467,76 +494,94 @@
                   <KeepWithGroup>After</KeepWithGroup>
                 </TablixMember>
                 <TablixMember>
+                  <KeepWithGroup>After</KeepWithGroup>
+                </TablixMember>
+                <TablixMember>
                   <Group Name="Details" />
+                  <Visibility>
+                    <Hidden>=IsNothing(Fields!DueDate.Value) =true</Hidden>
+                  </Visibility>
                 </TablixMember>
               </TablixMembers>
             </TablixRowHierarchy>
             <DataSetName>DataSet_Result</DataSetName>
-            <Top>0.89931in</Top>
-            <Left>0.73612in</Left>
-            <Height>0.44444in</Height>
-            <Width>6.85419in</Width>
-            <ZIndex>1</ZIndex>
+            <Top>0.25in</Top>
+            <Left>0.25in</Left>
+            <Height>0.69444in</Height>
+            <Width>7.12963in</Width>
             <Style>
               <Border>
                 <Style>None</Style>
               </Border>
             </Style>
           </Tablix>
-          <Textbox Name="Textbox3">
-            <CanGrow>true</CanGrow>
-            <KeepTogether>true</KeepTogether>
-            <Paragraphs>
-              <Paragraph>
-                <TextRuns>
-                  <TextRun>
-                    <Value>Interest Payout Schedule</Value>
-                    <Style />
-                  </TextRun>
-                </TextRuns>
-                <Style>
-                  <TextAlign>Center</TextAlign>
-                </Style>
-              </Paragraph>
-            </Paragraphs>
-            <rd:DefaultName>Textbox1</rd:DefaultName>
-            <Top>1.98958in</Top>
-            <Left>0.47223in</Left>
-            <Height>0.30092in</Height>
-            <Width>7.56945in</Width>
-            <ZIndex>2</ZIndex>
-            <Style>
-              <Border>
-                <Style>None</Style>
-              </Border>
-              <PaddingLeft>2pt</PaddingLeft>
-              <PaddingRight>2pt</PaddingRight>
-              <PaddingTop>2pt</PaddingTop>
-              <PaddingBottom>2pt</PaddingBottom>
-            </Style>
-          </Textbox>
           <Tablix Name="Tablix2">
             <TablixBody>
               <TablixColumns>
                 <TablixColumn>
-                  <Width>1.51389in</Width>
+                  <Width>0.91319in</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1.22222in</Width>
                 </TablixColumn>
                 <TablixColumn>
                   <Width>1.51389in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.51389in</Width>
+                  <Width>1.25695in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.51389in</Width>
-                </TablixColumn>
-                <TablixColumn>
-                  <Width>1.51389in</Width>
+                  <Width>1.1875in</Width>
                 </TablixColumn>
               </TablixColumns>
               <TablixRows>
                 <TablixRow>
                   <Height>0.25in</Height>
+                  <TablixCells>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox25">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Interest Payout Schedule</Value>
+                                  <Style>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
+                                </TextRun>
+                              </TextRuns>
+                              <Style>
+                                <TextAlign>Center</TextAlign>
+                              </Style>
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox25</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <BackgroundColor>LightBlue</BackgroundColor>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                        <ColSpan>5</ColSpan>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                    <TablixCell />
+                  </TablixCells>
+                </TablixRow>
+                <TablixRow>
+                  <Height>0.22917in</Height>
                   <TablixCells>
                     <TablixCell>
                       <CellContents>
@@ -548,7 +593,9 @@
                               <TextRuns>
                                 <TextRun>
                                   <Value>Due Date</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style>
@@ -580,7 +627,9 @@
                               <TextRuns>
                                 <TextRun>
                                   <Value>Interest</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style>
@@ -612,7 +661,9 @@
                               <TextRuns>
                                 <TextRun>
                                   <Value>WithHolding Tax</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style>
@@ -644,7 +695,9 @@
                               <TextRuns>
                                 <TextRun>
                                   <Value>Net Interest</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style>
@@ -676,7 +729,9 @@
                               <TextRuns>
                                 <TextRun>
                                   <Value>Calculation Date</Value>
-                                  <Style />
+                                  <Style>
+                                    <FontWeight>Bold</FontWeight>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style>
@@ -1070,10 +1125,16 @@
                   <KeepWithGroup>After</KeepWithGroup>
                 </TablixMember>
                 <TablixMember>
+                  <KeepWithGroup>After</KeepWithGroup>
+                </TablixMember>
+                <TablixMember>
                   <Group Name="Details2" />
                   <TablixMembers>
                     <TablixMember />
                   </TablixMembers>
+                  <Visibility>
+                    <Hidden>=IsNothing(Fields!DueDateB.Value)=true</Hidden>
+                  </Visibility>
                 </TablixMember>
                 <TablixMember>
                   <KeepWithGroup>Before</KeepWithGroup>
@@ -1081,11 +1142,11 @@
               </TablixMembers>
             </TablixRowHierarchy>
             <DataSetName>DataSet_Result</DataSetName>
-            <Top>2.42707in</Top>
-            <Left>0.47223in</Left>
-            <Height>0.75in</Height>
-            <Width>7.56945in</Width>
-            <ZIndex>3</ZIndex>
+            <Top>1.01388in</Top>
+            <Left>0.25in</Left>
+            <Height>0.97917in</Height>
+            <Width>6.09375in</Width>
+            <ZIndex>1</ZIndex>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -1093,11 +1154,13 @@
             </Style>
           </Tablix>
         </ReportItems>
-        <Height>3.79167in</Height>
+        <Height>2.36806in</Height>
         <Style />
       </Body>
-      <Width>8.51391in</Width>
+      <Width>7.37963in</Width>
       <Page>
+        <PageHeight>11.69in</PageHeight>
+        <PageWidth>8.27in</PageWidth>
         <Style />
       </Page>
     </ReportSection>

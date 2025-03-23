@@ -208,7 +208,21 @@ page 50233 "Funder Card"
                 Visible = ShowJointFastTab;
                 group("Joint General")
                 {
+                    field("JointShortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
+                    {
+                        ApplicationArea = all;
+                        ShowMandatory = true;
+                        trigger OnValidate()
+                        begin
+                            CurrPage.Update();
+                        end;
 
+                    }
+                    field("JointBranch Name"; BranchName)
+                    {
+                        ApplicationArea = All;
+                        Editable = false;
+                    }
                     field(PersonalDetIDPassport; Rec.PersonalDetIDPassport)
                     {
                         ApplicationArea = All;
@@ -306,6 +320,21 @@ page 50233 "Funder Card"
                 Visible = ShowCorporateFastTab;
                 group("Corporate General")
                 {
+                    field("CorpShortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
+                    {
+                        ApplicationArea = all;
+                        ShowMandatory = true;
+                        trigger OnValidate()
+                        begin
+                            CurrPage.Update();
+                        end;
+
+                    }
+                    field("CorpBranch Name"; BranchName)
+                    {
+                        ApplicationArea = All;
+                        Editable = false;
+                    }
 
                     field(CompanyNo; Rec.CompanyNo)
                     {

@@ -185,7 +185,7 @@ table 50232 "Funder Loan"
         {
             DataClassification = ToBeClassified;
             Caption = 'Enable GL Posting';
-            InitValue = false;
+            InitValue = true;
         }
         // field(523; Portfolio; Code[100])
         // {
@@ -438,49 +438,49 @@ table 50232 "Funder Loan"
         {
             Caption = 'Payables Account';
             TableRelation = "G/L Account";
-            trigger OnValidate()
-            begin
-                vPostingGroup.Reset();
-                vPostingGroup.SetRange(vPostingGroup.Code, "No.");
-                if vPostingGroup.Find('-') then begin
-                    vPostingGroup."Payables Account" := "Payables Account";
-                    vPostingGroup.Modify();
-                end;
-            end;
+            // trigger OnValidate()
+            // begin
+            //     vPostingGroup.Reset();
+            //     vPostingGroup.SetRange(vPostingGroup.Code, "No.");
+            //     if vPostingGroup.Find('-') then begin
+            //         vPostingGroup."Payables Account" := "Payables Account";
+            //         vPostingGroup.Modify();
+            //     end;
+            // end;
         }
         field(2801; "Interest Expense"; Code[20])
         {
             Caption = 'Interest Expense';
             TableRelation = "G/L Account";
-            trigger OnValidate()
-            begin
-                vPostingGroup.Reset();
-                vPostingGroup.SetRange(vPostingGroup.Code, "No.");
-                if vPostingGroup.Find('-') then begin
-                    vPostingGroup."Interest Expense" := "Interest Expense";
-                    vPostingGroup.Modify();
-                end;
-            end;
+            // trigger OnValidate()
+            // begin
+            //     vPostingGroup.Reset();
+            //     vPostingGroup.SetRange(vPostingGroup.Code, "No.");
+            //     if vPostingGroup.Find('-') then begin
+            //         vPostingGroup."Interest Expense" := "Interest Expense";
+            //         vPostingGroup.Modify();
+            //     end;
+            // end;
         }
         field(2802; "Interest Payable"; Code[20])
         {
             Caption = 'Interest Payable';
             TableRelation = "G/L Account";
-            trigger OnValidate()
-            begin
-                vPostingGroup.Reset();
-                vPostingGroup.SetRange(vPostingGroup.Code, "No.");
-                if vPostingGroup.Find('-') then begin
-                    vPostingGroup."Interest Payable" := "Interest Payable";
-                    vPostingGroup.Modify();
-                end;
-            end;
+            // trigger OnValidate()
+            // begin
+            //     vPostingGroup.Reset();
+            //     vPostingGroup.SetRange(vPostingGroup.Code, "No.");
+            //     if vPostingGroup.Find('-') then begin
+            //         vPostingGroup."Interest Payable" := "Interest Payable";
+            //         vPostingGroup.Modify();
+            //     end;
+            // end;
         }
 
         field(2810; PlacementMaturity; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = " ",Principal,Interest,"Principal + Interest",Terminate;
+            OptionMembers = Principal,Interest,"Principal + Interest",Terminate;
         }
         field(2820; "Confirmation Date"; Date)
         {

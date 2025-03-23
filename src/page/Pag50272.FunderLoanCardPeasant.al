@@ -1,9 +1,10 @@
-page 50236 "Funder Loan Card"
+page 50272 "Funder Loan Card Peasant"
 {
     PageType = Card;
     ApplicationArea = All;
     UsageCategory = Administration;
     SourceTable = "Funder Loan";
+    InsertAllowed = false;
 
     layout
     {
@@ -91,6 +92,10 @@ page 50236 "Funder Loan Card"
                 //     ApplicationArea = All;
                 //     // Editable = false;
                 // }
+                field("Enable GL Posting"; Rec.EnableGLPosting)
+                {
+                    ApplicationArea = All;
+                }
                 group("G/L Mapping")
                 {
                     field("Payables Account"; Rec."Payables Account")
@@ -249,10 +254,10 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                 }
-                field("Enable GL Posting"; Rec.EnableGLPosting)
-                {
-                    ApplicationArea = All;
-                }
+                // field(Portfolio; Rec.Portfolio)
+                // {
+                //     ApplicationArea = All;
+                // }
 
                 field(Category; Rec.Category)
                 {
@@ -723,20 +728,6 @@ page 50236 "Funder Loan Card"
         OpenApprovalEntriesExist := ApprovalsMgmt.HasOpenApprovalEntries(Rec.RecordId);
         CanCancelApprovalForRecord := ApprovalsMgmt.CanCancelApprovalForRecord(Rec.RecordId);
         HasApprovalEntries := ApprovalsMgmt.HasApprovalEntries(Rec.RecordId);
-    end;
-
-    trigger OnQueryClosePage(CloseAction: Action): Boolean
-    var
-        ReportFlag: Record "Report Flags";
-    begin
-        ReportFlag.Reset();
-        ReportFlag.SetFilter("Line No.", '<>%1', 0);
-        ReportFlag.SetFilter("Utilizing User", '=%1', UserId);
-        if ReportFlag.Find('-') then begin
-            repeat
-                ReportFlag.Delete();
-            until ReportFlag.Next() = 0;
-        end;
     end;
 
     var

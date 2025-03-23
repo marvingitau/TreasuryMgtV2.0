@@ -24,6 +24,13 @@ table 50233 "General Setup"
             TableRelation = "G/L Account";
 
         }
+        field(5; RelatedWithholdingAcc; Code[100])
+        {
+            Caption = 'Related Withholding Tax Account';
+            DataClassification = ToBeClassified;
+            TableRelation = "G/L Account";
+
+        }
         field(20; "Funder No."; Code[20])
         {
             Caption = 'Funder No';

@@ -277,7 +277,7 @@ codeunit 50231 FunderMgtCU
                     remainingDays := endMonthDate - funderLoan.PlacementDate + 1;
                 end else begin
                     endMonthDate := CALCDATE('CM', Today);
-                    remainingDays := Today - endMonthDate + 1;
+                    remainingDays := (endMonthDate - Today) + 1;
                 end;
 
 
@@ -422,16 +422,16 @@ codeunit 50231 FunderMgtCU
 
 
 
-    procedure DirectGLPosting(Origin: Text[100]; GLAcc: Code[100]; Amount: Decimal; Desc: Text[100]; FunderLoanNo: Code[20]; BankAc: Code[100]; Currency: Code[20]; PostingGroup: Code[20]; DocNo: Code[20])
+    procedure DirectGLPosting(Origin: Text[100]; GLAcc: Code[100]; Amount: Decimal; Desc: Text[100]; FunderLoanNo: Code[20]; BankAc: Code[100]; Currency: Code[20]; PostingGroup: Code[50]; DocNo: Code[20])
     var
         GLEntry: Record "G/L Entry";
         NextEntryNo: Integer;
         JournalEntry: Record "Gen. Journal Line";
         GLPost: Codeunit "Gen. Jnl.-Post Line";
 
-        principleAcc: Code[100];
-        interestAccExpense: Code[100];
-        interestAccPay: Code[100];
+        // principleAcc: Code[100];
+        // interestAccExpense: Code[100];
+        // interestAccPay: Code[100];
         withholdingAcc: Code[20];
         monthlyInterest: Decimal;
         witHldInterest: Decimal;
@@ -449,40 +449,41 @@ codeunit 50231 FunderMgtCU
         //**********************************************
         //          Get Posting groups & Posting Accounts
         //**********************************************
-        if PostingGroup = '' then begin
-            funderLoan.Reset();
-            if not funderLoan.Get(FunderLoanNo) then
-                Error('Funder %1 not found', FunderLoanNo);
-            // if not venPostingGroup.Get(funderLoan."Posting Group") then
-            //     Error('Missing Posting Group: %1', funderLoan."No.");
-            interestAccExpense := funderLoan."Interest Expense";
-            if interestAccExpense = '' then
-                Error('Missing Interest Expense A/C: %1', funderLoan."No.");
-            interestAccPay := funderLoan."Interest Payable";
-            if interestAccPay = '' then
-                Error('Missing Interest Payable A/C: %1', funderLoan."No.");
-            principleAcc := funderLoan."Payables Account";
-            if principleAcc = '' then
-                Error('Missing Principle A/C: %1', funderLoan."No.");
-        end
-        else begin
+        // if PostingGroup = '' then begin
+        //     funderLoan.Reset();
+        //     if not funderLoan.Get(FunderLoanNo) then
+        //         Error('Funder %1 not found', FunderLoanNo);
+        //     // if not venPostingGroup.Get(funderLoan."Posting Group") then
+        //     //     Error('Missing Posting Group: %1', funderLoan."No.");
+        //     interestAccExpense := funderLoan."Interest Expense";
+        //     if interestAccExpense = '' then
+        //         Error('Missing Interest Expense A/C: %1', funderLoan."No.");
+        //     interestAccPay := funderLoan."Interest Payable";
+        //     if interestAccPay = '' then
+        //         Error('Missing Interest Payable A/C: %1', funderLoan."No.");
+        //     principleAcc := funderLoan."Payables Account";
+        //     if principleAcc = '' then
+        //         Error('Missing Principle A/C: %1', funderLoan."No.");
+        // end
+        // else begin
 
-            // if not venPostingGroup.Get(PostingGroup) then
-            //     Error('Missing Posting Group: %1', funderLoan."No.");
-            funderLoan.Reset();
-            funderLoan.SetRange("No.", FunderLoanNo);
-            if not funderLoan.Find('-') then
-                Error('Funder Loan %1 not found', FunderLoanNo);
-            interestAccExpense := funderLoan."Interest Expense";
-            if interestAccExpense = '' then
-                Error('Missing Interest Expense A/C: %1', funderLoan."No.");
-            interestAccPay := funderLoan."Interest Payable";
-            if interestAccPay = '' then
-                Error('Missing Interest Payable A/C: %1', funderLoan."No.");
-            principleAcc := funderLoan."Payables Account";
-            if principleAcc = '' then
-                Error('Missing Principle A/C: %1', funderLoan."No.");
-        end;
+        // if not venPostingGroup.Get(PostingGroup) then
+        //     Error('Missing Posting Group: %1', funderLoan."No.");
+        funderLoan.Reset();
+        funderLoan.SetRange("No.", FunderLoanNo);
+        if not funderLoan.Find('-') then
+            Error('Funder Loan %1 not found', FunderLoanNo);
+        // interestAccExpense := funderLoan."Interest Expense";
+        // if interestAccExpense = '' then
+        //     Error('Missing Interest Expense A/C: %1', funderLoan."No.");
+        // interestAccPay := funderLoan."Interest Payable";
+        // if interestAccPay = '' then
+        //     Error('Missing Interest Payable A/C: %1', funderLoan."No.");
+        // principleAcc := funderLoan."Payables Account";
+        // if principleAcc = '' then
+        //     Error('Missing Principle A/C: %1', funderLoan."No.");
+
+        // end;
         if not generalSetup.FindFirst() then
             Error('Please Define Withholding Tax under General Setup');
         withholdingAcc := generalSetup.FunderWithholdingAcc;
@@ -607,6 +608,168 @@ codeunit 50231 FunderMgtCU
         ReportFlag."Funder Loan No." := funderLoanNo;
         ReportFlag.Insert();
         // Commit();
+    end;
+
+    procedure DuplicateRecord(SourceRecordID: Code[20])
+    var
+        SourceRecord: Record "Funder Loan";
+        NewRecord: Record "Funder Loan";
+        NewRecord1: Record "Funder Loan";
+        GenSetup: Record "General Setup";
+        NoSer: Codeunit "No. Series";
+        funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
+        funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
+        funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
+        funderLegderEntry3: Record FunderLedgerEntry;//Calculate every month
+        _interestValue: Decimal;
+        _principalValue: Decimal;
+        _nextEntryNo: Integer;
+
+    begin
+        // Step 1: Retrieve the existing record
+        SourceRecord.Reset();
+        SourceRecord.SetRange("No.", SourceRecordID);
+        if not SourceRecord.Find('-') then
+            Error('Funder Loan not found.');
+
+        if SourceRecord.Status <> SourceRecord.Status::Approved then
+            Error('Record Not Approved');
+
+
+        if SourceRecord.PlacementMaturity = SourceRecord.PlacementMaturity::Interest then begin
+            // Step 2: Create a new record and copy fields
+            NewRecord.Init();
+            NewRecord.TransferFields(SourceRecord); // Copy all fields from the source record
+
+            _docNo := TrsyMgt.GenerateDocumentNumber();
+            // Step 3: Modify the new record (e.g., set a new primary key or unique field)
+            GenSetup.Get(0);
+            GenSetup.TestField("Funder Loan No.");
+            NewRecord."No." := NoSer.GetNextNo(GenSetup."Funder Loan No.", 0D, true); // Replace with logic to generate a unique key
+
+            NewRecord."Original Disbursed Amount" := 0;
+            NewRecord.Status := NewRecord.Status::Open;
+
+            SourceRecord.CalcFields(NetInterestamount);
+            _interestValue := SourceRecord.NetInterestamount;
+
+            //funderLegderEntry.LockTable();
+            funderLegderEntry.Reset();
+            if funderLegderEntry.FindLast() then
+                _nextEntryNo := funderLegderEntry."Entry No." + 1;
+
+
+            funderLegderEntry.Init();
+            funderLegderEntry."Entry No." := _nextEntryNo;
+            funderLegderEntry."Funder No." := SourceRecord."Funder No.";
+            funderLegderEntry."Funder Name" := SourceRecord.Name;
+            funderLegderEntry."Loan Name" := SourceRecord."Loan Name";
+            funderLegderEntry."Loan No." := NewRecord."No.";
+            funderLegderEntry."Posting Date" := Today;
+            funderLegderEntry."Document No." := _docNo;
+            funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
+            funderLegderEntry.Description := 'Interest calculation' + Format(Today);
+            funderLegderEntry.Amount := _interestValue;
+            funderLegderEntry."Amount(LCY)" := _interestValue;
+            funderLegderEntry."Remaining Amount" := _interestValue;
+            funderLegderEntry.Insert();
+            if (funderLoan.EnableGLPosting = true) and (_interestValue <> 0) then
+                DirectGLPosting('interest', SourceRecord."Payables Account", _interestValue, 'Interest', funderLoan."No.", SourceRecord."Interest Payable", '', '', '');//GROSS Interest
+
+            // Step 4: Insert the new record
+            if not NewRecord.Insert() then
+                Error('Failed to Create a Loan record.');
+            Message('Loan %1 successfully created', NewRecord."No.");
+        end;
+        if SourceRecord.PlacementMaturity = SourceRecord.PlacementMaturity::Principal then begin
+            // Step 2: Create a new record and copy fields
+            NewRecord.Init();
+            NewRecord.TransferFields(SourceRecord); // Copy all fields from the source record
+
+            _docNo := TrsyMgt.GenerateDocumentNumber();
+            // Step 3: Modify the new record (e.g., set a new primary key or unique field)
+            GenSetup.Get(0);
+            GenSetup.TestField("Funder Loan No.");
+            NewRecord."No." := NoSer.GetNextNo(GenSetup."Funder Loan No.", 0D, true); // Replace with logic to generate a unique key
+
+            // NewRecord.Validate("Original Disbursed Amount"); // Validate to create Funder entries
+            NewRecord.Status := NewRecord.Status::Open;
+            // Step 4: Insert the new record
+            if NewRecord.Insert() then begin
+                NewRecord1.Reset();
+                NewRecord1.SetRange("No.", NewRecord."No.");
+                if NewRecord1.Find('-') then begin
+                    NewRecord1.Validate("Original Disbursed Amount");
+                    NewRecord1.Modify();
+                end;
+            end else begin
+
+                Error('Failed to Create a Loan record.');
+            end;
+            Message('Loan %1 successfully created', NewRecord."No.");
+        end;
+        if SourceRecord.PlacementMaturity = SourceRecord.PlacementMaturity::"Principal + Interest" then begin
+            // Step 2: Create a new record and copy fields
+            NewRecord.Init();
+            NewRecord.TransferFields(SourceRecord); // Copy all fields from the source record
+
+            _docNo := TrsyMgt.GenerateDocumentNumber();
+            // Step 3: Modify the new record (e.g., set a new primary key or unique field)
+            GenSetup.Get(0);
+            GenSetup.TestField("Funder Loan No.");
+            NewRecord."No." := NoSer.GetNextNo(GenSetup."Funder Loan No.", 0D, true); // Replace with logic to generate a unique key
+
+            // NewRecord.Validate("Original Disbursed Amount"); // Validate to create Funder entries
+            NewRecord.Status := NewRecord.Status::Open;
+
+            SourceRecord.CalcFields(NetInterestamount);
+            _interestValue := SourceRecord.NetInterestamount;
+
+            //funderLegderEntry.LockTable();
+            funderLegderEntry.Reset();
+            if funderLegderEntry.FindLast() then
+                _nextEntryNo := funderLegderEntry."Entry No." + 1;
+
+
+            funderLegderEntry.Init();
+            funderLegderEntry."Entry No." := _nextEntryNo;
+            funderLegderEntry."Funder No." := SourceRecord."Funder No.";
+            funderLegderEntry."Funder Name" := SourceRecord.Name;
+            funderLegderEntry."Loan Name" := SourceRecord."Loan Name";
+            funderLegderEntry."Loan No." := NewRecord."No.";
+            funderLegderEntry."Posting Date" := Today;
+            funderLegderEntry."Document No." := _docNo;
+            funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
+            funderLegderEntry.Description := 'Interest calculation' + Format(Today);
+            funderLegderEntry.Amount := _interestValue;
+            funderLegderEntry."Amount(LCY)" := _interestValue;
+            funderLegderEntry."Remaining Amount" := _interestValue;
+            funderLegderEntry.Insert();
+            if (funderLoan.EnableGLPosting = true) and (_interestValue <> 0) then
+                DirectGLPosting('interest', SourceRecord."Payables Account", _interestValue, 'Interest', funderLoan."No.", SourceRecord."Interest Payable", '', '', '');//GROSS Interest
+
+            // Step 4: Insert the new record
+            // if not NewRecord.Insert() then
+            //     Error('Failed to Create a Loan record.');
+            if NewRecord.Insert() then begin
+                NewRecord1.Reset();
+                NewRecord1.SetRange("No.", NewRecord."No.");
+                if NewRecord1.Find('-') then begin
+                    NewRecord1.Validate("Original Disbursed Amount");
+                    NewRecord1.Modify();
+                end;
+            end else begin
+
+                Error('Failed to Create a Loan record.');
+            end;
+            Message('Loan %1 successfully created', NewRecord."No.");
+        end;
+        if SourceRecord.PlacementMaturity = SourceRecord.PlacementMaturity::Terminate then begin
+
+        end;
+
+
+
     end;
 
     var

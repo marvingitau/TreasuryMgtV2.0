@@ -133,8 +133,10 @@ report 50231 "Payment Amortization"
     begin
         ReportFlag.Reset();
         ReportFlag.SetFilter("Line No.", '<>%1', 0);
+        ReportFlag.SetFilter("Utilizing User", '=%1', UserId);
         if not ReportFlag.FindFirst() then
             Error('No Report Flag Added');
+
         FunderNo := ReportFlag."Funder Loan No.";
         // Filters := FunderLoanTbl.GetFilter("No.");
         FunderLoanTbl.Reset();

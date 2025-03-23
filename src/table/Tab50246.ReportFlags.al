@@ -14,6 +14,16 @@ table 50246 "Report Flags"
             DataClassification = ToBeClassified;
             // InvestmentConfirmFlag;
         }
+        field(20; "Related Party No"; Code[20])
+        {
+            DataClassification = ToBeClassified;
+            // InvestmentConfirmFlag;
+        }
+        field(30; "Utilizing User"; Code[20])
+        {
+            DataClassification = ToBeClassified;
+            // InvestmentConfirmFlag;
+        }
     }
 
     keys
