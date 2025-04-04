@@ -165,8 +165,8 @@ report 50238 "Reminder On Intr. Due"
                     if (FunderLoanTbl.InterestRateType = FunderLoanTbl.InterestRateType::"Floating Rate") then
                         _interestRate_Active := (FunderLoanTbl."Reference Rate" + FunderLoanTbl.Margin);
 
-                    if _interestRate_Active = 0 then
-                        Error('Interest Rate is Zero');
+                    // if _interestRate_Active = 0 then
+                    //     Error('Interest Rate is Zero');
 
                     _withHoldingTax_Percent := FunderLoanTbl.Withldtax;
                     _withHoldingTax_Amnt := 0;
@@ -493,9 +493,10 @@ report 50238 "Reminder On Intr. Due"
                         BranchName := DimensionValue.Name;
 
                     Banks.Reset();
-                    Banks.SetRange(Banks.BankCode, Funders."Bank Code");
+                    Banks.SetRange(BankCode, Funders."Bank Code");
                     if Banks.Find('-') then
-                        BankName := Banks.Name;
+                        BankName := Funders."Bank Name";
+                    // BankName := Banks.Name;
 
                     BankBranch.Reset();
                     BankBranch.SetRange(BranchCode, Funders."Bank Branch");
@@ -984,7 +985,7 @@ report 50238 "Reminder On Intr. Due"
         ConfirmationDate: Date;
         Pay: Decimal;
         Loan: Record "Schedule Total";
-        BranchName: Code[20];
+        BranchName: Text[50];
         BankName: Text[50];
         BBranchName: Text[50];
         Banks: Record Banks;

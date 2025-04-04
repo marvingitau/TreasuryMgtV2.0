@@ -30,7 +30,8 @@ page 50236 "Funder Loan Card"
                 field("Loan Name"; Rec."Loan Name")
                 {
                     ApplicationArea = All;
-                    ShowMandatory = true;
+                    // ShowMandatory = true;
+                    Visible = false;
                 }
                 field(PlacementDate; Rec.PlacementDate)
                 {
@@ -446,7 +447,7 @@ page 50236 "Funder Loan Card"
             {
                 Caption = 'Communications';
                 Image = MapSetup;
-                action("Send Confirmation")
+                action("Email Send Confirmation")
                 {
                     Image = Confirm;
                     Promoted = true;
@@ -457,6 +458,33 @@ page 50236 "Funder Loan Card"
                         EmailingCU: Codeunit "Treasury Emailing";
                     begin
                         EmailingCU.SendConfirmationEmailWithAttachment(Rec."No.")
+                    end;
+                }
+                action("Reminder On Placement Maturity")
+                {
+                    Image = Reminder;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    // PromotedIsBig = true;
+                    trigger OnAction()
+                    var
+                        PlacementReminder: Report "Reminder on Placement Mature";
+                    begin
+                        PlacementReminder.Run();
+                        // EmailingCU.SendReminderOnPlacementMaturity(Rec."No.")
+                    end;
+                }
+                action("Reminder On Instrest Due")
+                {
+                    Image = Intercompany;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    // PromotedIsBig = true;
+                    trigger OnAction()
+                    var
+                        EmailingCU: Codeunit "Treasury Emailing";
+                    begin
+                        EmailingCU.SendReminderOnInterestDue(Rec."No.")
                     end;
                 }
             }
@@ -614,7 +642,7 @@ page 50236 "Funder Loan Card"
                 action(Confirmation)
                 {
                     ApplicationArea = All;
-                    Caption = 'Confirmation';
+                    Caption = 'Loan Confirmation Document';
                     Image = Attach;
                     Promoted = true;
                     PromotedCategory = Report;

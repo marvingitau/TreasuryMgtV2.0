@@ -336,7 +336,7 @@ table 50232 "Funder Loan"
                     funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
                     funderLegderEntry."Remaining Amount" := "Original Disbursed Amount";
                     funderLegderEntry.Insert();
-                    Commit();
+                    // Commit();
                     FunderMgt.DirectGLPosting('init', principleAcc, "Original Disbursed Amount", 'Original Amount', "No.", FundSource, Currency, "Posting Group", _docNo)
                 end;
 
@@ -517,6 +517,8 @@ table 50232 "Funder Loan"
         GenSetup.TestField("Funder Loan No.");
         if "No." = '' then
             "No." := NoSer.GetNextNo(GenSetup."Funder Loan No.", 0D, true);
+        if "Loan Name" = '' then
+            "Loan Name" := NoSer.GetNextNo(GenSetup."Loan No.", 0D, true);
 
         "Status" := "Status"::Open;
         vPostingGroup.Reset();

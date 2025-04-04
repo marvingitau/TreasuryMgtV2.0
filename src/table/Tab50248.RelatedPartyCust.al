@@ -77,8 +77,8 @@ table 50248 "RelatedParty- Cust"
                     Error('Missing G/L - Principle A/C');
                 if interestReceivable = '' then
                     Error('Missing G/L - Interest Receivable A/C');
-                if RelatePSourceOfFund = '' then
-                    Error('Missing Source of Fund');
+                if BankAcc = '' then
+                    Error('Missing Bank Account');
 
                 if Currency <> '' then
                     _ConvertedCurrency := FunderMgt.ConvertCurrencyAmount(Currency, Amount, false)
@@ -126,7 +126,7 @@ table 50248 "RelatedParty- Cust"
                     relatedLegderEntry."Remaining Amount" := Amount;
                     relatedLegderEntry.Insert();
                     Commit();
-                    RelatedMGTCU.DirectGLPosting('init', principleAcc, Amount, 'Original Amount', "No.", RelatePSourceOfFund, Currency, '', _docNo)
+                    RelatedMGTCU.DirectGLPosting('init-relatedcust', principleAcc, Amount, 'Original Amount', "No.", BankAcc, Currency, '', _docNo)
                 end;
             end;
         }
@@ -170,7 +170,13 @@ table 50248 "RelatedParty- Cust"
         // {
         //     DataClassification = ToBeClassified;
         // }
-        field(55; RelatePSourceOfFund; Text[250])
+        field(54; SourceOfFund; Option)
+        {
+            OptionMembers = Business,Salary,Pension,Dividends;
+            DataClassification = ToBeClassified;
+
+        }
+        field(55; BankAcc; Text[250])
         {
             DataClassification = ToBeClassified;
             TableRelation = "Bank Account"."No.";
@@ -251,9 +257,9 @@ table 50248 "RelatedParty- Cust"
             TableRelation = "G/L Account";
 
         }
-        field(2802; "Interest Expense"; Code[20])
+        field(2802; "Interest Income"; Code[20])
         {
-            Caption = 'Interest Expense';
+            Caption = 'Interest Income';
             TableRelation = "G/L Account";
         }
 
@@ -264,7 +270,7 @@ table 50248 "RelatedParty- Cust"
 
     keys
     {
-        key(Key1; "No.")
+        key(Key1; "No.", RelatedPName)
         {
             Clustered = true;
         }

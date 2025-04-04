@@ -1,4 +1,4 @@
-page 50270 "Related Party card"
+page 50280 "Related Party card"
 {
     PageType = Card;
     ApplicationArea = All;
@@ -45,6 +45,11 @@ page 50270 "Related Party card"
                     Caption = 'KRA Pin No.';
                     ShowMandatory = true;
                 }
+                field(SourceOfFund; Rec.SourceOfFund)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Source of Fund';
+                }
                 field(PlacementDate; Rec.PlacementDate)
                 {
                     ApplicationArea = All;
@@ -65,10 +70,10 @@ page 50270 "Related Party card"
                 {
                     ApplicationArea = All;
                 }
-                field(RelatePSourceOfFund; Rec.RelatePSourceOfFund)
+                field(BankAcc; Rec.BankAcc)
                 {
                     ApplicationArea = All;
-                    Caption = 'Source of Fund';
+                    Caption = 'Bank Account';
                 }
                 field("Principal Account"; Rec."Principal Account")
                 {
@@ -78,7 +83,7 @@ page 50270 "Related Party card"
                 {
                     ApplicationArea = All;
                 }
-                field("Interest Expense"; Rec."Interest Expense")
+                field("Interest Income"; Rec."Interest Income")
                 {
                     ApplicationArea = All;
                 }
@@ -270,6 +275,30 @@ page 50270 "Related Party card"
                     PromotedCategory = Report;
                     PromotedIsBig = true;
                     RunObject = report "Payment Amortization Related";
+
+                }
+                action("Statement")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Statement';
+                    Image = Statistics;
+                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
+                    // RunObject = report "Related Party Statement";
+                    trigger OnAction()
+                    var
+                        Repot: Report "Related Party Statement";
+                    begin
+                        // Get the current record
+                        CurrPage.SetSelectionFilter(Rec);
+                        // Set the record filters for the report
+                        Repot.SetTableView(Rec);
+                        // Run the report
+                        Repot.Run();
+                        // Report.Run(Report::"Related Party Statement", true, false, Rec);
+                    end;
 
                 }
             }

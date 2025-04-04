@@ -1,26 +1,20 @@
-table 50236 "Funder Loan Category"
+table 50280 "Treasury Report"
 {
     DataClassification = ToBeClassified;
-    LookupPageId = "Funder Loan Categories";
-    DrillDownPageId = "Funder Loan Categories";
 
     fields
     {
-        field(1; Code; Code[50])
+        field(1; Line; Integer)
         {
             DataClassification = ToBeClassified;
 
         }
-        field(2; Value; Text[250])
-        {
-            DataClassification = ToBeClassified;
 
-        }
     }
 
     keys
     {
-        key(K1; Code)
+        key(Key1; Line)
         {
             Clustered = true;
         }

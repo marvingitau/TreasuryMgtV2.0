@@ -1,4 +1,4 @@
-page 50271 "Funder Loan List"
+page 50281 "Funder Loan List"
 {
     PageType = List;
     ApplicationArea = All;
@@ -8,7 +8,7 @@ page 50271 "Funder Loan List"
     ModifyAllowed = false;
     DeleteAllowed = false;
     Editable = false;
-    CardPageId = 50272;
+    CardPageId = 50282;
     layout
     {
         area(Content)

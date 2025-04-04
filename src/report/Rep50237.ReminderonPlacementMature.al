@@ -97,8 +97,8 @@ report 50237 "Reminder on Placement Mature"
                     if (FunderLoanTbl.InterestRateType = FunderLoanTbl.InterestRateType::"Floating Rate") then
                         _interestRate_Active := (FunderLoanTbl."Reference Rate" + FunderLoanTbl.Margin);
 
-                    if _interestRate_Active = 0 then
-                        Error('Interest Rate is Zero');
+                    // if _interestRate_Active = 0 then
+                    //     Error('Interest Rate is Zero');
 
                     FunderLoanTbl.CalcFields(OutstandingAmntDisbLCY);
                     _principle := FunderLoanTbl.OutstandingAmntDisbLCY;

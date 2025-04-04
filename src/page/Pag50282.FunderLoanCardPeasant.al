@@ -1,4 +1,4 @@
-page 50272 "Funder Loan Card Peasant"
+page 50282 "Funder Loan Card Peasant"
 {
     PageType = Card;
     ApplicationArea = All;

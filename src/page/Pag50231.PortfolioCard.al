@@ -20,6 +20,10 @@ page 50231 "Portfolio Card"
                     ApplicationArea = All;
                     Caption = 'Program Size';
                 }
+                // field(Value;Rec.Value)
+                // {
+                //     ApplicationArea = All;
+                // }
                 field(BeginDate; Rec.BeginDate)
                 {
                     ApplicationArea = All;

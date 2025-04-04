@@ -279,7 +279,7 @@ report 50239 "Interest Payment Amortization"
                 DaysInQuarter := 0;
                 if QuarterCounter = 1 then begin
                     _currentQuarterInLoop := GetEndOfQuarter(placementDate);
-                    DaysInQuarter := _currentQuarterInLoop - placementDate + 1;
+                    DaysInQuarter := placementDate - _currentQuarterInLoop + 1;
                     _outstandingAmount := _principle;
                 end
                 else if QuarterCounter = NoOfQuarter then begin

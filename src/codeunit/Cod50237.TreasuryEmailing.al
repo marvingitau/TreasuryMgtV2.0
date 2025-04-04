@@ -146,7 +146,7 @@ codeunit 50237 "Treasury Emailing"
         if GeneralSetup."Trsy Recipient mail" = '' then
             Error('Treasury Recipient Email Missing');
 
-        EmailMessage.Create(GeneralSetup."Trsy Recipient mail", 'Placement Confirmation with Company ' + CompanyName + ' Ltd', Body, true);
+        EmailMessage.Create(GeneralSetup."Trsy Recipient mail", 'Placement Maturity Reminder with Company ' + CompanyName + ' Ltd', Body, true);
 
         if GeneralSetup."Trsy Recipient mail1" <> '' then
             EmailMessage.AddRecipient(Enum::"Email Recipient Type"::Cc, GeneralSetup."Trsy Recipient mail1");
@@ -194,6 +194,8 @@ codeunit 50237 "Treasury Emailing"
         PrimaryEmail: Text[100];
     begin
 
+        GeneralSetup.Get();
+
         FunderLoan.Reset();
         FunderLoan.SetRange(FunderLoan."No.", funderLoanNo);
         if not FunderLoan.Find('-') then
@@ -204,16 +206,18 @@ codeunit 50237 "Treasury Emailing"
         if not Funders.Find('-') then
             Error('Funder %1 Not found.', FunderLoan."Funder No.");
 
-        // RecRef.GetTable(FunderLoan);
-        // TempBlob.CreateOutStream(FileOutStream);
-        // Report.SaveAs(Report::"Investment Confirmation", '', ReportFormat::Pdf, FileOutStream, RecRef);
-        // TempBlob.CreateInStream(FileInStream);
+        RecRef.GetTable(FunderLoan);
+        TempBlob.CreateOutStream(FileOutStream);
+        Report.SaveAs(Report::"Reminder On Intr. Due", '', ReportFormat::Excel, FileOutStream, RecRef);
+        TempBlob.CreateInStream(FileInStream);
 
-        Body := '<p>Dear ' + Funders.Name + '</p><p> Thank you for your placement of ' + Format(FunderLoan."Original Disbursed Amount") + ' on ' + Format(FunderLoan.PlacementDate) + ' with ' + CompanyName + '.</p> <p> Please find attached the placement confirmation for your review. Kindly sign and return the document at your earliest convenience.</p> <p>If you have any questions or require further assistance, please feel free to contact us at [contact details].</p> <p>Best regards,</p> <p>' + CompanyName + ' – [Department Name]</p> <br><br><br><br> <p>(This is a system-generated email.)</p>';
+        Body := '<p>Dear ' + GeneralSetup."Trsy Recipient mail" + '</p><p> You are receiving D365 Treasury reminders for interest due </p>';
 
+        if GeneralSetup."Trsy Recipient mail" = '' then
+            Error('Treasury Recipient Email Missing');
 
-        EmailMessage.Create(Funders."Mailing Address", 'Placement Confirmation with Company ' + CompanyName + ' Ltd', Body, true);
-        EmailMessage.AddAttachment('LPO.pdf', 'PDF', FileInStream);
+        EmailMessage.Create(GeneralSetup."Trsy Recipient mail", 'Reminder on Interest Due For  ' + CompanyName + ' Ltd', Body, true);
+        EmailMessage.AddAttachment('IntrestDue.xlsx', 'xlsx', FileInStream);
         // if Funders."Email Address" <> '' then
         //     EmailMessage.AddRecipient(Enum::"Email Recipient Type"::Cc, BufferSetup.POEmailCC1);
 

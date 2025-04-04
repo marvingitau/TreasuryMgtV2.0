@@ -49,6 +49,12 @@ table 50233 "General Setup"
             DataClassification = ToBeClassified;
             TableRelation = "No. Series";
         }
+        field(50; "Loan No."; Code[20])
+        {
+            Caption = 'Loan Name';
+            DataClassification = ToBeClassified;
+            TableRelation = "No. Series";
+        }
         field(60; "Trsy Recipient mail"; Text[50])
         {
             DataClassification = ToBeClassified;

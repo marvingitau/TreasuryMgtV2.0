@@ -4,7 +4,7 @@ page 50249 "Related Party List"
     ApplicationArea = All;
     UsageCategory = Lists;
     SourceTable = 50248;
-    CardPageId = 50270;
+    CardPageId = 50280;
     layout
     {
         area(Content)
@@ -85,10 +85,10 @@ page 50249 "Related Party List"
                     ApplicationArea = All;
                     Caption = 'Principal Repayment Frequency';
                 }
-                field(RelatePSourceOfFund; Rec.RelatePSourceOfFund)
+                field(BankAcc; Rec.BankAcc)
                 {
                     ApplicationArea = All;
-                    Caption = 'Source of Fund';
+                    Caption = 'Bank Account';
                 }
                 field(InterestMethod; Rec.InterestMethod)
                 {

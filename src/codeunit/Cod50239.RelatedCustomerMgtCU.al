@@ -13,7 +13,7 @@ codeunit 50239 "RelatedCustomer Mgt CU"
         principleAcc: Code[20];
         interestReceivedAc: Code[20];
         interestAccPayable: Code[20];
-        interestExpenseAc: Code[20];
+        interestIncomeAc: Code[20];
         withholdingAcc: Code[20];
         NextEntryNo: Integer;
         relatedLegderEntry: Record RelatedLedgerEntry;//Calculate every month
@@ -126,12 +126,12 @@ codeunit 50239 "RelatedCustomer Mgt CU"
 
                 principleAcc := RelatedParty."Principal Account";
                 interestReceivedAc := RelatedParty."Interest Receivable";
-                interestExpenseAc := RelatedParty."Interest Expense";
+                interestIncomeAc := RelatedParty."Interest Income";
 
                 if interestReceivedAc = '' then
                     Error('Missing Receivable Interest A/C: %1', RelatedParty."No.");
-                if interestExpenseAc = '' then
-                    Error('Missing Expense Interest A/C: %1', RelatedParty."No.");
+                if interestIncomeAc = '' then
+                    Error('Missing Income Interest A/C: %1', RelatedParty."No.");
                 if principleAcc = '' then
                     Error('Missing Principle A/C: %1', RelatedParty."No.");
 
@@ -169,15 +169,15 @@ codeunit 50239 "RelatedCustomer Mgt CU"
                 relatedLegderEntry."Posting Date" := Today;
                 relatedLegderEntry."Document No." := _docNo;
                 relatedLegderEntry."Document Type" := relatedLegderEntry."Document Type"::Interest;
-                relatedLegderEntry.Description := 'Interest calculation' + Format(Today);
+                relatedLegderEntry.Description := 'Interest calculation ' + Format(Today);
                 relatedLegderEntry."Currency Code" := RelatedParty.Currency;
                 relatedLegderEntry.Amount := monthlyInterest;
                 relatedLegderEntry."Amount(LCY)" := _ConvertedCurrency;
                 relatedLegderEntry."Remaining Amount" := (monthlyInterest - witHldInterest);
                 relatedLegderEntry.Insert();
                 if (RelatedParty.EnableGLPosting = true) and (monthlyInterest <> 0) then
-                    DirectGLPosting('interest', interestReceivedAc, monthlyInterest, 'Interest', RelatedParty."No.", interestExpenseAc, RelatedParty.Currency, '', '');//GROSS Interest
-                                                                                                                                                                       //Commit();
+                    DirectGLPosting('interest', interestReceivedAc, monthlyInterest, 'Interest', RelatedParty."No.", interestIncomeAc, RelatedParty.Currency, '', '');//GROSS Interest
+                                                                                                                                                                      //Commit();
                 relatedLegderEntry1.Init();
                 relatedLegderEntry1."Entry No." := NextEntryNo + 1;
                 relatedLegderEntry1."Related  Name" := _relatedName;
@@ -185,7 +185,7 @@ codeunit 50239 "RelatedCustomer Mgt CU"
                 relatedLegderEntry1."Posting Date" := Today;
                 relatedLegderEntry1."Document No." := _docNo;
                 relatedLegderEntry1."Document Type" := relatedLegderEntry."Document Type"::Withholding;
-                relatedLegderEntry1.Description := 'Withholding calculation' + Format(Today);
+                relatedLegderEntry1.Description := 'Withholding calculation ' + Format(Today);
                 relatedLegderEntry."Currency Code" := RelatedParty.Currency;
                 relatedLegderEntry1.Amount := -witHldInterest;
                 relatedLegderEntry1."Amount(LCY)" := -_ConvertedWthdoldCurrency;
@@ -268,6 +268,14 @@ codeunit 50239 "RelatedCustomer Mgt CU"
             JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
             JournalEntry."Bal. Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Bal. Account No." := GLAcc;
+        end;
+        if Origin = 'init-relatedcust' then begin  //*
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"Bank Account";
+            JournalEntry."Account No." := GLAcc;
+            JournalEntry.Amount := Round(Amount, 0.01, '=');
+            JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
+            JournalEntry."Bal. Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Bal. Account No." := BankAc;
         end;
         if Origin = 'interest' then begin
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";

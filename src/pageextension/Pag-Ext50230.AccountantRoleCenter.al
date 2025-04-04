@@ -42,7 +42,7 @@ pageextension 50230 AccountantRoleCenter extends 9027
                     ApplicationArea = Basic, Suite;
                     Caption = 'Funder Loans';
                     Image = ResourceJournal;
-                    RunObject = page 50271;
+                    RunObject = page 50281;
                     ToolTip = 'Funder Loans';
                 }
                 action(TrsyJnl)
@@ -52,6 +52,14 @@ pageextension 50230 AccountantRoleCenter extends 9027
                     Image = ResourceJournal;
                     RunObject = page "Trsy Journal";
                     ToolTip = 'Treasury Journal';
+                }
+                action("Treasury Reports")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Treasury Reports';
+                    Image = ResourceJournal;
+                    RunObject = page "Treasury Reports";
+                    ToolTip = 'Treasury Reports';
                 }
                 // action(GLMapping)
                 // {

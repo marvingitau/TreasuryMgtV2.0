@@ -36,11 +36,11 @@ page 50234 "General Setup"
                     ApplicationArea = all;
                     ToolTip = 'Name 1 to Send Alerts too';
                 }
-                // field(WithholdingAcc; Rec.FunderWithholdingAcc)
-                // {
-                //     Caption = 'Funder Withholding Tax A/c';
-                //     ApplicationArea = All;
-                // }
+                field(WithholdingAcc; Rec.FunderWithholdingAcc)
+                {
+                    Caption = 'Funder Withholding Tax A/c';
+                    ApplicationArea = All;
+                }
                 // field(DebtorWithholdingAcc; Rec.DebtorWithholdingAcc)
                 // {
                 //     Caption = 'Debtor Withholding Tax A/c';
@@ -79,6 +79,11 @@ page 50234 "General Setup"
                 field("Related Party"; Rec."Related Party")
                 {
                     // Caption = 'Treasury Jnl No.';
+                    ApplicationArea = All;
+                }
+                field("Loan No."; Rec."Loan No.")
+                {
+
                     ApplicationArea = All;
                 }
             }

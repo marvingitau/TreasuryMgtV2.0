@@ -118,13 +118,15 @@ codeunit 50231 FunderMgtCU
                     // if not venPostingGroup.Get(funderLoan."Posting Group") then
                     //     Error('Missing Posting Group: %1', funder."No.");
 
-                    principleAcc := funderLoan."Payables Account";
+
                     interestAccExpense := funderLoan."Interest Expense";
-                    interestAccPayable := funderLoan."Interest Payable";
+
                     if interestAccExpense = '' then
                         Error('Missing Expense Interest A/C: %1', funder."No.");
+                    principleAcc := funderLoan."Payables Account";
                     if principleAcc = '' then
                         Error('Missing Principle A/C: %1', funder."No.");
+                    interestAccPayable := funderLoan."Interest Payable";
                     if interestAccPayable = '' then
                         Error('Missing Payable Interest A/C: %1', funder."No.");
 
@@ -344,6 +346,9 @@ codeunit 50231 FunderMgtCU
                 if not generalSetup.FindFirst() then
                     Error('Please Define Withholding Tax under General Setup');
                 withholdingAcc := generalSetup.FunderWithholdingAcc;
+                if withholdingAcc = '' then
+                    Error('Withholding Account Missing under General Setup');
+
                 //Get the latest remaining amount
                 funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Remaining Amount");
                 if funderLegderEntry.FindLast() then
@@ -511,7 +516,7 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Account No." := BankAc;
             JournalEntry.Amount := Round(Amount, 0.01, '=');
             JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
-            JournalEntry."Bal. Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
             JournalEntry."Bal. Account No." := GLAcc;
         end;
         if Origin = 'interest' then begin
@@ -519,7 +524,7 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Account No." := GLAcc;
             JournalEntry.Amount := Round(Amount, 0.01, '=');
             JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
-            JournalEntry."Bal. Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
             JournalEntry."Bal. Account No." := BankAc;//interestAccPayable
         end;
         if Origin = 'withholding' then begin
@@ -527,7 +532,7 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Account No." := GLAcc;
             JournalEntry.Amount := Round(Amount, 0.01, '=');
             JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
-            JournalEntry."Bal. Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
             JournalEntry."Bal. Account No." := BankAc;//interestAccPayable
         end;
         // else begin
@@ -558,7 +563,7 @@ codeunit 50231 FunderMgtCU
         // // Insert the G/L Entry
         // GLEntry.Insert();
     end;
-
+    // Converts Currency to Local
     procedure ConvertCurrencyAmount(var CurrencyCode: Code[10]; var Amount: Decimal; FXSource: boolean): Decimal
     var
         Currency: Record "Currency";
@@ -600,12 +605,55 @@ codeunit 50231 FunderMgtCU
         end else
             Error('Currency code is empty');
     end;
+    // Converts Curreny the Given Paramenter
+    procedure ConvertCurrencyTo(var CurrencyCode: Code[10]; var Amount: Decimal; FXSource: boolean): Decimal
+    var
+        Currency: Record "Currency";
+        CurrencyExchangeRate: Record "Currency Exchange Rate";
+        CurrencyCustom: Record "Currency";
+        CurrencyExchangeRateCustom: Record "Currency Exchange Rate";
+        ExchangeRate: Decimal;
+        NewAmount: Decimal;
+        MaxDate: Date;
+    begin
+        if CurrencyCode <> '' then begin
+
+            if Currency.Get(CurrencyCode) then begin
+                // Try to get today's exchange rate
+                if CurrencyExchangeRate.Get(CurrencyCode, Today) then begin
+                    ExchangeRate := CurrencyExchangeRate."Exchange Rate Amount" / CurrencyExchangeRate."Relational Exch. Rate Amount";
+                end else begin
+                    // Find the latest available exchange rate
+                    CurrencyExchangeRate.SetCurrentKey("Currency Code", "Starting Date");
+                    CurrencyExchangeRate.SetRange("Currency Code", CurrencyCode);
+                    if CurrencyExchangeRate.FindLast then begin
+                        MaxDate := CurrencyExchangeRate."Starting Date";
+                        if CurrencyExchangeRate.Get(CurrencyCode, MaxDate) then begin
+                            ExchangeRate := CurrencyExchangeRate."Exchange Rate Amount" / CurrencyExchangeRate."Relational Exch. Rate Amount";
+                        end else
+                            Error('Exchange rate not found for currency %1 on the latest date', CurrencyCode);
+                    end else
+                        Error('Exchange rate not found for currency %1', CurrencyCode);
+                end;
+
+                if ExchangeRate <> 0 then begin
+                    // Convert the amount to the new currency
+                    NewAmount := Amount * ExchangeRate;
+                    exit(NewAmount);
+                end else
+                    Error('Exchange rate is zero for currency %1', CurrencyCode);
+            end else
+                Error('Currency not found for code %1', CurrencyCode);
+        end else
+            Error('Currency code is empty');
+    end;
 
     procedure SetFunderNoFilter(funderLoanNo: Code[20])
     begin
         ReportFlag.DeleteAll();
         ReportFlag.Init();
         ReportFlag."Funder Loan No." := funderLoanNo;
+        ReportFlag."Utilizing User" := UserId;
         ReportFlag.Insert();
         // Commit();
     end;
