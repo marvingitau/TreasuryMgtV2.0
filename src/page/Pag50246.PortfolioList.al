@@ -15,22 +15,28 @@ page 50246 "Portfolio List"
                 field(Code; Rec.Code)
                 {
                     ApplicationArea = All;
+                    Caption = 'Name';
                 }
+
                 field(ProgramSize; Rec.ProgramSize)
                 {
                     ApplicationArea = All;
+                    Caption = 'Program Size';
                 }
                 field(BeginDate; Rec.BeginDate)
                 {
                     ApplicationArea = All;
+                    Caption = 'Begin Date';
                 }
                 field(ProgramTerm; Rec.ProgramTerm)
                 {
                     ApplicationArea = All;
+                    Caption = 'Program Term';
                 }
                 field(ProgramCurrency; Rec.ProgramCurrency)
                 {
                     ApplicationArea = All;
+                    Caption = 'Program Currency';
                 }
                 field("Fee Applicable"; Rec."Fee Applicable")
                 {

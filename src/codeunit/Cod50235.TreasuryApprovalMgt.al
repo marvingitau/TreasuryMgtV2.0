@@ -125,7 +125,7 @@ codeunit 50235 "Treasury Approval Mgt"
                     CustomWorkflowHdr.Validate(Status, CustomWorkflowHdr.Status::Approved);
                     CustomWorkflowHdr.Modify(true);
                     //MAil Confirmation
-                    EmailCU.SendConfirmationEmailWithAttachment(CustomWorkflowHdr."No.");
+                    //EmailCU.SendConfirmationEmailWithAttachment(CustomWorkflowHdr."No.");
                     Handled := true;
                 end;
         end;

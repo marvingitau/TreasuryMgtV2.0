@@ -1,7 +1,7 @@
-table 50233 "General Setup"
+table 50233 "Treasury General Setup"
 {
     DataClassification = ToBeClassified;
-    Caption = 'General Setup';
+    Caption = 'Treasury General Setup';
 
     fields
     {
@@ -52,6 +52,12 @@ table 50233 "General Setup"
         field(50; "Loan No."; Code[20])
         {
             Caption = 'Loan Name';
+            DataClassification = ToBeClassified;
+            TableRelation = "No. Series";
+        }
+        field(51; "Portfolio No."; Code[20])
+        {
+            Caption = 'Portfolio No.';
             DataClassification = ToBeClassified;
             TableRelation = "No. Series";
         }

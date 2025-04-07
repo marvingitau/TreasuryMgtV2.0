@@ -663,7 +663,7 @@ codeunit 50231 FunderMgtCU
         SourceRecord: Record "Funder Loan";
         NewRecord: Record "Funder Loan";
         NewRecord1: Record "Funder Loan";
-        GenSetup: Record "General Setup";
+        GenSetup: Record "Treasury General Setup";
         NoSer: Codeunit "No. Series";
         funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
         funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
@@ -820,6 +820,8 @@ codeunit 50231 FunderMgtCU
 
     end;
 
+
+
     var
         myGlobalCounter: Integer;
         // vendor: Record Vendor;
@@ -828,7 +830,7 @@ codeunit 50231 FunderMgtCU
         // debtor: Record Debtor;
         // funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
         funderPostingGroup: Record 93;
-        generalSetup: Record "General Setup";
+        generalSetup: Record "Treasury General Setup";
         _docNo: Code[20];
         TrsyMgt: Codeunit "Treasury Mgt CU";
         ReportFlag: Record "Report Flags";

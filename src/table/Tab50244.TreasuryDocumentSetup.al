@@ -1,8 +1,8 @@
-table 50244 "Treasury Setup"
+table 50244 "Treasury Document Setup"
 {
     DataClassification = ToBeClassified;
-    DrillDownPageId = "Treasury Setup";
-    LookupPageId = "Treasury Setup";
+    DrillDownPageId = "Treasury Document Setup";
+    LookupPageId = "Treasury Document Setup";
     fields
     {
         field(1; Line; Integer)
@@ -10,16 +10,28 @@ table 50244 "Treasury Setup"
             DataClassification = ToBeClassified;
 
         }
-        field(10; "Finace Manager Email"; Text[200])
+        field(10; "Document No."; Code[50])
         {
             DataClassification = ToBeClassified;
 
         }
-        field(20; "Finace Manager Email Cc"; Text[200])
+        field(20; Ownership; Code[50])
         {
             DataClassification = ToBeClassified;
 
         }
+        field(30; "Document Description"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+
+        }
+
+        field(40; "Must Attached"; Boolean)
+        {
+            DataClassification = ToBeClassified;
+
+        }
+
 
     }
 

@@ -2,9 +2,8 @@ page 50231 "Portfolio Card"
 {
     PageType = Card;
     ApplicationArea = All;
-    // UsageCategory = Lists;
     SourceTable = Portfolio;
-
+    DataCaptionFields = "No.", Code;
     layout
     {
         area(Content)
@@ -32,7 +31,12 @@ page 50231 "Portfolio Card"
                 field(ProgramTerm; Rec.ProgramTerm)
                 {
                     ApplicationArea = All;
-                    Caption = 'Program Term';
+                    Caption = 'Program Term(Years)';
+                }
+                field(EndTerm; Rec.EndTerm)
+                {
+                    ApplicationArea = All;
+                    Caption = 'End Term';
                 }
                 field(ProgramCurrency; Rec.ProgramCurrency)
                 {
@@ -42,16 +46,38 @@ page 50231 "Portfolio Card"
                 field("Fee Applicable"; Rec."Fee Applicable")
                 {
                     ApplicationArea = All;
-                    Caption = 'Fee Applicable';
+                    Caption = 'Fee Applicable (%)';
                 }
-                field("Interest Rate Applicable"; Rec."Interest Rate Applicable")
-                {
-                    ApplicationArea = All;
-                }
+                // field("Interest Rate Applicable"; Rec."Interest Rate Applicable")
+                // {
+                //     ApplicationArea = All;
+                // }
                 field("Physical Address"; Rec."Physical Address")
                 {
                     ApplicationArea = All;
                 }
+
+
+                // field(Abbreviation; Rec.Abbreviation)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Abbreviation';
+                // }
+                // field(InternalRef; Rec.InternalRef)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Internal Reference';
+                // }
+                field(Status; Rec.Status)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Status';
+                    // Editable = false;
+                }
+
+            }
+            group("Contact Person")
+            {
                 field("Contact Person Detail"; Rec."Contact Person Detail")
                 {
                     ApplicationArea = All;
@@ -68,23 +94,11 @@ page 50231 "Portfolio Card"
                 {
                     ApplicationArea = All;
                 }
-
-                // field(Abbreviation; Rec.Abbreviation)
-                // {
-                //     ApplicationArea = All;
-                //     Caption = 'Abbreviation';
-                // }
-                // field(InternalRef; Rec.InternalRef)
-                // {
-                //     ApplicationArea = All;
-                //     Caption = 'Internal Reference';
-                // }
-                field(Status; Rec.Status)
+                field("Contact Person Email"; Rec."Contact Person Email")
                 {
                     ApplicationArea = All;
-                    Caption = 'Status';
+                    ExtendedDatatype = EMail;
                 }
-
             }
         }
         area(Factboxes)

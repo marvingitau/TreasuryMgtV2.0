@@ -507,7 +507,7 @@ table 50232 "Funder Loan"
     }
 
     var
-        GenSetup: Record "General Setup";
+        GenSetup: Record "Treasury General Setup";
         NoSer: Codeunit "No. Series";
         vPostingGroup: Record "Treasury Posting Group";
 

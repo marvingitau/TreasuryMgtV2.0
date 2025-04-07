@@ -253,7 +253,7 @@ table 50230 Funders
 
     var
         NoSer: Codeunit "No. Series";
-        GenSetup: Record "General Setup";
+        GenSetup: Record "Treasury General Setup";
         DimensionValue: Record "Dimension Value";
 
     trigger OnInsert()

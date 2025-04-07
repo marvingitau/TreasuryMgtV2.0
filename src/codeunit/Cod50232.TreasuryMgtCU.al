@@ -11,7 +11,7 @@ codeunit 50232 "Treasury Mgt CU"
         NoSeriesCode: Code[20];
         DocumentNo: Code[20];
         NoSer: Codeunit "No. Series";
-        GenSetup: Record "General Setup";
+        GenSetup: Record "Treasury General Setup";
 
     begin
         GenSetup.Get(0);
@@ -61,7 +61,7 @@ codeunit 50232 "Treasury Mgt CU"
         CurrentBatchCount: Integer;
         TotalDebit: Decimal;
         TotalCredit: Decimal;
-        generalSetup: Record "General Setup";
+        generalSetup: Record "Treasury General Setup";
         funderNo: Code[100];
         funderName: Text[100];
         _loanNo: Code[100];
@@ -1325,7 +1325,7 @@ codeunit 50232 "Treasury Mgt CU"
         CurrentBatchCount: Integer;
         TotalDebit: Decimal;
         TotalCredit: Decimal;
-        generalSetup: Record "General Setup";
+        generalSetup: Record "Treasury General Setup";
         funderNo: Code[100];
         funderName: Text[100];
         _loanNo: Code[100];
@@ -1582,7 +1582,47 @@ codeunit 50232 "Treasury Mgt CU"
         end;
 
     end;
+    //*********** END-UNUSED
 
+    //Validate Email
+    // procedure IsValidEmail(EmailAddress: Text): Boolean
+    // var
+    //     Regex: Codeunit Regex;
+    // begin
+
+    //     exit(Regex.IsMatch(
+    //         EmailAddress.Trim(),
+    //         '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
+    //     ));
+    // end;
+
+    procedure IsValidEmail(EmailAddress: Text): Boolean
+    var
+        Regex: Codeunit Regex;
+        Pattern: Text;
+    begin
+        if EmailAddress = '' then
+            exit(false);
+
+        // Trim whitespace
+        EmailAddress := DelChr(EmailAddress.Trim(), '<>');
+
+        // Comprehensive RFC 5322 compliant regex pattern
+        Pattern := '^(?:(?:(?:[a-zA-Z0-9_\-\.\+])+|"(?:[\\\x01-\\\x08\\\x0b\\\x0c\\\x0e-\\\x1f\\\x21\\\x23-\\\x5b\\\x5d-\\\x7f]|(?:\\[\\\x00-\\\x7f]))*")@(?:(?:[a-zA-Z0-9\-])+\.)+(?:[a-zA-Z]{2,63})|\[(?:(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))\.){3}(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)|[a-zA-Z0-9\-]*[a-zA-Z0-9]:(?:[\\\x01-\\\x08\\\x0b\\\x0c\\\x0e-\\\x1f\\\x21-\\\x5a\\\x53-\\\x7f]|\\[\\\x00-\\\x7f])+)\]))$';
+
+        if not Regex.IsMatch(EmailAddress, Pattern) then
+            exit(false);
+
+        // Additional length validation (RFC 5321)
+        if StrLen(EmailAddress) > 254 then
+            exit(false);
+
+        // Check for consecutive dots in domain part
+        if StrPos(EmailAddress, '..') > 0 then
+            exit(false);
+
+        exit(true);
+    end;
 
     var
         funderLedgerEntries: Page FunderLedgerEntry;

@@ -3,6 +3,7 @@ table 50231 Portfolio
     DataClassification = ToBeClassified;
     LookupPageId = 50231;
     DrillDownPageId = 50231;
+
     fields
     {
         field(1; Code; Code[100])
@@ -10,11 +11,11 @@ table 50231 Portfolio
             DataClassification = ToBeClassified;
             Caption = 'Name';
         }
-        field(2; Value; Text[200])
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Value';
-        }
+        // field(2; Value; Text[200])
+        // {
+        //     DataClassification = ToBeClassified;
+        //     Caption = 'Value';
+        // }
         field(3; Abbreviation; Text[200])
         {
             DataClassification = ToBeClassified;
@@ -25,7 +26,7 @@ table 50231 Portfolio
             DataClassification = ToBeClassified;
 
         }
-        field(10; ProgramSize; Text[200])
+        field(10; ProgramSize; Decimal)
         {
             DataClassification = ToBeClassified;
 
@@ -36,6 +37,12 @@ table 50231 Portfolio
 
         }
         field(16; ProgramTerm; Integer)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Program Term(Years)';
+
+        }
+        field(17; EndTerm; Integer)
         {
             DataClassification = ToBeClassified;
 
@@ -49,6 +56,7 @@ table 50231 Portfolio
         field(21; "Fee Applicable"; Integer)
         {
             DataClassification = ToBeClassified;
+            Caption = 'Fee Applicable (%)';
 
         }
         field(25; "Interest Rate Applicable"; Integer)
@@ -81,6 +89,26 @@ table 50231 Portfolio
             DataClassification = ToBeClassified;
 
         }
+        field(40; "Contact Person Email"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+            ExtendedDatatype = EMail;
+            trigger OnValidate()
+            begin
+                // if not TrezMgtCU.IsValidEmail("Contact Person Address") then
+                //     FieldError("Contact Person Email", 'Must be a valid email address');
+            end;
+
+        }
+        field(50; "No."; Code[50])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(60; "Portfolio Type"; Option)
+        {
+            OptionMembers = Portfolio;
+            DataClassification = ToBeClassified;
+        }
         field(5000; Status; Enum PortfolioStatus)
         {
             DataClassification = ToBeClassified;
@@ -90,7 +118,7 @@ table 50231 Portfolio
 
     keys
     {
-        key(PK; Code, Value)
+        key(PK; "No.", Code)
         {
             Clustered = true;
         }
@@ -107,10 +135,16 @@ table 50231 Portfolio
     }
 
     var
-        myInt: Integer;
+        TrezMgtCU: Codeunit "Treasury Mgt CU";
+        GenSetup: Record "Treasury General Setup";
+        NoSer: Codeunit "No. Series";
 
     trigger OnInsert()
     begin
+        GenSetup.Get(0);
+        GenSetup.TestField("Portfolio No.");
+        if "No." = '' then
+            "No." := NoSer.GetNextNo(GenSetup."Portfolio No.", 0D, true);
 
     end;
 

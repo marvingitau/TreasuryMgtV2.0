@@ -299,7 +299,7 @@ codeunit 50239 "RelatedCustomer Mgt CU"
     end;
 
     var
-        generalSetup: Record "General Setup";
+        generalSetup: Record "Treasury General Setup";
         RelatedParty: Record "RelatedParty- Cust";
         TrsyMgt: Codeunit "Treasury Mgt CU";
 }

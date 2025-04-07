@@ -1,9 +1,9 @@
-page 50247 "Treasury Setup"
+page 50247 "Treasury Document Setup"
 {
     PageType = Card;
     ApplicationArea = All;
     UsageCategory = Administration;
-    SourceTable = "Treasury Setup";
+    SourceTable = "Treasury Document Setup";
     DeleteAllowed = false;
     InsertAllowed = false;
     DataCaptionExpression = '';
@@ -13,11 +13,19 @@ page 50247 "Treasury Setup"
         {
             group(General)
             {
-                field("Finace Manager Email"; Rec."Finace Manager Email")
+                field("Document No."; Rec."Document No.")
                 {
                     ApplicationArea = All;
                 }
-                field("Finace Manager Email Cc"; Rec."Finace Manager Email Cc")
+                field("Document Description"; Rec."Document Description")
+                {
+                    ApplicationArea = All;
+                }
+                field(Ownership; Rec.Ownership)
+                {
+                    ApplicationArea = All;
+                }
+                field("Must Attached"; Rec."Must Attached")
                 {
                     ApplicationArea = All;
                 }
@@ -29,9 +37,13 @@ page 50247 "Treasury Setup"
     {
         area(Processing)
         {
-            action(ActionName)
+            action("Country/Region Setup")
             {
-
+                Image = CountryRegion;
+                Promoted = true;
+                PromotedIsBig = true;
+                PromotedCategory = Process;
+                Caption = 'Country/Region Setup';
                 trigger OnAction()
                 begin
 

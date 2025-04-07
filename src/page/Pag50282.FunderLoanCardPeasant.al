@@ -732,7 +732,7 @@ page 50282 "Funder Loan Card Peasant"
 
     var
         myInt: Integer;
-        GenSetup: Record "General Setup";
+        GenSetup: Record "Treasury General Setup";
         NoSer: Codeunit "No. Series";
         GlobalFilters: Codeunit GlobalFilters;
         isCurrencyVisible, isSecureLoanActive, isUnsecureLoanActive, isFloatRate : Boolean;

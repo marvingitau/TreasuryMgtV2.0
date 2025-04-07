@@ -3,8 +3,8 @@ page 50234 "General Setup"
     PageType = Card;
     ApplicationArea = All;
     UsageCategory = Administration;
-    SourceTable = "General Setup";
-    Caption = 'General Setup';
+    SourceTable = "Treasury General Setup";
+    Caption = 'Treasury General Setup';
     DeleteAllowed = true;
     InsertAllowed = false;
     DataCaptionExpression = '';
@@ -86,6 +86,11 @@ page 50234 "General Setup"
 
                     ApplicationArea = All;
                 }
+                field("Portfolio No."; Rec."Portfolio No.")
+                {
+
+                    ApplicationArea = All;
+                }
             }
         }
 
@@ -95,9 +100,14 @@ page 50234 "General Setup"
     {
         area(Processing)
         {
-            action(ActionName)
+            action("Treasury Document Setup")
             {
-
+                Image = DocumentsMaturity;
+                Promoted = true;
+                PromotedIsBig = true;
+                PromotedCategory = Process;
+                Caption = 'Treasury Document Setup';
+                RunObject = page "Treasury Document Setup";
                 trigger OnAction()
                 begin
 

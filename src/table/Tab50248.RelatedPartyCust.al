@@ -283,7 +283,7 @@ table 50248 "RelatedParty- Cust"
 
     var
         NoSer: Codeunit "No. Series";
-        GenSetup: Record "General Setup";
+        GenSetup: Record "Treasury General Setup";
         DimensionValue: Record "Dimension Value";
 
     trigger OnInsert()

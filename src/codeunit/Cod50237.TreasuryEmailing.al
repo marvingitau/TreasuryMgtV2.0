@@ -250,5 +250,5 @@ codeunit 50237 "Treasury Emailing"
     var
         FunderMgtCU: Codeunit 50231;
         Company: Record "Company Information";
-        GeneralSetup: Record "General Setup";
+        GeneralSetup: Record "Treasury General Setup";
 }

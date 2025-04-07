@@ -835,6 +835,6 @@ report 50237 "Reminder on Placement Mature"
         SumNetInterest: Decimal;
         ConfirmationDate: Date;
         Loan: Record "Schedule Total";
-        GeneralSetup: Record "General Setup";
+        GeneralSetup: Record "Treasury General Setup";
 
 }

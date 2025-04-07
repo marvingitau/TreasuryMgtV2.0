@@ -105,7 +105,7 @@ codeunit 50238 "Portfolio Approval Mgt"
             DataBase::Portfolio:
                 begin
                     RecRef.SetTable(CustomWorkflowHdr);
-                    ApprovalEntryArgument."Document No." := CustomWorkflowHdr.Code;
+                    ApprovalEntryArgument."Document No." := CustomWorkflowHdr."No.";
                     // ApprovalEntryArgument.Amount := CustomWorkflowHdr."Original Disbursed Amount";
                     // ApprovalEntryArgument."Amount (LCY)" := CustomWorkflowHdr."Original Disbursed Amount";
                 end;
@@ -149,7 +149,6 @@ codeunit 50238 "Portfolio Approval Mgt"
     var
 
         WorkflowMgt: Codeunit "Workflow Management";
-
         RUNWORKFLOWONSENDFORAPPROVALCODE: Label 'RUNWORKFLOWONSEND%1FORAPPROVAL';
         RUNWORKFLOWONCANCELFORAPPROVALCODE: Label 'RUNWORKFLOWONCANCEL%1FORAPPROVAL';
         NoWorkflowEnabledErr: Label 'No approval workflow for this record type is enabled.';
