@@ -16,11 +16,11 @@ page 50235 "Funder Loans List"
                 {
                     ApplicationArea = All;
                 }
-                field("Loan Name"; Rec."Loan Name")
-                {
-                    ApplicationArea = All;
-                    Visible = false;
-                }
+                // field("Loan Name"; Rec."Loan Name")
+                // {
+                //     ApplicationArea = All;
+                //     Visible = false;
+                // }
                 field("Funder No."; Rec."Funder No.")
                 {
                     ApplicationArea = All;

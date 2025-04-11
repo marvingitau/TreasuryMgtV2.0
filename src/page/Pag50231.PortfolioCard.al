@@ -63,11 +63,10 @@ page 50231 "Portfolio Card"
                 //     ApplicationArea = All;
                 //     Caption = 'Abbreviation';
                 // }
-                // field(InternalRef; Rec.InternalRef)
-                // {
-                //     ApplicationArea = All;
-                //     Caption = 'Internal Reference';
-                // }
+                field(Category; Rec.Category)
+                {
+                    ApplicationArea = All;
+                }
                 field(Status; Rec.Status)
                 {
                     ApplicationArea = All;

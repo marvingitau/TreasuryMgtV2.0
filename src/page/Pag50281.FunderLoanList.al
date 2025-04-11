@@ -19,10 +19,10 @@ page 50281 "Funder Loan List"
                 {
                     ApplicationArea = All;
                 }
-                field("Loan Name"; Rec."Loan Name")
-                {
-                    ApplicationArea = All;
-                }
+                // field("Loan Name"; Rec."Loan Name")
+                // {
+                //     ApplicationArea = All;
+                // }
                 field("Funder No."; Rec."Funder No.")
                 {
                     ApplicationArea = All;

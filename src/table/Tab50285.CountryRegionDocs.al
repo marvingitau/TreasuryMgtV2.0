@@ -1,8 +1,7 @@
-table 50244 "Treasury Document Setup"
+table 50285 "Country_Region_Docs"
 {
     DataClassification = ToBeClassified;
-    DrillDownPageId = "Treasury Document Setup";
-    LookupPageId = "Treasury Document Setup";
+
     fields
     {
         field(1; Line; Integer)
@@ -10,35 +9,28 @@ table 50244 "Treasury Document Setup"
             DataClassification = ToBeClassified;
             AutoIncrement = true;
         }
-        field(10; "Document No."; Code[50])
+        field(10; "Country_Region"; Code[50])
         {
             DataClassification = ToBeClassified;
-
+            TableRelation = Country_Region."Country Name";
         }
-        field(20; Ownership; Option)
-        {
-            OptionMembers = Portfolio,"Funder Loan",Funders,"Related Party/Customer";
-            DataClassification = ToBeClassified;
-
-        }
-        field(30; "Document Description"; Text[250])
+        field(20; "Document Name"; Text[50])
         {
             DataClassification = ToBeClassified;
-
         }
-
-        field(40; "Must Attached"; Boolean)
+        field(24; "Minimum Length"; Text[50])
         {
             DataClassification = ToBeClassified;
-
         }
-
-
+        field(28; "Maximum Length"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+        }
     }
 
     keys
     {
-        key(Key1; Line)
+        key(K1; Line, Country_Region)
         {
             Clustered = true;
         }

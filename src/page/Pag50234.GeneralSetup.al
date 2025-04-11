@@ -107,7 +107,7 @@ page 50234 "General Setup"
                 PromotedIsBig = true;
                 PromotedCategory = Process;
                 Caption = 'Treasury Document Setup';
-                RunObject = page "Treasury Document Setup";
+                RunObject = page "Treasury Documents Setup";
                 trigger OnAction()
                 begin
 

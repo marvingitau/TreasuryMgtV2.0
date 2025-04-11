@@ -27,12 +27,12 @@ page 50236 "Funder Loan Card"
                     Editable = false;
                     Caption = 'Funder Name';
                 }
-                field("Loan Name"; Rec."Loan Name")
-                {
-                    ApplicationArea = All;
-                    // ShowMandatory = true;
-                    Visible = false;
-                }
+                // field("Loan Name"; Rec."Loan Name")
+                // {
+                //     ApplicationArea = All;
+                //     // ShowMandatory = true;
+                //     Visible = false;
+                // }
                 field(PlacementDate; Rec.PlacementDate)
                 {
                     ApplicationArea = All;

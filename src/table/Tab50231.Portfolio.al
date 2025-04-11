@@ -109,6 +109,11 @@ table 50231 Portfolio
             OptionMembers = Portfolio;
             DataClassification = ToBeClassified;
         }
+        field(70; Category; Code[50])
+        {
+            DataClassification = ToBeClassified;
+            TableRelation = "Portfolio Category".Code;
+        }
         field(5000; Status; Enum PortfolioStatus)
         {
             DataClassification = ToBeClassified;

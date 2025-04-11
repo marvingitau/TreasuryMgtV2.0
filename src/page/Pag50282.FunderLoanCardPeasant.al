@@ -5,6 +5,7 @@ page 50282 "Funder Loan Card Peasant"
     UsageCategory = Administration;
     SourceTable = "Funder Loan";
     InsertAllowed = false;
+    Caption = 'Funder Loan Card';
 
     layout
     {
@@ -28,11 +29,11 @@ page 50282 "Funder Loan Card Peasant"
                     Editable = false;
                     Caption = 'Funder Name';
                 }
-                field("Loan Name"; Rec."Loan Name")
-                {
-                    ApplicationArea = All;
-                    ShowMandatory = true;
-                }
+                // field("Loan Name"; Rec."Loan Name")
+                // {
+                //     ApplicationArea = All;
+                //     ShowMandatory = true;
+                // }
                 field(PlacementDate; Rec.PlacementDate)
                 {
                     ApplicationArea = All;

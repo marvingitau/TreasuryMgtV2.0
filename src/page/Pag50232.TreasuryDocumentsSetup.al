@@ -1,17 +1,16 @@
-page 50247 "Treasury Document Setup"
+page 50232 "Treasury Documents Setup"
 {
-    PageType = Card;
+    PageType = List;
     ApplicationArea = All;
-    UsageCategory = Administration;
+    UsageCategory = Lists;
     SourceTable = "Treasury Document Setup";
-    // DeleteAllowed = false;
-    // InsertAllowed = false;
-    DataCaptionExpression = '';
+    CardPageId = 50247;
+
     layout
     {
         area(Content)
         {
-            group(General)
+            repeater(General)
             {
                 field("Document No."; Rec."Document No.")
                 {
@@ -31,19 +30,19 @@ page 50247 "Treasury Document Setup"
                 }
             }
         }
+        area(Factboxes)
+        {
+
+        }
     }
 
     actions
     {
         area(Processing)
         {
-            action("Country/Region Setup")
+            action(ActionName)
             {
-                Image = CountryRegion;
-                Promoted = true;
-                PromotedIsBig = true;
-                PromotedCategory = Process;
-                Caption = 'Country/Region Setup';
+
                 trigger OnAction()
                 begin
 
@@ -51,12 +50,4 @@ page 50247 "Treasury Document Setup"
             }
         }
     }
-    trigger OnInit()
-    begin
-        if Rec.IsEmpty() then
-            Rec.Insert();
-    end;
-
-    var
-        myInt: Integer;
 }

@@ -61,6 +61,15 @@ pageextension 50230 AccountantRoleCenter extends 9027
                     RunObject = page "Treasury Reports";
                     ToolTip = 'Treasury Reports';
                 }
+
+                action("Treasury Setup")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Treasury Setup';
+                    Image = ResourceJournal;
+                    RunObject = page "General Setup";
+                    ToolTip = 'Treasury Setup';
+                }
                 // action(GLMapping)
                 // {
                 //     ApplicationArea = Basic, Suite;

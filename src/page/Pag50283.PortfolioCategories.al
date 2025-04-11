@@ -1,17 +1,21 @@
-page 50232 "Funder Loan"
+page 50283 "Portfolio Categories"
 {
     PageType = List;
     ApplicationArea = All;
     UsageCategory = Lists;
-    SourceTable = "Funder Loan";
+    SourceTable = "Portfolio Category";
 
     layout
     {
         area(Content)
         {
-            repeater(GroupName)
+            repeater(General)
             {
-                field("No."; Rec."No.")
+                field(Code; Rec.Code)
+                {
+                    ApplicationArea = All;
+                }
+                field(Value; Rec.Value)
                 {
                     ApplicationArea = All;
                 }
