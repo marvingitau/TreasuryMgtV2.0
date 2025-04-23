@@ -32,7 +32,7 @@ table 50234 FunderLedgerEntry
         //     DataClassification = ToBeClassified;
         //     Caption = 'Transaction Type';
         // }
-        field(5; Description; Text[100])
+        field(5; Description; Text[1000])
         {
             DataClassification = ToBeClassified;
             Caption = 'Description';
@@ -106,6 +106,14 @@ table 50234 FunderLedgerEntry
             TableRelation = "Funder Loan";
         }
         field(22; "Loan Name"; Text[100])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(30; "External Document No."; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(35; Category; Code[50])
         {
             DataClassification = ToBeClassified;
         }

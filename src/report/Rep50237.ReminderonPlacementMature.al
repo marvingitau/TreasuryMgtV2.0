@@ -14,8 +14,9 @@ report 50237 "Reminder on Placement Mature"
             }
             trigger OnPreDataItem()
             begin
-                GeneralSetup.Get();
-
+                GeneralSetup.Get(0);
+                "Funder Loan".SetRange(Status, "Funder Loan".Status::Approved);
+                "Funder Loan".SetFilter("Funder Loan".MaturityDate, '<>%1', 0D);
             end;
 
             trigger OnAfterGetRecord()
@@ -66,12 +67,15 @@ report 50237 "Reminder on Placement Mature"
                 _amortization: Decimal;
                 _totalPayment: Decimal;
                 _outstandingAmount: Decimal;
-                _emailingCU: Codeunit "Treasury Emailing";
+
+
+                _remOnPlacementMature: Record ReminderMaturityPerCategory;
+                _ttotalPayment: Decimal;
             begin
                 /** 
                 Ensure Processing only records whose waiting time is actually within the expected alert period
                 */
-                if true then begin //(Today - "Funder Loan".MaturityDate) = GeneralSetup."Placemnt. Matur Rem. Time"
+                if (20290430D - "Funder Loan".MaturityDate) = GeneralSetup."Placemnt. Matur Rem. Time" then begin //
 
                     // FunderLoanTbl.Reset();
                     // FunderLoanTbl.SetRange("No.", FunderNo);
@@ -371,7 +375,20 @@ report 50237 "Reminder on Placement Mature"
 
                     end;
 
-                    _emailingCU.SendReminderOnPlacementMaturity("Funder Loan"."No.");
+                    EmailingCU.SendReminderOnPlacementMaturity("Funder Loan"."No.");
+
+                    Loan.Reset();
+                    Loan.SetRange(LoanNo, _fNo);
+                    Loan.CalcSums(TotalPayment);
+                    _ttotalPayment := Loan.TotalPayment;
+
+                    _remOnPlacementMature.Init();
+                    _remOnPlacementMature.LoanNo := _fNo;
+                    _remOnPlacementMature.InterestRate := _interestRate_Active;
+                    _remOnPlacementMature.TotalPayment := _ttotalPayment;
+                    _remOnPlacementMature.Category := "Funder Loan".Category;
+                    _remOnPlacementMature.DueDate := "Funder Loan".MaturityDate;
+                    _remOnPlacementMature.Insert();
 
                 end else begin
                     CurrReport.Skip(); // Skip this record and move to the next one
@@ -386,41 +403,56 @@ report 50237 "Reminder on Placement Mature"
 
     }
 
-    requestpage
-    {
+    // requestpage
+    // {
 
-        layout
-        {
-            area(Content)
-            {
-                group(GroupName)
-                {
-                    field(No; FunderNo)
-                    {
-                        TableRelation = "Funder Loan"."No.";
-                        ApplicationArea = All;
+    //     layout
+    //     {
+    //         area(Content)
+    //         {
+    //             group(GroupName)
+    //             {
+    //                 field(No; FunderNo)
+    //                 {
+    //                     TableRelation = "Funder Loan"."No.";
+    //                     ApplicationArea = All;
 
-                    }
-                }
-            }
-        }
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
+    //     actions
+    //     {
+    //         area(processing)
+    //         {
+    //             action(LayoutName)
+    //             {
 
-                }
-            }
-        }
-    }
+    //             }
+    //         }
+    //     }
+    // }
 
+
+    trigger OnInitReport()
+    begin
+
+    end;
+
+    // trigger OnPreRendering(var RenderingPayload: JsonObject)
+    // begin
+
+    // end;
 
     trigger OnPreReport()
     var
     begin
+    end;
+
+    trigger OnPostReport()
+    begin
+        EmailingCU.SendReminderOnPlacementMaturityStaff();
     end;
 
     procedure IsFirstOfMonth(): Boolean
@@ -836,5 +868,6 @@ report 50237 "Reminder on Placement Mature"
         ConfirmationDate: Date;
         Loan: Record "Schedule Total";
         GeneralSetup: Record "Treasury General Setup";
+        EmailingCU: Codeunit "Treasury Emailing";
 
 }

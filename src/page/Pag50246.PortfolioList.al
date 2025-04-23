@@ -17,11 +17,31 @@ page 50246 "Portfolio List"
                     ApplicationArea = All;
                     Caption = 'Name';
                 }
-
+                field(Category; Rec.Category)
+                {
+                    ApplicationArea = All;
+                }
                 field(ProgramSize; Rec.ProgramSize)
                 {
                     ApplicationArea = All;
                     Caption = 'Program Size';
+                }
+                field("Actual Program Size"; Rec."Actual Program Size")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Actual Program Size';
+                    // DrillDown = true;
+                    // DrillDownPageId = 50235;
+                    Editable = false;
+                    trigger OnDrillDown()
+                    var
+                        loans: Record "Funder Loan";
+                    begin
+                        loans.SetRange(Category, Rec.Category);
+                        loans.SetRange(loans.Status, loans.Status::Approved);
+                        Page.Run(Page::"Funder Loans List", loans);
+                    end;
+
                 }
                 field(BeginDate; Rec.BeginDate)
                 {
@@ -31,12 +51,12 @@ page 50246 "Portfolio List"
                 field(ProgramTerm; Rec.ProgramTerm)
                 {
                     ApplicationArea = All;
-                    Caption = 'Program Term';
+                    Caption = 'Program Term (Year)';
                 }
-                field(ProgramCurrency; Rec.ProgramCurrency)
+                field(EndTerm; Rec.EndTerm)
                 {
                     ApplicationArea = All;
-                    Caption = 'Program Currency';
+                    Caption = 'End Term';
                 }
                 field("Fee Applicable"; Rec."Fee Applicable")
                 {

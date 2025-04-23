@@ -1,10 +1,10 @@
-page 50233 "Funder Card"
+page 50287 "Funder Change Card"
 {
     PageType = Card;
     ApplicationArea = All;
     UsageCategory = Administration;
-    SourceTable = Funders;
-    Caption = 'Funder/Supplier Card';
+    SourceTable = "Funder Change";
+    Caption = 'Funder Change Card';
 
     // DataCaptionExpression = '';
     layout
@@ -16,25 +16,26 @@ page 50233 "Funder Card"
                 field("No."; Rec."No.")
                 {
                     ApplicationArea = All;
-                    Editable = EditStatus;
+                }
+                field("Funder No."; Rec."Funder No.")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Funder No. To Change';
                 }
                 field(Portfolio; Rec.Portfolio)
                 {
                     ApplicationArea = All;
-                    Editable = EditStatus;
                 }
                 field(Name; Rec.Name)
                 {
                     ApplicationArea = All;
                     Caption = 'Full Name';
                     ShowMandatory = true;
-                    Editable = EditStatus;
                 }
                 field(FunderType; Rec.FunderType)
                 {
                     ApplicationArea = all;
                     Caption = 'Funder Type';
-                    Editable = EditStatus;
                     trigger OnValidate()
                     begin
                         UpdateFastTabVisibility();
@@ -50,31 +51,6 @@ page 50233 "Funder Card"
                     Editable = false;
                 }
             }
-            group("G/L Mapping")
-            {
-                field("Payables Account"; Rec."Payables Account")
-                {
-
-                    ApplicationArea = All;
-                    ShowMandatory = true;
-                    Editable = EditStatus;
-                }
-                field("Interest Expense"; Rec."Interest Expense")
-                {
-
-                    ApplicationArea = All;
-                    ShowMandatory = true;
-                    Editable = EditStatus;
-                }
-                field("Interest Payable"; Rec."Interest Payable")
-                {
-
-                    ApplicationArea = All;
-                    ShowMandatory = true;
-                    Editable = EditStatus;
-                }
-            }
-
             group("Personal Detail (Individual)")
             {
                 Visible = ShowIndividualFastTab;
@@ -85,7 +61,6 @@ page 50233 "Funder Card"
                     {
                         ApplicationArea = all;
                         ShowMandatory = true;
-                        Editable = EditStatus;
                         trigger OnValidate()
                         begin
                             CurrPage.Update();
@@ -107,38 +82,30 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         Caption = 'KRA PIN';
                         ShowMandatory = true;
-                        Editable = EditStatus;
                     }
                     field("Employer Identification Number"; Rec."Employer Identification Number")
                     {
                         ApplicationArea = All;
                         Caption = 'ID/Passport No.';
                         ShowMandatory = true;
-                        Editable = EditStatus;
                     }
-
+                    field(IndOccupation; Rec.IndOccupation)
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                        Caption = 'Occupation';
+                    }
                     field(IndNatureOfBusiness; Rec.IndNatureOfBusiness)
                     {
                         ApplicationArea = All;
                         ShowMandatory = true;
                         Caption = 'Nature of Business';
-                        Editable = EditStatus;
-                    }
-                    field(IndOccupation; Rec.IndOccupation)
-                    {
-                        ApplicationArea = All;
-                        // ShowMandatory = true;
-                        Caption = 'Occupation';
-                        Editable = Rec.IndNatureOfBusiness = Rec.IndNatureOfBusiness::"Self Employed";
-
                     }
                     field(IndEmployer; Rec.IndEmployer)
                     {
                         ApplicationArea = All;
-                        // ShowMandatory = true;
+                        ShowMandatory = true;
                         Caption = 'Employer';
-                        Editable = Rec.IndNatureOfBusiness = Rec.IndNatureOfBusiness::Employed;
-
                     }
                     // field("VAT Number"; Rec."VAT Number")
                     // {
@@ -162,33 +129,28 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         Caption = 'Residential Address/Registered Office';
                         ShowMandatory = true;
-                        Editable = EditStatus;
                     }
                     field("Phone Number"; Rec."Phone Number")
                     {
                         ApplicationArea = All;
                         ExtendedDatatype = PhoneNo;
                         ShowMandatory = true;
-                        Editable = EditStatus;
                     }
                     field("Postal Address"; Rec."Postal Address")
                     {
                         ApplicationArea = All;
                         ShowMandatory = true;
-                        Editable = EditStatus;
                     }
                     field("Postal Code"; Rec."Postal Code")
                     {
                         ApplicationArea = All;
                         ShowMandatory = true;
-                        Editable = EditStatus;
                     }
                     field("Mailing Address"; Rec."Mailing Address")
                     {
                         ApplicationArea = All;
                         Caption = 'Email';
                         ShowMandatory = true;
-                        Editable = EditStatus;
                     }
                     // field("Pri Contact Name"; Rec."Primary Contact Name")
                     // {
@@ -229,28 +191,24 @@ page 50233 "Funder Card"
                         Caption = 'Name';
                         ApplicationArea = All;
                         ShowMandatory = true;
-                        Editable = EditStatus;
                     }
                     field(ContactDetailRelation; Rec.ContactDetailRelation)
                     {
                         Caption = 'Relation';
                         ApplicationArea = All;
                         ShowMandatory = true;
-                        Editable = EditStatus;
                     }
                     field(ContactDetailIdPassport; Rec.ContactDetailIdPassport)
                     {
                         Caption = 'Passport/ID No.';
                         ApplicationArea = All;
                         ShowMandatory = true;
-                        Editable = EditStatus;
                     }
                     field(ContactDetailPhone; Rec.ContactDetailPhone)
                     {
                         Caption = 'Phone';
                         ApplicationArea = All;
                         ShowMandatory = true;
-                        Editable = EditStatus;
                     }
                 }
 
@@ -451,7 +409,6 @@ page 50233 "Funder Card"
                 {
                     ApplicationArea = All;
                     ShowMandatory = true;
-                    Editable = EditStatus;
                     trigger OnValidate()
                     begin
                         // CurrPage.Banks.
@@ -463,18 +420,16 @@ page 50233 "Funder Card"
                 {
                     ApplicationArea = All;
                     Editable = false;
-
                 }
                 field("Bank Branch"; Rec."Bank Branch")
                 {
                     ApplicationArea = All;
-
                     // TableRelation= BankBranch.BankCode where FILTER('');
                     // trigger OnLookup(var Text: Text): Boolean
                     // begin
                     //     // Message('lookup');
                     // end;
-                    Editable = EditStatus;
+                    Editable = true;
                     DrillDownPageId = "Bank Branch List";
                     trigger OnDrillDown()
                     var
@@ -499,23 +454,18 @@ page 50233 "Funder Card"
                 field("Bank Account Number"; Rec."Bank Account Number")
                 {
                     ApplicationArea = All;
-                    Editable = EditStatus;
                 }
-
                 field("Bank Address"; Rec."Bank Address")
                 {
                     ApplicationArea = All;
-                    Editable = EditStatus;
                 }
                 field("SWIFT/BIC Code"; Rec."SWIFT/BIC Code")
                 {
                     ApplicationArea = All;
-                    Editable = EditStatus;
                 }
                 field("IBAN (Int Bank Acc No)"; Rec."IBAN (Int Bank Acc No)")
                 {
                     ApplicationArea = All;
-                    Editable = EditStatus;
                 }
                 // field("Payment Terms"; Rec."Payment Terms")
                 // {
@@ -523,37 +473,21 @@ page 50233 "Funder Card"
                 // }
 
             }
-            /*group("Other Details")
+            group("Change Reason")
             {
-                field("KYC Details"; Rec."KYC Details")
+                field(ChangeReason; Rec.ChangeReason)
                 {
                     ApplicationArea = All;
+                    ShowMandatory = true;
+                    Caption = 'Change Reason';
                 }
-                field("Sanctions Check"; Rec."Sanctions Check")
-                {
-                    ApplicationArea = All;
-                }
-                field("AML Compliance Details"; Rec."AML Compliance Details")
-                {
-                    ApplicationArea = All;
-                }
-
-                field("Payment Method"; Rec."Payment Method")
-                {
-                    ApplicationArea = All;
-                }
-                field("Additional Notes"; Rec."Additional Notes")
-                {
-                    ApplicationArea = All;
-                }
-
-            }*/
+            }
 
         }
 
         area(FactBoxes)
         {
-            part("Attached Documents"; "Document Attachment Factbox")
+            part("Attached Documents"; "Doc. Attachment List Factbox")
             {
                 ApplicationArea = All;
                 Caption = 'Attachments';
@@ -583,26 +517,6 @@ page 50233 "Funder Card"
 
         area(Processing)
         {
-
-            action("Funder Ledger Entry")
-            {
-                ApplicationArea = Basic, Suite;
-                Caption = 'Funder Ledger';
-                Image = LedgerEntries;
-                PromotedCategory = Process;
-                Promoted = true;
-                // RunObject = Page "Funder Loans List";
-                //RunPageLink = "Funder No." = FIELD("No.");
-                trigger OnAction()
-                var
-                    funderLedgerEntry: Record FunderLedgerEntry;
-                begin
-                    funderLedgerEntry.SETRANGE(funderLedgerEntry."Funder No.", Rec."No.");
-                    funderLedgerEntry.SetFilter(funderLedgerEntry."Document Type", '<>%1', funderLedgerEntry."Document Type"::"Remaining Amount");
-                    PAGE.RUN(PAGE::FunderLedgerEntry, funderLedgerEntry);
-
-                end;
-            }
             action(BeneficiaryTrustee)
             {
                 ApplicationArea = Basic, Suite;
@@ -624,65 +538,6 @@ page 50233 "Funder Card"
 
             }
 
-
-            action("Funder Loan Open")
-            {
-                ApplicationArea = Basic, Suite;
-                Caption = 'Funder Loan (Open)';
-                Image = CashReceiptJournal;
-                PromotedCategory = Process;
-                Promoted = true;
-                // RunObject = Page "Funder Loans List";
-                //RunPageLink = "Funder No." = FIELD("No.");
-
-                trigger OnAction()
-                var
-                    funderLoan: Record "Funder Loan";
-                begin
-                    funderLoan.SETRANGE(funderLoan."Funder No.", Rec."No.");
-                    funderLoan.SETRANGE(funderLoan.Status, funderLoan.Status::Open);
-                    PAGE.RUN(PAGE::"Funder Loans List", funderLoan);
-
-                end;
-            }
-            action("Funder Loan Pending")
-            {
-                ApplicationArea = Basic, Suite;
-                Caption = 'Funder Loan (Pending)';
-                Image = CashReceiptJournal;
-                PromotedCategory = Process;
-                Promoted = true;
-                // RunObject = Page "Funder Loans List";
-                //RunPageLink = "Funder No." = FIELD("No.");
-                trigger OnAction()
-                var
-                    funderLoan: Record "Funder Loan";
-                begin
-                    funderLoan.SETRANGE(funderLoan."Funder No.", Rec."No.");
-                    funderLoan.SETRANGE(funderLoan.Status, funderLoan.Status::"Pending Approval");
-                    PAGE.RUN(PAGE::"Funder Loans List", funderLoan);
-
-                end;
-            }
-            action("Funder Loan Approved")
-            {
-                ApplicationArea = Basic, Suite;
-                Caption = 'Funder Loan (Approved)';
-                Image = CashReceiptJournal;
-                PromotedCategory = Process;
-                Promoted = true;
-                // RunObject = Page "Funder Loans List";
-                //RunPageLink = "Funder No." = FIELD("No.");
-                trigger OnAction()
-                var
-                    funderLoan: Record "Funder Loan";
-                begin
-                    funderLoan.SETRANGE(funderLoan."Funder No.", Rec."No.");
-                    funderLoan.SETRANGE(funderLoan.Status, funderLoan.Status::Approved);
-                    PAGE.RUN(PAGE::"Funder Loans List", funderLoan);
-
-                end;
-            }
             group("Request Approval")
             {
                 Caption = 'Request Approval';
@@ -702,13 +557,6 @@ page 50233 "Funder Card"
                         CustomWorkflowMgmt: Codeunit "Portfolio Approval Mgt";
                         RecRef: RecordRef;
                     begin
-                        if Rec."Payables Account" = '' then
-                            Error('Payable Account Required');
-                        if Rec."Interest Expense" = '' then
-                            Error('Interest Expense Account Required');
-                        if Rec."Interest Payable" = '' then
-                            Error('Interest Payable Account Required');
-
                         RecRef.GetTable(Rec);
                         if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
                             CustomWorkflowMgmt.OnSendWorkflowForApproval(RecRef);
@@ -749,7 +597,6 @@ page 50233 "Funder Card"
                     PromotedCategory = Report;
                     PromotedIsBig = true;
                     RunObject = report ReEvaluateFX;
-                    Enabled = false;
 
                 }
                 action("Capitalize Interest")
@@ -762,7 +609,6 @@ page 50233 "Funder Card"
                     PromotedCategory = Report;
                     PromotedIsBig = true;
                     RunObject = report "Capitalize Interest";
-                    Enabled = false;
 
                 }
                 action("attachment")
@@ -891,27 +737,16 @@ page 50233 "Funder Card"
         OpenApprovalEntriesExist := ApprovalsMgmt.HasOpenApprovalEntries(Rec.RecordId);
         CanCancelApprovalForRecord := ApprovalsMgmt.CanCancelApprovalForRecord(Rec.RecordId);
         HasApprovalEntries := ApprovalsMgmt.HasApprovalEntries(Rec.RecordId);
-        FieldEditProp();
     end;
     // Trigger to update FastTab visibility when the record is loaded
     trigger OnAfterGetCurrRecord()
     begin
         UpdateFastTabVisibility();
-        FieldEditProp()
     end;
     // Trigger to update FastTab visibility when the page is opened
     trigger OnOpenPage()
     begin
         UpdateFastTabVisibility();
-        FieldEditProp();
-    end;
-
-    trigger OnQueryClosePage(CloseAction: Action): Boolean
-    begin
-        if Rec.Portfolio = '' then
-            Error('Portfolio Mandatory');
-        if Rec."Mailing Address" = '' then
-            Error('Email Required');
     end;
     // Local procedure to update FastTab visibility
     local procedure UpdateFastTabVisibility()
@@ -920,12 +755,6 @@ page 50233 "Funder Card"
         ShowIndividualFastTab := Rec.FunderType = Rec.FunderType::Individual;
         ShowJointFastTab := Rec.FunderType = Rec.FunderType::"Joint Application";
         ShowCorporateFastTab := Rec.FunderType = Rec.FunderType::Corporate;
-    end;
-
-    local procedure FieldEditProp()
-    var
-    begin
-        EditStatus := not (Rec.Status = Rec.Status::Approved);
     end;
 
     var
@@ -943,5 +772,4 @@ page 50233 "Funder Card"
         OpenApprovalEntriesExistCurrUser, OpenApprovalEntriesExist, CanCancelApprovalForRecord
         , HasApprovalEntries : Boolean;
         ApprovalsMgmt: Codeunit "Approvals Mgmt.";
-        EditStatus: Boolean;
 }

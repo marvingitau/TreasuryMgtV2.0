@@ -14,17 +14,17 @@ page 50236 "Funder Loan Card"
                 field("No."; Rec."No.")
                 {
                     ApplicationArea = All;
-                    Editable = false;
+                    // Editable = false;
                 }
                 field("Funder No."; Rec."Funder No.")
                 {
                     ApplicationArea = All;
-                    Editable = false;
+                    // Editable = false;
                 }
                 field(Name; Rec.Name)
                 {
                     ApplicationArea = All;
-                    Editable = false;
+                    // Editable = false;
                     Caption = 'Funder Name';
                 }
                 // field("Loan Name"; Rec."Loan Name")
@@ -57,7 +57,7 @@ page 50236 "Funder Loan Card"
                         end;
                     end;
                 }
-                field("Loan Duration"; PlacementAndMaturityDifference)
+                field(LoanDurationDays; Rec.LoanDurationDays)
                 {
                     ApplicationArea = All;
                     Editable = false;
@@ -67,7 +67,7 @@ page 50236 "Funder Loan Card"
                 {
 
                     ApplicationArea = All;
-                    Caption = 'Bank';
+                    Caption = 'Receiving Bank Account';
                     ShowMandatory = true;
                 }
                 field(Currency; Rec.Currency)
@@ -75,7 +75,7 @@ page 50236 "Funder Loan Card"
                     Caption = 'Currency';
                     // Visible = false;
                     ApplicationArea = All;
-                    // Editable = false;
+                    Editable = false;
                     // Visible = isCurrencyVisible;
                     // ShowMandatory = isCurrencyVisible;
                     // ShowMandatory = true;
@@ -92,31 +92,38 @@ page 50236 "Funder Loan Card"
                 //     ApplicationArea = All;
                 //     // Editable = false;
                 // }
+                field("Bank Ref. No."; Rec."Bank Ref. No.")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Bank Reference No.';
+                    ShowMandatory = true;
+                }
                 group("G/L Mapping")
                 {
                     field("Payables Account"; Rec."Payables Account")
                     {
 
                         ApplicationArea = All;
-                        ShowMandatory = true;
+                        Editable = false;
                     }
                     field("Interest Expense"; Rec."Interest Expense")
                     {
 
                         ApplicationArea = All;
-                        ShowMandatory = true;
+                        Editable = false;
                     }
                     field("Interest Payable"; Rec."Interest Payable")
                     {
 
                         ApplicationArea = All;
-                        ShowMandatory = true;
+                        Editable = false;
                     }
                 }
 
                 field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
                 {
                     ApplicationArea = All;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
                 }
                 // field(OrigAmntDisbLCY; Rec.OrigAmntDisbLCY)
                 // {
@@ -168,6 +175,10 @@ page 50236 "Funder Loan Card"
                     ApplicationArea = All;
                     ShowMandatory = true;
                     Editable = not isFloatRate;
+                }
+                field(NetInterestRate; Rec.NetInterestRate)
+                {
+                    ApplicationArea = All;
                 }
                 group(FloatInterestFields)
                 {
@@ -224,8 +235,15 @@ page 50236 "Funder Loan Card"
                 {
                     Caption = '*Payment Period (Interest) ';
                     ApplicationArea = All;
+                    trigger OnValidate()
+                    begin
+                        UpdateInterestPaymentVisibility();
+
+                        // CurrPage.Update();
+                    end;
 
                 }
+
                 field(PeriodicPaymentOfPrincipal; Rec.PeriodicPaymentOfPrincipal)
                 {
                     Caption = '*Payment Period (Principal) ';
@@ -245,6 +263,7 @@ page 50236 "Funder Loan Card"
                 field(InvestmentTenor; Rec.InvestmentTenor)
                 {
                     ApplicationArea = All;
+                    Caption = 'Investment Tenor (Months)';
                 }
                 field(InvstPINNo; Rec.InvstPINNo)
                 {
@@ -258,6 +277,7 @@ page 50236 "Funder Loan Card"
                 field(Category; Rec.Category)
                 {
                     ApplicationArea = All;
+                    Editable = false;
                 }
 
                 // field(sTenor; Rec.StartTenor)
@@ -317,6 +337,45 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                     // Editable = false;
+                }
+                field(State; Rec.State)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Operational State';
+                    Editable = false;
+                    // Visible = Rec.Status = Rec.Status::Approved;
+                    ToolTip = 'This shows the Loan is in Operation';
+                }
+                group("Rollover Details")
+                {
+                    Visible = IsRollovered;
+                    field(Rollovered; Rec.Rollovered)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Record Origin';
+                    }
+                    field("Original Record No."; Rec."Original Record No.")
+                    {
+                        ApplicationArea = All;
+                    }
+                    field("Rollovered Interest"; Rec."Rollovered Interest")
+                    {
+                        ApplicationArea = All;
+                        Caption = '* Rollovered Interest';
+                        ToolTip = 'Applicable only for the case of Rollovered Interest';
+                    }
+                }
+
+
+            }
+            group("Quartery Interest Payment Advanced Settings")
+            {
+                Visible = EnableInterestPaymentVisibility;
+                field(FirstDueDate; Rec.FirstDueDate)
+                {
+                    Caption = 'First Due Date ';
+                    ApplicationArea = All;
+
                 }
             }
         }
@@ -393,8 +452,40 @@ page 50236 "Funder Loan Card"
                     trigger OnAction()
                     var
                         funderMgt: Codeunit FunderMgtCU;
+                        RO: Page "Roll over";
+                        GFilter: Codeunit GlobalFilters;
+                        ROTbl: Record "Roll over Tbl";
                     begin
-                        funderMgt.DuplicateRecord(Rec."No.");
+                        // funderMgt.DuplicateRecord(Rec."No.");
+                        //Page.Run(Page::"Roll over", Rec);
+                        ROTbl.Reset();
+                        ROTbl.DeleteAll();
+                        GFilter.SetGlobalLoanFilter(Rec."No.");
+                        RO.Run();
+                    end;
+                }
+                action("Redemption Record")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Image = RefreshDiscount;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    Caption = 'Redemption Record';
+                    ToolTip = 'Redemption Record';
+                    trigger OnAction()
+                    var
+                        funderMgt: Codeunit FunderMgtCU;
+                        RD: Page Redemption;
+                        GFilter: Codeunit GlobalFilters;
+                        RDTbl: Record "Redemption Tbl";
+                    begin
+                        // funderMgt.DuplicateRecord(Rec."No.");
+                        //Page.Run(Page::"Roll over", Rec);
+                        RDTbl.Reset();
+                        RDTbl.DeleteAll();
+
+                        GFilter.SetGlobalLoanFilter(Rec."No.");
+                        RD.Run();
                     end;
                 }
             }
@@ -469,8 +560,11 @@ page 50236 "Funder Loan Card"
                     trigger OnAction()
                     var
                         PlacementReminder: Report "Reminder on Placement Mature";
+                        _funderLoan: Record "Funder Loan";
                     begin
-                        PlacementReminder.Run();
+                        //PlacementReminder.Run();
+                        _funderLoan.SetRange("No.", Rec."No.");
+                        Report.Run(50237, true, false, _funderLoan);
                         // EmailingCU.SendReminderOnPlacementMaturity(Rec."No.")
                     end;
                 }
@@ -613,8 +707,29 @@ page 50236 "Funder Loan Card"
                         _funderLoan.SetRange("No.", Rec."No.");
                         // Report.Run(50230, true, false, _funderLoan);
                     end;
+                }
+                action("Capitalize Interest")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Capitalize Interest';
+                    Image = Report;
+                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
+                    RunObject = report "Capitalize Interest";
 
-
+                }
+                action("ReEvaluateFX")
+                {
+                    ApplicationArea = All;
+                    Caption = 'ReEvaluateFX';
+                    Image = Report;
+                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
+                    RunObject = report ReEvaluateFX;
 
                 }
             }
@@ -671,12 +786,27 @@ page 50236 "Funder Loan Card"
         isSecureLoanActive := false;
         isUnsecureLoanActive := true;
         isFloatRate := false;
+
+        _funderNo := GlobalFilters.GetGlobalFilter();
+        if _funderNo <> '' then begin
+            if FunderTbl.Get(_funderNo) then begin
+                if FunderTbl."Mailing Address" = '' then begin
+                    Error('Email Required');
+                    exit;
+                end;
+            end;
+        end;
     end;
 
     trigger OnOpenPage()
     var
         ReportFlag: Record "Report Flags";
     begin
+        "Region/Country".Reset();
+        if "Region/Country".IsEmpty() then begin
+            Error('Region/Country must have atleast one entry');
+            exit;
+        end;
         _funderNo := GlobalFilters.GetGlobalFilter();
         if _funderNo <> '' then begin
             if FunderTbl.Get(_funderNo) then begin
@@ -715,7 +845,12 @@ page 50236 "Funder Loan Card"
         ReportFlag."Funder Loan No." := Rec."No.";
         ReportFlag."Utilizing User" := UserId;
         ReportFlag.Insert();
+
+        UpdateInterestPaymentVisibility();
+        FieldEditProp();
+        RolloveredChecker();
     end;
+
 
     trigger OnNextRecord(Steps: Integer): Integer
     begin
@@ -749,8 +884,12 @@ page 50236 "Funder Loan Card"
     begin
         OpenApprovalEntriesExistCurrUser := ApprovalsMgmt.HasOpenApprovalEntriesForCurrentUser(Rec.RecordId);
         OpenApprovalEntriesExist := ApprovalsMgmt.HasOpenApprovalEntries(Rec.RecordId);
+        // OpenApprovalEntriesExist := ApprovalsMgmt.HasApprovedApprovalEntries(Rec.RecordId);
         CanCancelApprovalForRecord := ApprovalsMgmt.CanCancelApprovalForRecord(Rec.RecordId);
         HasApprovalEntries := ApprovalsMgmt.HasApprovalEntries(Rec.RecordId);
+        UpdateInterestPaymentVisibility();
+        FieldEditProp();
+        RolloveredChecker();
     end;
 
     trigger OnQueryClosePage(CloseAction: Action): Boolean
@@ -767,6 +906,24 @@ page 50236 "Funder Loan Card"
         end;
     end;
 
+    local procedure UpdateInterestPaymentVisibility()
+    begin
+        EnableInterestPaymentVisibility := Rec.PeriodicPaymentOfInterest = Rec.PeriodicPaymentOfInterest::Quarterly;
+
+    end;
+
+    local procedure FieldEditProp()
+    var
+    begin
+        EditStatus := not (Rec.Status = Rec.Status::Approved);
+    end;
+
+    local procedure RolloveredChecker()
+    var
+    begin
+        IsRollovered := (Rec.Rollovered = Rec.Rollovered::"Roll overed");
+    end;
+
     var
         myInt: Integer;
         GenSetup: Record "Treasury General Setup";
@@ -780,6 +937,10 @@ page 50236 "Funder Loan Card"
         , HasApprovalEntries : Boolean;
         ApprovalsMgmt: Codeunit "Approvals Mgmt.";
         PlacementAndMaturityDifference: Integer;
+        EnableInterestPaymentVisibility: Boolean;
+        "Region/Country": Record Country_Region;
+        EditStatus: Boolean;
+        IsRollovered: Boolean;
 
     protected var
 

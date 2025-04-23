@@ -5,10 +5,10 @@ pageextension 50233 "Doc. Attchment _" extends 1173
         // Add changes to page layout here
         addafter("File Type")
         {
-            field(DocType; Rec.DocType)
-            {
-                ApplicationArea = All;
-            }
+            // field(DocType; Rec.DocType)
+            // {
+            //     ApplicationArea = All;
+            // }
         }
     }
 
@@ -24,16 +24,16 @@ pageextension 50233 "Doc. Attchment _" extends 1173
 
     trigger OnQueryClosePage(CloseAction: Action): Boolean
     begin
-        if OpParadigm = '50232' then begin
-            DocAttch.Reset();
-            DocAttch.SetRange("Table ID", 50232);
-            if DocAttch.Find('-') then begin
-                repeat
-                    if DocAttch.DocType = DocAttch.DocType::" " then
-                        Error('Document Type Needed');
-                until DocAttch.Next() = 0;
-            end;
-        end;
+        // if OpParadigm = '50232' then begin
+        //     DocAttch.Reset();
+        //     DocAttch.SetRange("Table ID", 50232);
+        //     if DocAttch.Find('-') then begin
+        //         repeat
+        //             if DocAttch.DocType = DocAttch.DocType::" " then
+        //                 Error('Document Type Needed');
+        //         until DocAttch.Next() = 0;
+        //     end;
+        // end;
     end;
 
     var

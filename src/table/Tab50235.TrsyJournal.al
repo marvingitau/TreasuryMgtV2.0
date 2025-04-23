@@ -208,7 +208,10 @@ table 50235 "Trsy Journal"
             CaptionClass = '1,1,1';
             DataClassification = ToBeClassified;
             TableRelation = "Dimension Value".Code WHERE("Global Dimension No." = CONST(1), "Dimension Value Type" = CONST(Standard), Blocked = CONST(false));
-
+        }
+        field(800; "External Document No"; Text[250])
+        {
+            DataClassification = ToBeClassified;
         }
     }
 

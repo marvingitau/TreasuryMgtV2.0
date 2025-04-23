@@ -40,13 +40,18 @@ page 50232 "Treasury Documents Setup"
     {
         area(Processing)
         {
-            action(ActionName)
+            action(CountryRegion)
             {
+                Caption = 'Country Region';
+                Image = CountryRegion;
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                RunObject = page 50284;
+                // trigger OnAction()
+                // begin
 
-                trigger OnAction()
-                begin
-
-                end;
+                // end;
             }
         }
     }

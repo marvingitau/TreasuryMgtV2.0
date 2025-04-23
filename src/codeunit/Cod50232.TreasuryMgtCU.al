@@ -21,8 +21,6 @@ codeunit 50232 "Treasury Mgt CU"
 
     end;
 
-
-
     procedure PostTrsyJnl()
     var
         GLEntry: Record "G/L Entry";
@@ -1248,30 +1246,31 @@ codeunit 50232 "Treasury Mgt CU"
                 funderLegderEntry1."Amount(LCY)" := _amount;
                 funderLegderEntry1.Insert();
 
-            // funderLegderEntry2.Init();
-            // funderLegderEntry2."Entry No." := funderEntryCounter + 2;
-            // funderLegderEntry2."Funder No." := funder."No.";
-            // funderLegderEntry2."Funder Name" := funder.Name;
-            // funderLegderEntry2."Loan No." := _loanNo;
-            // funderLegderEntry2."Loan Name" := _loanName;
+                // funderLegderEntry2.Init();
+                // funderLegderEntry2."Entry No." := funderEntryCounter + 2;
+                // funderLegderEntry2."Funder No." := funder."No.";
+                // funderLegderEntry2."Funder Name" := funder.Name;
+                // funderLegderEntry2."Loan No." := _loanNo;
+                // funderLegderEntry2."Loan Name" := _loanName;
 
-            // if TrsyJnl."Currency Code" <> '' then
-            //     funderLegderEntry2."Currency Code" := TrsyJnl."Currency Code";
-            // funderLegderEntry2."Posting Date" := TrsyJnl."Posting Date";
-            // funderLegderEntry2."Document Type" := funderLegderEntry."Document Type"::"Remaining Amount";
-            // funderLegderEntry."Document No." := TrsyJnl."Document No.";
-            // funderLegderEntry2.Description := 'Remaining Amount' + Format(Today) + TrsyJnl.Description;
-            // funderLegderEntry2.Amount := ((-_amount + witHldInterest) + originalAmount);
-            // funderLegderEntry2."Amount(LCY)" := ((-_amount + witHldInterest) + originalAmount);
-            // if latestRemainingAmount = 0 then begin
-            //     funderLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + originalAmount);
-            // end
-            // else begin
-            //     funderLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + latestRemainingAmount);
-            // end;
-            // funderLegderEntry2.Insert();
+                // if TrsyJnl."Currency Code" <> '' then
+                //     funderLegderEntry2."Currency Code" := TrsyJnl."Currency Code";
+                // funderLegderEntry2."Posting Date" := TrsyJnl."Posting Date";
+                // funderLegderEntry2."Document Type" := funderLegderEntry."Document Type"::"Remaining Amount";
+                // funderLegderEntry."Document No." := TrsyJnl."Document No.";
+                // funderLegderEntry2.Description := 'Remaining Amount' + Format(Today) + TrsyJnl.Description;
+                // funderLegderEntry2.Amount := ((-_amount + witHldInterest) + originalAmount);
+                // funderLegderEntry2."Amount(LCY)" := ((-_amount + witHldInterest) + originalAmount);
+                // if latestRemainingAmount = 0 then begin
+                //     funderLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + originalAmount);
+                // end
+                // else begin
+                //     funderLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + latestRemainingAmount);
+                // end;
+                // funderLegderEntry2.Insert();
 
-
+                //+++++++++++++++++++++ EMAIL THE FUNDER ON THE NEW PRINCIPAL
+                EmailingCU.EmailFunderOnNewPrincipalFromCapitalization(_loanNo);
             until TrsyJnl.Next() = 0;
             TrsyJnl.Reset();
             TrsyJnl.SetFilter("Account No.", '<>%1', '');
@@ -1478,7 +1477,9 @@ codeunit 50232 "Treasury Mgt CU"
 
 
                 JournalEntry.Amount := _amount;
-                JournalEntry.Validate(JournalEntry.Amount);
+                if JournalEntry."Currency Code" <> '' then
+                    JournalEntry.Validate(JournalEntry.Amount);
+
                 if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Funder then begin
                     JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account"; //@@@@@@@ Credit Bank
                     JournalEntry."Bal. Account No." := interestAccPay;
@@ -1624,8 +1625,289 @@ codeunit 50232 "Treasury Mgt CU"
         exit(true);
     end;
 
+    procedure ValidateQuarterEndDate(DateToCheck: Date)
+    var
+        QuarterEndDates: List of [Date];
+        IsValid: Boolean;
+        Year: Integer;
+    begin
+        if DateToCheck = 0D then
+            exit; // Allow blank dates if needed
+
+        Year := Date2DMY(DateToCheck, 3); // Get year from date
+
+        // Create list of quarter end dates for the year
+        QuarterEndDates.Add(DMY2Date(31, 3, Year));
+        QuarterEndDates.Add(DMY2Date(30, 6, Year));
+        QuarterEndDates.Add(DMY2Date(30, 9, Year));
+        QuarterEndDates.Add(DMY2Date(31, 12, Year));
+
+        IsValid := QuarterEndDates.Contains(DateToCheck);
+
+        if not IsValid then
+            Error('Date %1 must be a quarter end date (March 31, June 30, September 30, or December 31)', DateToCheck);
+    end;
+
+    procedure IsTodayEndOfMonth(): Boolean
+    var
+        TodayDate: Date;
+        EndOfMonthDate: Date;
+    begin
+        TodayDate := Today;
+        EndOfMonthDate := CALCDATE('<CM>', TodayDate);
+
+        exit(TodayDate = EndOfMonthDate);
+    end;
+
+    procedure IsTodayEndOfQuarter(): Boolean
+    var
+        TodayDate: Date;
+        EndOfQuarterDate: Date;
+    begin
+        TodayDate := Today;
+        EndOfQuarterDate := CalculateEndOfQuarter(TodayDate);
+
+        exit(TodayDate = EndOfQuarterDate);
+    end;
+
+    local procedure CalculateEndOfQuarter(InputDate: Date): Date
+    var
+        Month: Integer;
+        Quarter: Integer;
+        Year: Integer;
+    begin
+        Month := Date2DMY(InputDate, 2); // Get month component
+        Year := Date2DMY(InputDate, 3); // Get year component
+
+        // Determine which quarter we're in (1-4)
+        Quarter := (Month - 1) div 3 + 1;
+
+        // Calculate last month of the quarter
+        Month := Quarter * 3;
+
+        // Return the last day of that month
+        exit(DMY2Date(31, Month, Year)); // This automatically adjusts for months with fewer days
+    end;
+
+    procedure IsTodayEndOfBiAnnual(): Boolean
+    var
+        TodayDate: Date;
+        EndOfBiAnnualDate: Date;
+    begin
+        TodayDate := Today;
+        EndOfBiAnnualDate := CalculateEndOfBiAnnual(TodayDate);
+
+        exit(TodayDate = EndOfBiAnnualDate);
+    end;
+
+    local procedure CalculateEndOfBiAnnual(InputDate: Date): Date
+    var
+        Month: Integer;
+        Year: Integer;
+    begin
+        Month := Date2DMY(InputDate, 2); // Get month component
+        Year := Date2DMY(InputDate, 3);  // Get year component
+
+        // Determine which half-year we're in (1 or 2)
+        if Month <= 6 then
+            // First half-year ends June 30
+            exit(DMY2Date(30, 6, Year))
+        else
+            // Second half-year ends December 31
+            exit(DMY2Date(31, 12, Year));
+    end;
+
+    procedure IsTodayEndOfYear(): Boolean
+    begin
+        // December 31 is always the last day of the year
+        exit((Date2DMY(Today, 2) = 12) and (Date2DMY(Today, 1) = 31));
+    end;
+
+    procedure GetDaysUntilMonthEnd(): Integer
+    var
+        TodayDate: Date;
+        EndOfMonthDate: Date;
+    begin
+        TodayDate := Today;
+        EndOfMonthDate := CALCDATE('<CM>', TodayDate); // Gets last day of current month
+        exit(EndOfMonthDate - TodayDate);
+    end;
+
+    procedure GetDaysUntilQuarterEnd(): Integer
+    var
+        TodayDate: Date;
+        Month: Integer;
+        Year: Integer;
+        QuarterEndDate: Date;
+    begin
+        TodayDate := Today;
+        Month := Date2DMY(TodayDate, 2);
+        Year := Date2DMY(TodayDate, 3);
+
+        case true of
+            Month in [1 .. 3]: // Q1 ends March 31
+                QuarterEndDate := DMY2Date(31, 3, Year);
+            Month in [4 .. 6]: // Q2 ends June 30
+                QuarterEndDate := DMY2Date(30, 6, Year);
+            Month in [7 .. 9]: // Q3 ends September 30
+                QuarterEndDate := DMY2Date(30, 9, Year);
+            Month in [10 .. 12]: // Q4 ends December 31
+                QuarterEndDate := DMY2Date(31, 12, Year);
+        end;
+
+        exit(QuarterEndDate - TodayDate);
+    end;
+
+    procedure GetDaysUntilBiAnnualEnd(): Integer
+    var
+        TodayDate: Date;
+        Month: Integer;
+        Year: Integer;
+        BiAnnualEndDate: Date;
+    begin
+        TodayDate := Today;
+        Month := Date2DMY(TodayDate, 2);
+        Year := Date2DMY(TodayDate, 3);
+
+        if Month <= 6 then
+            // First half ends June 30
+            BiAnnualEndDate := DMY2Date(30, 6, Year)
+        else
+            // Second half ends December 31
+            BiAnnualEndDate := DMY2Date(31, 12, Year);
+
+        exit(BiAnnualEndDate - TodayDate);
+    end;
+
+    procedure GetDaysUntilYearEnd(): Integer
+    var
+        TodayDate: Date;
+        YearEndDate: Date;
+    begin
+        TodayDate := Today;
+        YearEndDate := DMY2Date(31, 12, Date2DMY(TodayDate, 3)); // December 31 of current year
+        exit(YearEndDate - TodayDate);
+    end;
+
+    // Check if any interest for this loan has been computed for this month.
+    procedure CheckIfAnyInterestWasCalculatedForThisMonth(RedemptionDate: Date; LoanNo: Code[20]; PayingBankCode: Code[50])
+    var
+        funderLegderEntry: Record FunderLedgerEntry;
+        funderLegderEntry_1: Record FunderLedgerEntry;
+        funderLegderEntry_2: Record FunderLedgerEntry;
+        startMonth: Date;
+        endMonth: date;
+        monthNo: Integer;
+        yearNo: Integer;
+        recondsCount: Integer;
+        funder: Record Funders;
+
+        NextEntryNo: Integer;
+
+        TotalInterestAmount: Decimal;
+        TotalInterestAmountLCY: Decimal;
+    begin
+        monthNo := Date2DMY(RedemptionDate, 2);
+        yearNo := Date2DMY(RedemptionDate, 3);
+        startMonth := CalcDate('<-CM>', RedemptionDate);
+        endMonth := CalcDate('<+CM>', RedemptionDate);
+
+        funderLegderEntry.Reset();
+        if funderLegderEntry.FindLast() then
+            NextEntryNo := funderLegderEntry."Entry No." + 1;
+
+        funderLegderEntry_1.Reset();
+        funderLegderEntry_1.SetRange("Loan No.", LoanNo);
+        funderLegderEntry_1.SetRange("Document Type", funderLegderEntry."Document Type"::Interest);
+        funderLegderEntry_1.SetRange("Posting Date", startMonth, endMonth);
+        if funderLegderEntry_1.Find('-') then begin
+
+            funder.Reset();
+            funder.SetRange("No.", funderLegderEntry_1."Funder No.");
+            if not funder.Find('-') then
+                Error('Funder %1 Not Found', funderLegderEntry_1."Funder No.");
+
+            funderLoan3.Reset();
+            funderLoan3.SetRange("No.", funderLegderEntry_1."Loan No.");
+            if not funderLoan3.Find('-') then
+                Error('Funder Loan %1 Not Found', funderLegderEntry_1."Loan No.");
+
+            funderLegderEntry.Init();
+            funderLegderEntry."Entry No." := NextEntryNo;
+            funderLegderEntry."Funder No." := funder."No.";
+            funderLegderEntry."Funder Name" := funder.Name;
+            funderLegderEntry."Loan Name" := funderLegderEntry_1."Loan Name";
+            funderLegderEntry."Loan No." := funderLegderEntry_1."Loan No.";
+            funderLegderEntry."Posting Date" := RedemptionDate;
+            funderLegderEntry."Document No." := funderLegderEntry_1."Document No.";
+            funderLegderEntry.Category := funderLegderEntry_1.Category; // Funder Loan Category
+            funderLegderEntry."Document Type" := funderLegderEntry_1."Document Type"::"Reversed Interest";
+            funderLegderEntry.Description := 'Interest Reversal calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
+            funderLegderEntry.Amount := -funderLegderEntry_1.Amount;
+            funderLegderEntry."Amount(LCY)" := -funderLegderEntry_1."Amount(LCY)";
+            funderLegderEntry."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
+            funderLegderEntry.Insert();
+            if (funderLoan3.EnableGLPosting = true) and (funderLegderEntry_1.Amount <> 0) then
+                FunderMGTCU.DirectGLPosting('reverse-interest', funderLoan3."Interest Payable", funderLegderEntry_1.Amount, 'Interest', funderLoan3."No.", PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.");//reverse Interest (Db Paying Bank)
+
+            //Create a Correction One.
+            FunderMGTCU.CalculateInterest(LoanNo, RedemptionDate, PayingBankCode);
+        end else begin
+            //Create a new One.
+            FunderMGTCU.CalculateInterest(LoanNo, RedemptionDate, PayingBankCode);
+        end;
+        // recondsCount := funderLegderEntry_1.Count();
+        // Clear All our Interests
+        TotalInterestAmount := 0;
+        TotalInterestAmountLCY := 0;
+        funderLegderEntry.Reset();
+        funderLegderEntry.SetRange("Loan No.", LoanNo);
+        funderLegderEntry.SetFilter("Document Type", '=%1|=%2|=%3|=%4', funderLegderEntry."Document Type"::Interest, funderLegderEntry."Document Type"::"Interest Paid", funderLegderEntry."Document Type"::"Capitalized Interest", funderLegderEntry."Document Type"::"Reversed Interest");
+        // funderLegderEntry.SetRange("Document Type", funderLegderEntry."Document Type"::Interest);
+        // funderLegderEntry.SetRange("Document Type", funderLegderEntry."Document Type"::"Interest Paid");
+        // funderLegderEntry.SetRange("Document Type", funderLegderEntry."Document Type"::"Capitalized Interest");
+        // funderLegderEntry.SetRange("Document Type", funderLegderEntry."Document Type"::"Reversed Interest");
+        if funderLegderEntry.Find('-') then begin
+            repeat
+                TotalInterestAmount := TotalInterestAmount + funderLegderEntry.Amount;
+                TotalInterestAmountLCY := TotalInterestAmountLCY + funderLegderEntry."Amount(LCY)";
+            until funderLegderEntry.Next() = 0;
+        end;
+        // funderLegderEntry.CalcSums(Amount);
+        // TotalInterestAmount := funderLegderEntry.Amount;
+        // funderLegderEntry.CalcSums("Amount(LCY)");
+        // TotalInterestAmountLCY := funderLegderEntry."Amount(LCY)";
+
+        funderLoan3.Reset();
+        funderLoan3.SetRange("No.", LoanNo);
+        if not funderLoan3.Find('-') then
+            Error('Funder Loan %1 Not Found', LoanNo);
+
+        funderLegderEntry_2.Init();
+        funderLegderEntry_2."Entry No." := NextEntryNo + 6;
+        funderLegderEntry_2."Funder No." := funder."No.";
+        funderLegderEntry_2."Funder Name" := funder.Name;
+        funderLegderEntry_2."Loan Name" := funderLoan3."Loan Name";
+        funderLegderEntry_2."Loan No." := funderLoan3."No.";
+        funderLegderEntry_2."Posting Date" := RedemptionDate;
+        funderLegderEntry_2."Document No." := funderLegderEntry_1."Document No.";
+        funderLegderEntry_2.Category := funderLoan3.Category; // Funder Loan Category
+        funderLegderEntry_2."Document Type" := funderLegderEntry_2."Document Type"::"Interest Paid";
+        funderLegderEntry_2.Description := 'Interest Redemption Payment calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
+        funderLegderEntry_2.Amount := -(TotalInterestAmount);
+        funderLegderEntry_2."Amount(LCY)" := -(TotalInterestAmountLCY);
+        // funderLegderEntry_2."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
+        funderLegderEntry_2.Insert();
+        if (funderLoan3.EnableGLPosting = true) and (TotalInterestAmount <> 0) then
+            FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", TotalInterestAmount, 'Interest', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.");//Clear All the Interest (Db Paying Bank)
+
+
+    end;
+
     var
         funderLedgerEntries: Page FunderLedgerEntry;
         funder3: Record Funders;
         funderLoan3: Record "Funder Loan";
+        EmailingCU: Codeunit "Treasury Emailing";
+        FunderMGTCU: Codeunit FunderMgtCU;
 }

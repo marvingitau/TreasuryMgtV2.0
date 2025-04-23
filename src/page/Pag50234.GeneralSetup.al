@@ -58,6 +58,21 @@ page 50234 "General Setup"
                     ToolTip = 'Time (Days) before Placement Maturity Payment Reminder alert is sent ';
                     ApplicationArea = all;
                 }
+
+                field("Region/Country"; Rec."Region/Country")
+                {
+                    Caption = 'Region/Country';
+                    ApplicationArea = All;
+                }
+
+            }
+            group(Dimension)
+            {
+                field("Shortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
+                {
+                    CaptionClass = '1,2,1';
+                    ApplicationArea = All;
+                }
             }
             group(Numbering)
             {
@@ -85,8 +100,14 @@ page 50234 "General Setup"
                 {
 
                     ApplicationArea = All;
+                    ShowMandatory = true;
                 }
                 field("Portfolio No."; Rec."Portfolio No.")
+                {
+
+                    ApplicationArea = All;
+                }
+                field("Funder Change No."; Rec."Funder Change No.")
                 {
 
                     ApplicationArea = All;
@@ -113,6 +134,15 @@ page 50234 "General Setup"
 
                 end;
             }
+            action("Country Region")
+            {
+                Caption = 'Country Region';
+                Image = CountryRegion;
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                RunObject = page 50284;
+            }
         }
     }
 
@@ -120,6 +150,14 @@ page 50234 "General Setup"
     begin
         if Rec.IsEmpty() then
             Rec.Insert();
+    end;
+
+    trigger OnQueryClosePage(CloseAction: Action): Boolean
+    begin
+        if Rec."Loan No." = '' then begin
+            Error('Loan Name Needed');
+            exit(false);
+        end;
     end;
 
     var

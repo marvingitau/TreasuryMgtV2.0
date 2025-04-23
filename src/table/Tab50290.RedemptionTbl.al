@@ -1,52 +1,46 @@
-table 50243 "Funder Ben/Trus"
+table 50290 "Redemption Tbl"
 {
     DataClassification = ToBeClassified;
-    Caption = 'Funder Beneficiary/Trustee';
-    LookupPageId = 50245;
-    DrillDownPageId = 50245;
+    DataCaptionFields = "Loan No.";
     fields
     {
-        field(1; "Line No."; Integer)
+        field(1; Line; Integer)
         {
             DataClassification = ToBeClassified;
             AutoIncrement = true;
         }
-        field(2; "Funder No."; Code[20])
+        field(5; RedemptionType; Option)
         {
             DataClassification = ToBeClassified;
-            TableRelation = Funders."No.";
+            OptionMembers = "Full Redemption","Partial Redemption";
         }
-        field(3; Name; Text[250])
+        field(10; PayingBank; Code[20])
         {
             DataClassification = ToBeClassified;
+            TableRelation = "Bank Account"."No.";
         }
-        field(4; Relation; Text[250])
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(5; DOB; Date)
+        field(20; PrincipalAmount; Decimal)
         {
             DataClassification = ToBeClassified;
         }
-        field(6; "ID/Passport No."; Text[50])
+        field(25; InterestAmount; Decimal)
         {
             DataClassification = ToBeClassified;
         }
-        field(7; PhoneNo; Text[50])
+        field(22; "Loan No."; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(24; "Redemption Date"; Date)
         {
             DataClassification = ToBeClassified;
         }
 
-        field(8; Type; Option)
-        {
-            OptionMembers = Beneficiary,Trustee,"Next of Kin";
-            DataClassification = ToBeClassified;
-        }
     }
 
     keys
     {
-        key(Key1; "Line No.")
+        key(PK; Line)
         {
             Clustered = true;
         }

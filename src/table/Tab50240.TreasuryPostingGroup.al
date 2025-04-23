@@ -7,12 +7,12 @@ table 50240 "Treasury Posting Group"
     {
         field(1; "Code"; Code[20])
         {
-            Caption = 'Code';
+            Caption = 'Funder No';
             NotBlank = true;
         }
-        field(2; "Payables Account"; Code[20])
+        field(2; "Principal Account"; Code[20])
         {
-            Caption = 'Payables Account';
+            Caption = 'Principal Account';
             TableRelation = "G/L Account";
         }
         field(7; "Service Charge Acc."; Code[20])

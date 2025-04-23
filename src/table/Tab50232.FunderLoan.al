@@ -18,11 +18,25 @@ table 50232 "Funder Loan"
             trigger OnValidate()
             var
                 Funder: Record Funders;
+                Portfolio: Record Portfolio;
             begin
                 Funder.Reset();
                 Funder.SetRange("No.", "Funder No.");
                 if Funder.Find('-') then begin
                     Name := Funder.Name;
+                    "Payables Account" := Funder."Payables Account";
+                    Rec.Validate("Payables Account");
+                    "Interest Expense" := Funder."Interest Expense";
+                    Rec.Validate("Interest Expense");
+                    "Interest Payable" := Funder."Interest Payable";
+                    Rec.Validate("Interest Payable");
+
+                    Portfolio.Reset();
+                    Portfolio.SetRange("No.", Funder.Portfolio);
+                    if Portfolio.Find('-') then begin
+                        Category := Portfolio.Category;
+                        Rec.Validate(Category);
+                    end;
                 end;
             end;
         }
@@ -52,12 +66,27 @@ table 50232 "Funder Loan"
             DataClassification = ToBeClassified;
             Caption = 'Placement Date';
             NotBlank = true;
+            trigger OnValidate()
+            begin
+                if (PlacementDate <> 0D) and (MaturityDate <> 0D) then begin
+                    LoanDurationDays := (MaturityDate - PlacementDate) + 1;
+                end
+
+            end;
         }
         field(502; "MaturityDate"; Date)
         {
             DataClassification = ToBeClassified;
             Caption = 'Maturity Date';
+            trigger OnValidate()
+            begin
+                if (PlacementDate <> 0D) and (MaturityDate <> 0D) then begin
+                    LoanDurationDays := (MaturityDate - PlacementDate) + 1;
+                end
+
+            end;
         }
+
         field(503; "OrigAmntDisbLCY"; Decimal)
         {
             // DataClassification = ToBeClassified;
@@ -197,7 +226,7 @@ table 50232 "Funder Loan"
         {
             DataClassification = ToBeClassified;
             Caption = 'Category';
-            TableRelation = "Funder Loan Category".Code;
+            TableRelation = "Portfolio Category".Code;
         }
         field(525; Type; Enum FundingType)
         {
@@ -210,6 +239,16 @@ table 50232 "Funder Loan"
             DataClassification = ToBeClassified;
 
             TableRelation = "Bank Account"."No.";
+            trigger OnValidate()
+            var
+                _bankAccs: Record "Bank Account";
+            begin
+                _bankAccs.Reset();
+                _bankAccs.SetRange("No.", FundSource);
+                if _bankAccs.Find('-') then begin
+                    Currency := _bankAccs."Currency Code";
+                end;
+            end;
         }
         field(535; Currency; Code[20])
         {
@@ -250,11 +289,6 @@ table 50232 "Funder Loan"
         field(610; Status; Enum "Loan Approval Status")
         {
             DataClassification = ToBeClassified;
-        }
-
-        field(620; "Original Disbursed Amount"; Decimal)
-        {
-            DataClassification = ToBeClassified;
             trigger OnValidate()
             var
                 funderLegderEntry: Record FunderLedgerEntry;
@@ -270,6 +304,8 @@ table 50232 "Funder Loan"
                 TrsyMgt: Codeunit "Treasury Mgt CU";
                 _ConvertedCurrency: Decimal;
             begin
+                if not (Status = Status::Approved) then
+                    exit;
                 _docNo := TrsyMgt.GenerateDocumentNumber();
                 //Get Posting groups
                 /*if not venPostingGroup.Get("Posting Group") then
@@ -288,6 +324,8 @@ table 50232 "Funder Loan"
                     Error('Missing G/L - Interest Expense A/C');
                 if interestAccPay = '' then
                     Error('Missing G/L - Interest Payable A/C');
+                if "Bank Ref. No." = '' then
+                    Error('Missing Bank Reference No.');
 
                 if Currency <> '' then
                     _ConvertedCurrency := FunderMgt.ConvertCurrencyAmount(Currency, "Original Disbursed Amount", CustomFX)
@@ -329,19 +367,57 @@ table 50232 "Funder Loan"
                     funderLegderEntry."Posting Date" := Today;
                     funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::"Original Amount";
                     funderLegderEntry."Document No." := _docNo;
+                    funderLegderEntry.Category := Category; // Funder Loan Category
                     // funderLegderEntry."Transaction Type" := funderLegderEntry."Transaction Type"::"Original Amount";
-                    funderLegderEntry.Description := 'Original Amount' + Format(Today);
+                    funderLegderEntry.Description := Name + ' ' + "Bank Ref. No." + ' Original Amount ' + Format(Today);
                     funderLegderEntry."Currency Code" := Currency;
                     funderLegderEntry.Amount := "Original Disbursed Amount";
                     funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
                     funderLegderEntry."Remaining Amount" := "Original Disbursed Amount";
                     funderLegderEntry.Insert();
                     // Commit();
-                    FunderMgt.DirectGLPosting('init', principleAcc, "Original Disbursed Amount", 'Original Amount', "No.", FundSource, Currency, "Posting Group", _docNo)
+                    FunderMgt.DirectGLPosting('init', principleAcc, "Original Disbursed Amount", 'Original Amount', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.")
                 end;
 
-            end;
 
+                // ++++++++++++++++  CHECK ROLLOVER RECORD AND VALIDATE INTREST.
+                if Rollovered = Rollovered::"Roll overed" then begin
+
+                    funderLegderEntry.Reset();
+                    if funderLegderEntry.FindLast() then
+                        NextEntryNo := funderLegderEntry."Entry No." + 2;
+
+
+                    funderLegderEntry.Init();
+                    funderLegderEntry."Entry No." := NextEntryNo;
+                    funderLegderEntry."Funder No." := "Funder No.";
+                    funderLegderEntry."Funder Name" := Name;
+                    funderLegderEntry."Loan Name" := "Loan Name";
+                    funderLegderEntry."Loan No." := "No.";
+                    funderLegderEntry."Posting Date" := Today;
+                    funderLegderEntry.Category := Category; // Funder Loan Category
+                    funderLegderEntry."Document No." := _docNo;
+                    funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
+                    funderLegderEntry.Description := Name + ' ' + "Bank Ref. No." + 'Interest calculation' + Format(Today);
+                    funderLegderEntry.Amount := "Rollovered Interest";
+                    funderLegderEntry."Amount(LCY)" := "Rollovered Interest";
+                    funderLegderEntry."Remaining Amount" := "Rollovered Interest";
+                    funderLegderEntry.Insert();
+                    if (EnableGLPosting = true) and ("Rollovered Interest" <> 0) then
+                        FunderMgt.DirectGLPosting('interest', principleAcc, "Rollovered Interest", 'Interest', "No.", interestAccPay, '', '', '', "Bank Ref. No.");//GROSS Interest
+
+                    Rollovered := Rollovered::Normal;
+                    // "Rollovered Interest" := 0;
+                end;
+
+
+            end;
+        }
+
+        field(620; "Original Disbursed Amount"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+            //Original Value shifted to Status
         }
         // field(630; "Original Disbursed Amount(LCY)"; Decimal)
         // {
@@ -380,7 +456,7 @@ table 50232 "Funder Loan"
         field(934; "Outstanding Interest"; Decimal)
         {
             AutoFormatType = 1;
-            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest | "Capitalized Interest" | "Interest Paid")));
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest | "Capitalized Interest" | "Interest Paid" | "Reversed Interest")));
             Caption = 'Outstanding Interest';
             DecimalPlaces = 0 : 2;
             Editable = false;
@@ -416,9 +492,9 @@ table 50232 "Funder Loan"
         }
 
 
-        field(2609; InvestmentTenor; Option)
+        field(2609; InvestmentTenor; Integer)
         {
-            OptionMembers = "12","15","18","24";
+            // OptionMembers = "12","15","18","24";
             DataClassification = ToBeClassified;
         }
         field(2610; PoliticalExposure; Boolean)
@@ -438,15 +514,6 @@ table 50232 "Funder Loan"
         {
             Caption = 'Payables Account';
             TableRelation = "G/L Account";
-            // trigger OnValidate()
-            // begin
-            //     vPostingGroup.Reset();
-            //     vPostingGroup.SetRange(vPostingGroup.Code, "No.");
-            //     if vPostingGroup.Find('-') then begin
-            //         vPostingGroup."Payables Account" := "Payables Account";
-            //         vPostingGroup.Modify();
-            //     end;
-            // end;
         }
         field(2801; "Interest Expense"; Code[20])
         {
@@ -487,6 +554,62 @@ table 50232 "Funder Loan"
             DataClassification = ToBeClassified;
 
         }
+        field(2920; "Bank Ref. No."; Code[100])
+        {
+            DataClassification = ToBeClassified;
+
+        }
+        field(2830; "FirstDueDate"; Date)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'First Due Date';
+            trigger OnValidate()
+            begin
+                TreasuryCU.ValidateQuarterEndDate("FirstDueDate");
+            end;
+        }
+        field(2835; LoanDurationDays; Integer)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Loan Duration Days';
+            // NotBlank = true;
+        }
+
+        field(2836; NetInterestRate; Decimal)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Net Interest Rate';
+        }
+        //Rollovered Record related
+        field(3000; Rollovered; Option)
+        {
+            DataClassification = ToBeClassified;
+            OptionMembers = " ","Roll overed",Normal;
+        }
+        field(3001; "Original Record No."; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(3002; "Rollovered Interest"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        // ****************** REDEMPTION FIELD ************
+        field(3500; "Final Float"; Decimal)
+        {
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter("Original Amount" | Repayment | "Secondary Amount" | Interest | "Interest Paid" | Withholding | "Capitalized Interest")));
+            // Caption = 'Net Amount';
+            DecimalPlaces = 0 : 2;
+            Editable = false;
+            FieldClass = FlowField;
+        }
+        field(3501; State; Option)
+        {
+            DataClassification = ToBeClassified;
+            OptionMembers = Active,Terminated;
+        }
+
     }
 
     keys
@@ -510,6 +633,8 @@ table 50232 "Funder Loan"
         GenSetup: Record "Treasury General Setup";
         NoSer: Codeunit "No. Series";
         vPostingGroup: Record "Treasury Posting Group";
+        Funder: Record Funders;
+        TreasuryCU: Codeunit "Treasury Mgt CU";
 
     trigger OnInsert()
     begin
@@ -534,6 +659,7 @@ table 50232 "Funder Loan"
             "Posting Group" := vPostingGroup.Code;
         end;
 
+
         // Error('Please set the default Local Posting Group');
 
     end;
@@ -553,43 +679,5 @@ table 50232 "Funder Loan"
 
     end;
 
-    // procedure ConvertCurrencyAmount(var CurrencyCode: Code[10]; var Amount: Decimal): Decimal
-    // var
-    //     Currency: Record "Currency";
-    //     CurrencyExchangeRate: Record "Currency Exchange Rate";
-    //     ExchangeRate: Decimal;
-    //     NewAmount: Decimal;
-    //     MaxDate: Date;
-    // begin
-    //     if CurrencyCode <> '' then begin
-    //         if Currency.Get(CurrencyCode) then begin
-    //             // Try to get today's exchange rate
-    //             if CurrencyExchangeRate.Get(CurrencyCode, Today) then begin
-    //                 ExchangeRate := CurrencyExchangeRate."Exchange Rate Amount" / CurrencyExchangeRate."Relational Exch. Rate Amount";
-    //             end else begin
-    //                 // Find the latest available exchange rate
-    //                 CurrencyExchangeRate.SetCurrentKey("Currency Code", "Starting Date");
-    //                 CurrencyExchangeRate.SetRange("Currency Code", CurrencyCode);
-    //                 if CurrencyExchangeRate.FindLast then begin
-    //                     MaxDate := CurrencyExchangeRate."Starting Date";
-    //                     if CurrencyExchangeRate.Get(CurrencyCode, MaxDate) then begin
-    //                         ExchangeRate := CurrencyExchangeRate."Exchange Rate Amount" / CurrencyExchangeRate."Relational Exch. Rate Amount";
-    //                     end else
-    //                         Error('Exchange rate not found for currency %1 on the latest date', CurrencyCode);
-    //                 end else
-    //                     Error('Exchange rate not found for currency %1', CurrencyCode);
-    //             end;
-
-    //             if ExchangeRate <> 0 then begin
-    //                 // Convert the amount to the new currency
-    //                 NewAmount := Amount * (1 / ExchangeRate);
-    //                 exit(NewAmount);
-    //             end else
-    //                 Error('Exchange rate is zero for currency %1', CurrencyCode);
-    //         end else
-    //             Error('Currency not found for code %1', CurrencyCode);
-    //     end else
-    //         Error('Currency code is empty');
-    // end;
 
 }

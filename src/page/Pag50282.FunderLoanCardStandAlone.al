@@ -1,4 +1,4 @@
-page 50282 "Funder Loan Card Peasant"
+page 50282 "Funder Loan Card StandAlone"
 {
     PageType = Card;
     ApplicationArea = All;
@@ -32,7 +32,8 @@ page 50282 "Funder Loan Card Peasant"
                 // field("Loan Name"; Rec."Loan Name")
                 // {
                 //     ApplicationArea = All;
-                //     ShowMandatory = true;
+                //     // ShowMandatory = true;
+                //     Visible = false;
                 // }
                 field(PlacementDate; Rec.PlacementDate)
                 {
@@ -58,7 +59,7 @@ page 50282 "Funder Loan Card Peasant"
                         end;
                     end;
                 }
-                field("Loan Duration"; PlacementAndMaturityDifference)
+                field(LoanDurationDays; Rec.LoanDurationDays)
                 {
                     ApplicationArea = All;
                     Editable = false;
@@ -68,7 +69,7 @@ page 50282 "Funder Loan Card Peasant"
                 {
 
                     ApplicationArea = All;
-                    Caption = 'Bank';
+                    Caption = 'Receiving Bank Account';
                     ShowMandatory = true;
                 }
                 field(Currency; Rec.Currency)
@@ -76,7 +77,7 @@ page 50282 "Funder Loan Card Peasant"
                     Caption = 'Currency';
                     // Visible = false;
                     ApplicationArea = All;
-                    // Editable = false;
+                    Editable = false;
                     // Visible = isCurrencyVisible;
                     // ShowMandatory = isCurrencyVisible;
                     // ShowMandatory = true;
@@ -93,9 +94,11 @@ page 50282 "Funder Loan Card Peasant"
                 //     ApplicationArea = All;
                 //     // Editable = false;
                 // }
-                field("Enable GL Posting"; Rec.EnableGLPosting)
+                field("Bank Ref. No."; Rec."Bank Ref. No.")
                 {
                     ApplicationArea = All;
+                    Caption = 'Bank Reference No.';
+                    ShowMandatory = true;
                 }
                 group("G/L Mapping")
                 {
@@ -122,6 +125,7 @@ page 50282 "Funder Loan Card Peasant"
                 field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
                 {
                     ApplicationArea = All;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
                 }
                 // field(OrigAmntDisbLCY; Rec.OrigAmntDisbLCY)
                 // {
@@ -229,8 +233,15 @@ page 50282 "Funder Loan Card Peasant"
                 {
                     Caption = '*Payment Period (Interest) ';
                     ApplicationArea = All;
+                    trigger OnValidate()
+                    begin
+                        UpdateInterestPaymentVisibility();
+
+                        // CurrPage.Update();
+                    end;
 
                 }
+
                 field(PeriodicPaymentOfPrincipal; Rec.PeriodicPaymentOfPrincipal)
                 {
                     Caption = '*Payment Period (Principal) ';
@@ -250,19 +261,21 @@ page 50282 "Funder Loan Card Peasant"
                 field(InvestmentTenor; Rec.InvestmentTenor)
                 {
                     ApplicationArea = All;
+                    Caption = 'Investment Tenor (Months)';
                 }
                 field(InvstPINNo; Rec.InvstPINNo)
                 {
                     ApplicationArea = All;
                 }
-                // field(Portfolio; Rec.Portfolio)
-                // {
-                //     ApplicationArea = All;
-                // }
+                field("Enable GL Posting"; Rec.EnableGLPosting)
+                {
+                    ApplicationArea = All;
+                }
 
                 field(Category; Rec.Category)
                 {
                     ApplicationArea = All;
+                    Editable = false;
                 }
 
                 // field(sTenor; Rec.StartTenor)
@@ -322,6 +335,36 @@ page 50282 "Funder Loan Card Peasant"
                 {
                     ApplicationArea = All;
                     // Editable = false;
+                }
+                group("Rollover Details")
+                {
+                    Visible = IsRollovered;
+                    field(Rollovered; Rec.Rollovered)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Record Origin';
+                    }
+                    field("Original Record No."; Rec."Original Record No.")
+                    {
+                        ApplicationArea = All;
+                    }
+                    field("Rollovered Interest"; Rec."Rollovered Interest")
+                    {
+                        ApplicationArea = All;
+                        Caption = '* Rollovered Interest';
+                        ToolTip = 'Applicable only for the case of Rollovered Interest';
+                    }
+                }
+
+            }
+            group("Quartery Interest Payment Advanced Settings")
+            {
+                Visible = EnableInterestPaymentVisibility;
+                field(FirstDueDate; Rec.FirstDueDate)
+                {
+                    Caption = 'First Due Date ';
+                    ApplicationArea = All;
+
                 }
             }
         }
@@ -387,6 +430,21 @@ page 50282 "Funder Loan Card Peasant"
                         funderMgt.CalculateInterest(Rec."No.");
                     end;
                 }
+                // action("Rollover Record")
+                // {
+                //     ApplicationArea = Basic, Suite;
+                //     Image = Interaction;
+                //     Promoted = true;
+                //     PromotedCategory = Process;
+                //     Caption = 'Rollover Record';
+                //     ToolTip = 'Rollover Record';
+                //     trigger OnAction()
+                //     var
+                //         funderMgt: Codeunit FunderMgtCU;
+                //     begin
+                //         funderMgt.DuplicateRecord(Rec."No.");
+                //     end;
+                // }
                 action("Rollover Record")
                 {
                     ApplicationArea = Basic, Suite;
@@ -397,9 +455,41 @@ page 50282 "Funder Loan Card Peasant"
                     ToolTip = 'Rollover Record';
                     trigger OnAction()
                     var
-                        funderMgt: Codeunit FunderMgtCU;
+                        // funderMgt: Codeunit FunderMgtCU;
+                        RO: Page "Roll over";
+                        GFilter: Codeunit GlobalFilters;
+                        ROTbl: Record "Roll over Tbl";
                     begin
-                        funderMgt.DuplicateRecord(Rec."No.");
+                        // funderMgt.DuplicateRecord(Rec."No.");
+                        //Page.Run(Page::"Roll over", Rec);
+                        ROTbl.Reset();
+                        ROTbl.DeleteAll();
+                        GFilter.SetGlobalLoanFilter(Rec."No.");
+                        RO.Run();
+                    end;
+                }
+                action("Redemption Record")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Image = RefreshDiscount;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    Caption = 'Redemption Record';
+                    ToolTip = 'Redemption Record';
+                    trigger OnAction()
+                    var
+                        funderMgt: Codeunit FunderMgtCU;
+                        RD: Page Redemption;
+                        GFilter: Codeunit GlobalFilters;
+                        RDTbl: Record "Redemption Tbl";
+                    begin
+                        // funderMgt.DuplicateRecord(Rec."No.");
+                        //Page.Run(Page::"Roll over", Rec);
+                        RDTbl.Reset();
+                        RDTbl.DeleteAll();
+
+                        GFilter.SetGlobalLoanFilter(Rec."No.");
+                        RD.Run();
                     end;
                 }
             }
@@ -655,6 +745,11 @@ page 50282 "Funder Loan Card Peasant"
     var
         ReportFlag: Record "Report Flags";
     begin
+        "Region/Country".Reset();
+        if "Region/Country".IsEmpty() then begin
+            Error('Region/Country must have atleast one entry');
+            exit;
+        end;
         _funderNo := GlobalFilters.GetGlobalFilter();
         if _funderNo <> '' then begin
             if FunderTbl.Get(_funderNo) then begin
@@ -693,6 +788,14 @@ page 50282 "Funder Loan Card Peasant"
         ReportFlag."Funder Loan No." := Rec."No.";
         ReportFlag."Utilizing User" := UserId;
         ReportFlag.Insert();
+        UpdateInterestPaymentVisibility();
+        RolloveredChecker();
+    end;
+
+    local procedure UpdateInterestPaymentVisibility()
+    begin
+        EnableInterestPaymentVisibility := Rec.PeriodicPaymentOfInterest = Rec.PeriodicPaymentOfInterest::Quarterly;
+
     end;
 
     trigger OnNextRecord(Steps: Integer): Integer
@@ -729,6 +832,14 @@ page 50282 "Funder Loan Card Peasant"
         OpenApprovalEntriesExist := ApprovalsMgmt.HasOpenApprovalEntries(Rec.RecordId);
         CanCancelApprovalForRecord := ApprovalsMgmt.CanCancelApprovalForRecord(Rec.RecordId);
         HasApprovalEntries := ApprovalsMgmt.HasApprovalEntries(Rec.RecordId);
+        UpdateInterestPaymentVisibility();
+        RolloveredChecker();
+    end;
+
+    local procedure RolloveredChecker()
+    var
+    begin
+        IsRollovered := (Rec.Rollovered = Rec.Rollovered::"Roll overed");
     end;
 
     var
@@ -744,6 +855,11 @@ page 50282 "Funder Loan Card Peasant"
         , HasApprovalEntries : Boolean;
         ApprovalsMgmt: Codeunit "Approvals Mgmt.";
         PlacementAndMaturityDifference: Integer;
+        EnableInterestPaymentVisibility: Boolean;
+        "Region/Country": Record Country_Region;
+        EditStatus: Boolean;
+        IsRollovered: Boolean;
+
 
     protected var
 

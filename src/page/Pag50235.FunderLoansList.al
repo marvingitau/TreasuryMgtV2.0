@@ -43,6 +43,10 @@ page 50235 "Funder Loans List"
                 {
                     ApplicationArea = All;
                 }
+                field(Status; Rec.Status)
+                {
+                    ApplicationArea = All;
+                }
             }
         }
         area(Factboxes)

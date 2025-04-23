@@ -2,7 +2,8 @@ table 50233 "Treasury General Setup"
 {
     DataClassification = ToBeClassified;
     Caption = 'Treasury General Setup';
-
+    LookupPageId = 50234;
+    DrillDownPageId = 50234;
     fields
     {
         field(1; No; Integer)
@@ -88,6 +89,26 @@ table 50233 "Treasury General Setup"
         field(90; "Related Party"; Code[20])
         {
             Caption = 'Related Party/Customer';
+            DataClassification = ToBeClassified;
+            TableRelation = "No. Series";
+        }
+
+        field(100; "Shortcut Dimension 1 Code"; Code[50])
+        {
+            CaptionClass = '1,1,1';
+            DataClassification = ToBeClassified;
+            TableRelation = "Dimension Value".Code WHERE("Global Dimension No." = CONST(1), "Dimension Value Type" = CONST(Standard), Blocked = CONST(false));
+
+        }
+
+        field(110; "Region/Country"; Code[50])
+        {
+            DataClassification = ToBeClassified;
+            TableRelation = Country_Region."Country Name";
+        }
+        field(250; "Funder Change No."; Code[20])
+        {
+            Caption = 'Funder Change No.';
             DataClassification = ToBeClassified;
             TableRelation = "No. Series";
         }

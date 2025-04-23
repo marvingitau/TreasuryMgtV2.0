@@ -40,11 +40,21 @@ table 50231 Portfolio
         {
             DataClassification = ToBeClassified;
             Caption = 'Program Term(Years)';
+            trigger OnValidate()
+            var
+                _yearExp: Text[10];
+            begin
+                if ProgramTerm <> 0 then begin
+                    _yearExp := StrSubstNo('<%1Y>', ProgramTerm);
+                    EndTerm := CalcDate(_yearExp, BeginDate);
+                end;
+            end;
 
         }
-        field(17; EndTerm; Integer)
+        field(17; EndTerm; Date)
         {
             DataClassification = ToBeClassified;
+            Editable = false;
 
         }
         field(20; ProgramCurrency; Code[20])
@@ -69,11 +79,11 @@ table 50231 Portfolio
             DataClassification = ToBeClassified;
 
         }
-        field(29; "Contact Person Detail"; Text[250])
-        {
-            DataClassification = ToBeClassified;
+        // field(29; "Contact Person Detail"; Text[250])
+        // {
+        //     DataClassification = ToBeClassified;
 
-        }
+        // }
         field(30; "Contact Person Name"; Text[250])
         {
             DataClassification = ToBeClassified;
@@ -94,8 +104,13 @@ table 50231 Portfolio
             DataClassification = ToBeClassified;
             ExtendedDatatype = EMail;
             trigger OnValidate()
+            var
+                MailManagement: Codeunit "Mail Management";
             begin
-                // if not TrezMgtCU.IsValidEmail("Contact Person Address") then
+                if "Contact Person Email" = '' then
+                    exit;
+                MailManagement.CheckValidEmailAddresses("Contact Person Email");
+                // if not TrezMgtCU.ValidateEmailAddress("Contact Person Address") then
                 //     FieldError("Contact Person Email", 'Must be a valid email address');
             end;
 
@@ -114,6 +129,21 @@ table 50231 Portfolio
             DataClassification = ToBeClassified;
             TableRelation = "Portfolio Category".Code;
         }
+        field(80; "Actual Program Size"; Decimal)
+        {
+            // AutoFormatType = 1;
+            // CalcFormula = sum("Funder Loan".OutstandingAmntDisbLCY where(Category = field(Category), Status = filter(Approved)));
+            // Caption = 'Actual Program Size';
+            // DecimalPlaces = 0 : 2;
+            // Editable = false;
+            // FieldClass = FlowField;
+            DataClassification = ToBeClassified;
+        }
+        field(81; "OutstandingAmountToTarget"; Decimal)
+        {
+
+            DataClassification = ToBeClassified;
+        }
         field(5000; Status; Enum PortfolioStatus)
         {
             DataClassification = ToBeClassified;
@@ -123,7 +153,7 @@ table 50231 Portfolio
 
     keys
     {
-        key(PK; "No.", Code)
+        key(PK; "No.", Code, Category)
         {
             Clustered = true;
         }
@@ -139,17 +169,44 @@ table 50231 Portfolio
         // Add changes to field groups here
     }
 
+    // local procedure ValidateEmail()
+    // var
+    //     MailManagement: Codeunit "Mail Management";
+    //     IsHandled: Boolean;
+    // begin
+    //     IsHandled := false;
+    //     OnBeforeValidateEmail(Rec, IsHandled, xRec);
+    //     if IsHandled then
+    //         exit;
+
+    //     if "Contact Person Email" = '' then
+    //         exit;
+    //     MailManagement.CheckValidEmailAddresses("Contact Person Email");
+    // end;
+
     var
         TrezMgtCU: Codeunit "Treasury Mgt CU";
         GenSetup: Record "Treasury General Setup";
         NoSer: Codeunit "No. Series";
+        "Region/Country": Record Country_Region;
 
     trigger OnInsert()
     begin
+        "Region/Country".Reset();
+        if "Region/Country".IsEmpty() then begin
+
+            Error('Region/Country must have atleast one entry');
+            exit;
+        end;
+
         GenSetup.Get(0);
         GenSetup.TestField("Portfolio No.");
         if "No." = '' then
             "No." := NoSer.GetNextNo(GenSetup."Portfolio No.", 0D, true);
+
+        if ProgramTerm <> 0 then begin
+            EndTerm := CalcDate(StrSubstNo('<%1Y>', ProgramTerm), BeginDate);
+        end;
 
     end;
 

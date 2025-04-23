@@ -1,45 +1,48 @@
-page 50242 "Treasury Posting Group"
+page 50290 "Redemption Log"
 {
-    PageType = Card;
+    PageType = List;
     ApplicationArea = All;
-    UsageCategory = Administration;
-    SourceTable = 50240;
-    Caption = 'Treasury G/L Mapping';
+    UsageCategory = Lists;
+    SourceTable = "Redemption Log Tbl";
+
     layout
     {
         area(Content)
         {
-            group(General)
+            repeater(General)
             {
-                field(Code; Rec.Code)
+                field(Line; Rec.Line)
                 {
                     ApplicationArea = All;
                 }
-                field(Description; Rec.Description)
+                field("Loan No."; Rec."Loan No.")
                 {
                     ApplicationArea = All;
                 }
-                field("Principal Account"; Rec."Principal Account")
+                field("Redemption Date"; Rec."Redemption Date")
                 {
                     ApplicationArea = All;
                 }
-                field("Interest Expense"; Rec."Interest Expense")
+                field(RedemptionType; Rec.RedemptionType)
                 {
                     ApplicationArea = All;
+                    Caption = 'Redemption Type';
                 }
-                field("Interest Payable"; Rec."Interest Payable")
+                field(PrincAmountRemoved; Rec.PrincAmountRemoved)
                 {
                     ApplicationArea = All;
+                    Caption = 'Principal Removed';
                 }
-                field("Treasury Enabled (Local)"; Rec."Treasury Enabled (Local)")
+                field(IntrAmountRemoved; Rec.IntrAmountRemoved)
                 {
                     ApplicationArea = All;
+                    Caption = 'Interest Removed';
                 }
-                field("Treasury Enabled (Foreign)"; Rec."Treasury Enabled (Foreign)")
+                field(PayingBank; Rec.PayingBank)
                 {
                     ApplicationArea = All;
+                    Caption = 'Paying Bank';
                 }
-
             }
         }
         area(Factboxes)

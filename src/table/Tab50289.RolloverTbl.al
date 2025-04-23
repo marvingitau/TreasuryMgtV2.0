@@ -1,52 +1,38 @@
-table 50243 "Funder Ben/Trus"
+table 50289 "Roll over Tbl"
 {
     DataClassification = ToBeClassified;
-    Caption = 'Funder Beneficiary/Trustee';
-    LookupPageId = 50245;
-    DrillDownPageId = 50245;
+    DataCaptionFields = "Loan No.";
     fields
     {
-        field(1; "Line No."; Integer)
+        field(1; Line; Integer)
         {
             DataClassification = ToBeClassified;
             AutoIncrement = true;
         }
-        field(2; "Funder No."; Code[20])
+        field(5; RollOverType; Option)
         {
             DataClassification = ToBeClassified;
-            TableRelation = Funders."No.";
+            OptionMembers = "Full Rollover","Partial Rollover";
         }
-        field(3; Name; Text[250])
+        field(10; PlacementMaturity; Option)
         {
             DataClassification = ToBeClassified;
+            OptionMembers = Principal,Interest,"Principal + Interest",Terminate;
         }
-        field(4; Relation; Text[250])
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(5; DOB; Date)
+        field(20; Amount; Decimal)
         {
             DataClassification = ToBeClassified;
         }
-        field(6; "ID/Passport No."; Text[50])
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(7; PhoneNo; Text[50])
+        field(22; "Loan No."; Code[20])
         {
             DataClassification = ToBeClassified;
         }
 
-        field(8; Type; Option)
-        {
-            OptionMembers = Beneficiary,Trustee,"Next of Kin";
-            DataClassification = ToBeClassified;
-        }
     }
 
     keys
     {
-        key(Key1; "Line No.")
+        key(PK; Line)
         {
             Clustered = true;
         }

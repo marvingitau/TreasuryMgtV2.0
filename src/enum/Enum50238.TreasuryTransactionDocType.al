@@ -34,5 +34,13 @@ enum 50238 TreasuryTransactionDocType
     {
         Caption = 'Secondary Amount';
     }
+    value(10; "Reversed Interest")
+    {
+        Caption = 'Reversed Interest';
+    }
+    // value(11; Redemption)
+    // {
+    //     Caption = 'Redemption';
+    // }
 
 }

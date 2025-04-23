@@ -96,6 +96,7 @@ codeunit 50237 "Treasury Emailing"
 
     end;
 
+    // Client
     procedure SendReminderOnPlacementMaturity(funderLoanNo: Code[20]) Result: Text
     var
         RecordRef: RecordRef;
@@ -141,15 +142,15 @@ codeunit 50237 "Treasury Emailing"
         PersistedCalc.CalcSums(TotalPayment);
         MatureAmount := PersistedCalc.TotalPayment;
 
-        Body := '<p>Dear ' + GeneralSetup."Trsy Recipient Name" + '</p><p>You are receiving D365 Treasury reminders:</p><p>' + Format(FunderLoan.MaturityDate) + ' ' + Format(FunderLoan."Loan Name") + ' <b>' + Format(FunderLoan."No.") + ' </b> for entity ' + Company.Name + ' in the amount of ' + CurrencySymbol + ' ' + Format(Round(MatureAmount, 0.01, '=')) + ' matures on ' + Format(FunderLoan.MaturityDate) + '.Please take the necessary actions </p>';
+        Body := '<p>Dear ' + Funders.Name + '</p><p>You are receiving D365 Treasury reminders:</p><p>' + Format(FunderLoan.MaturityDate) + ' ' + Format(FunderLoan."Loan Name") + ' <b>' + Format(FunderLoan."No.") + ' </b> for entity ' + Company.Name + ' in the amount of ' + CurrencySymbol + ' ' + Format(Round(MatureAmount, 0.01, '=')) + ' matures on ' + Format(FunderLoan.MaturityDate) + '.Please take the necessary actions </p>';
 
-        if GeneralSetup."Trsy Recipient mail" = '' then
+        if Funders."Mailing Address" = '' then
             Error('Treasury Recipient Email Missing');
 
-        EmailMessage.Create(GeneralSetup."Trsy Recipient mail", 'Placement Maturity Reminder with Company ' + CompanyName + ' Ltd', Body, true);
+        EmailMessage.Create(Funders."Mailing Address", 'Placement Maturity Reminder with Company ' + CompanyName + ' Ltd', Body, true);
 
-        if GeneralSetup."Trsy Recipient mail1" <> '' then
-            EmailMessage.AddRecipient(Enum::"Email Recipient Type"::Cc, GeneralSetup."Trsy Recipient mail1");
+        // if GeneralSetup."Trsy Recipient mail1" <> '' then
+        //     EmailMessage.AddRecipient(Enum::"Email Recipient Type"::Cc, GeneralSetup."Trsy Recipient mail1");
 
         MailSent := EMail.Send(EmailMessage, Enum::"Email Scenario"::Default);
 
@@ -167,6 +168,95 @@ codeunit 50237 "Treasury Emailing"
         Message('Mailed Reminder');
         // end;
 
+
+
+
+
+    end;
+    // Staff
+    procedure SendReminderOnPlacementMaturityStaff() Result: Text
+    var
+        RecordRef: RecordRef;
+        EMail: Codeunit Email;
+        EmailMessage: Codeunit "Email Message";
+        MailSent: Boolean;
+        ErrInfo: ErrorInfo;
+        Vendors: Record Vendor;
+
+        TempBlob: Codeunit "Temp Blob";
+        FileInStream: InStream;
+        FileOutStream: OutStream;
+        RecRef: RecordRef;
+        FunderLoan: Record "Funder Loan";
+        Funders: Record Funders;
+        Body: Text;
+
+        PrimaryEmail: Text[100];
+        PersistedCalc: Record "Schedule Total";
+        MatureAmount: Decimal;
+        CurrencySymbol: Text;
+
+        _remOnPlacementMature: Record ReminderMaturityPerCategory;
+        _ttotalPayment: Decimal;
+    begin
+
+        // FunderLoan.Reset();
+        // FunderLoan.SetRange(FunderLoan."No.", funderLoanNo);
+        // if not FunderLoan.Find('-') then
+        //     Error('Funder Loan %1 Not found.', funderLoanNo);
+
+        // Funders.Reset();
+        // Funders.SetRange("No.", FunderLoan."Funder No.");
+        // if not Funders.Find('-') then
+        //     Error('Funder %1 Not found.', FunderLoan."Funder No.");
+
+        GeneralSetup.Get(0);
+        // Company.Get();
+
+        // CurrencySymbol := 'KES';
+        // if FunderLoan.Currency <> '' then
+        //     CurrencySymbol := FunderLoan.Currency;
+
+        // PersistedCalc.Reset();
+        // PersistedCalc.SetRange(LoanNo, funderLoanNo);
+        // PersistedCalc.CalcSums(TotalPayment);
+        // MatureAmount := PersistedCalc.TotalPayment;
+
+        _remOnPlacementMature.Reset();
+        _remOnPlacementMature.SetFilter(Line, '<>%1', 0);
+
+        Body := '<p>Dear ' + GeneralSetup."Trsy Recipient Name" + '</p><p>You are receiving D365 Treasury reminders of All Loans Maturing with ' + Format(GeneralSetup."Placemnt. Matur Rem. Time") + ' day(s) </p><p> For entity ' + Company.Name + '.Please take the necessary actions </p>';
+
+        if GeneralSetup."Trsy Recipient mail" = '' then
+            Error('Treasury Recipient Email Missing');
+
+        EmailMessage.Create(GeneralSetup."Trsy Recipient mail", 'Placement Maturity Reminder with Company ' + CompanyName + ' Ltd', Body, true);
+
+        RecRef.GetTable(_remOnPlacementMature);
+        TempBlob.CreateOutStream(FileOutStream);
+        Report.SaveAs(Report::ReminderAlertPerCategory, '', ReportFormat::Pdf, FileOutStream, RecRef);
+        TempBlob.CreateInStream(FileInStream);
+        EmailMessage.AddAttachment('CategoryMaturity.pdf', 'PDF', FileInStream);
+
+        if GeneralSetup."Trsy Recipient mail1" <> '' then
+            EmailMessage.AddRecipient(Enum::"Email Recipient Type"::Cc, GeneralSetup."Trsy Recipient mail1");
+
+        MailSent := EMail.Send(EmailMessage, Enum::"Email Scenario"::Default);
+
+        if not MailSent then begin
+            ErrInfo := ErrorInfo.Create('This is error: ' + Format(1));
+            ErrInfo.ErrorType(ErrorType::Client);
+            ErrInfo.Verbosity(Verbosity::Error);
+            ErrInfo.DetailedMessage(GetLastErrorText());
+            ErrInfo.DataClassification(DataClassification::SystemMetadata);
+            ErrInfo.Collectible(true);
+            Error(ErrInfo);
+        end;
+
+
+        Message('Mailed Treasury Teams');
+        // end;
+        _remOnPlacementMature.DeleteAll();
 
 
 
@@ -211,7 +301,7 @@ codeunit 50237 "Treasury Emailing"
         Report.SaveAs(Report::"Reminder On Intr. Due", '', ReportFormat::Excel, FileOutStream, RecRef);
         TempBlob.CreateInStream(FileInStream);
 
-        Body := '<p>Dear ' + GeneralSetup."Trsy Recipient mail" + '</p><p> You are receiving D365 Treasury reminders for interest due </p>';
+        Body := '<p>Dear ' + GeneralSetup."Trsy Recipient Name" + '</p><p> You are receiving D365 Treasury reminders for interest due </p>';
 
         if GeneralSetup."Trsy Recipient mail" = '' then
             Error('Treasury Recipient Email Missing');
@@ -245,6 +335,60 @@ codeunit 50237 "Treasury Emailing"
 
 
 
+    end;
+
+    procedure EmailFunderOnNewPrincipalFromCapitalization(LoanNo: Code[20])
+    var
+        funderLegderEntry2: Record FunderLedgerEntry;
+        _totalOutstandingAmount: Decimal;
+        FunderLoan: Record "Funder Loan";
+        Funders: Record Funders;
+
+        EMail: Codeunit Email;
+        EmailMessage: Codeunit "Email Message";
+        MailSent: Boolean;
+        ErrInfo: ErrorInfo;
+        Body: Text;
+        PrimaryEmail: Text[100];
+    begin
+        GeneralSetup.Get();
+
+        FunderLoan.Reset();
+        FunderLoan.SetRange(FunderLoan."No.", LoanNo);
+        if not FunderLoan.Find('-') then
+            Error('Funder Loan %1 Not found.', LoanNo);
+
+        FunderLoan.CalcFields(OutstandingAmntDisbLCY);
+        _totalOutstandingAmount := FunderLoan.OutstandingAmntDisbLCY;
+
+        Funders.Reset();
+        Funders.SetRange("No.", FunderLoan."Funder No.");
+        if not Funders.Find('-') then
+            Error('Funder %1 Not found.', FunderLoan."Funder No.");
+
+        Body := '<p>Dear ' + Funders.Name + '</p><p> You are receiving D365 Treasury alert on your New Principal which is ' + Format(_totalOutstandingAmount) + ' as of ' + Format(Today, 0, 4) + '</p>';
+
+        if Funders."Mailing Address" = '' then
+            Error('Funder Email Missing');
+
+        EmailMessage.Create(Funders."Mailing Address", 'Notification for the Latest Capitalization ', Body, true);
+
+
+        MailSent := EMail.Send(EmailMessage, Enum::"Email Scenario"::Default);
+
+        if not MailSent then begin
+            ErrInfo := ErrorInfo.Create('This is error: ' + Format(1));
+            ErrInfo.ErrorType(ErrorType::Client);
+            ErrInfo.Verbosity(Verbosity::Error);
+            ErrInfo.DetailedMessage(GetLastErrorText());
+            ErrInfo.DataClassification(DataClassification::SystemMetadata);
+            ErrInfo.Collectible(true);
+            Error(ErrInfo);
+        end;
+
+
+
+        Message('Mailed Confirmation');
     end;
 
     var

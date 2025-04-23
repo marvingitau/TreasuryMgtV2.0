@@ -1,74 +1,68 @@
-table 50284 "Country_Region"
+table 50287 "Intr- Amort Partial"
 {
     DataClassification = ToBeClassified;
-    LookupPageId = 50285;
-    DrillDownPageId = 50285;
-
+    Caption = 'Interest & Payment Amort. Accumul';
+    TableType = Temporary;
     fields
     {
-        field(5; "Country Name"; Code[50])
+        field(1; Line; Integer)
         {
             DataClassification = ToBeClassified;
-
+            AutoIncrement = true;
         }
-        field(6; "Country Prefix"; Code[50])
-        {
-            DataClassification = ToBeClassified;
-
-        }
-
-        field(10; "Country Currency"; Text[50])
-        {
-            DataClassification = ToBeClassified;
-
-        }
-        field(15; "Phone Code"; Text[50])
-        {
-            DataClassification = ToBeClassified;
-
-        }
-        field(19; "Minimum Phone Length"; Integer)
+        field(2; DueDate; Date)
         {
             DataClassification = ToBeClassified;
         }
-        field(20; "Maximum Phone Length"; Integer)
+        field(3; CalculationDate; Date)
         {
             DataClassification = ToBeClassified;
         }
-
-        field(29; "Minimum Bank Length"; Integer)
+        field(4; Interest; Decimal)
         {
             DataClassification = ToBeClassified;
         }
-        field(40; "Maximum Bank Length"; Integer)
+        field(5; LoanNo; Code[20])
         {
             DataClassification = ToBeClassified;
         }
-
-        field(50; "KRA Min Length"; Integer)
+        field(6; LoopCount; Integer)
         {
             DataClassification = ToBeClassified;
         }
-        field(51; "KRA Max Length"; Integer)
+        field(7; Amortization; Decimal)
         {
             DataClassification = ToBeClassified;
         }
-        field(60; "ID Min Length"; Integer)
+        field(8; TotalPayment; Decimal)
         {
             DataClassification = ToBeClassified;
         }
-        field(61; "ID Max Length"; Integer)
+        field(9; InterestRate; Decimal)
         {
             DataClassification = ToBeClassified;
         }
-
-
-
+        field(10; OutStandingAmt; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(11; WithHldTaxAmt; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(12; NetInterest; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(20; Reviewed; Boolean)
+        {
+            DataClassification = ToBeClassified;
+        }
     }
 
     keys
     {
-        key(K1; "Country Name")
+        key(Key1; Line, LoanNo, LoopCount)
         {
             Clustered = true;
         }

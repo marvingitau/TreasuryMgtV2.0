@@ -70,6 +70,15 @@ pageextension 50230 AccountantRoleCenter extends 9027
                     RunObject = page "General Setup";
                     ToolTip = 'Treasury Setup';
                 }
+                action("Funder Change List")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Funder Change List';
+                    Image = ResourceJournal;
+                    RunObject = page "Funder Change List";
+                    ToolTip = 'Funder Change List';
+                }
+
                 // action(GLMapping)
                 // {
                 //     ApplicationArea = Basic, Suite;

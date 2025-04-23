@@ -23,6 +23,28 @@ page 50231 "Portfolio Card"
                 // {
                 //     ApplicationArea = All;
                 // }
+                field("Actual Program Size"; Rec."Actual Program Size")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Actual Program Size';
+                    // DrillDown = true;
+                    // DrillDownPageId = 50235;
+                    Editable = false;
+                    trigger OnDrillDown()
+                    var
+                        loans: Record "Funder Loan";
+                    begin
+                        loans.SetRange(Category, Rec.Category);
+                        loans.SetRange(loans.Status, loans.Status::Approved);
+                        Page.Run(Page::"Funder Loans List", loans);
+                    end;
+
+                }
+                field(OutstandingAmountToTarget; Rec.OutstandingAmountToTarget)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Outstanding Amount To Target';
+                }
                 field(BeginDate; Rec.BeginDate)
                 {
                     ApplicationArea = All;
@@ -37,6 +59,7 @@ page 50231 "Portfolio Card"
                 {
                     ApplicationArea = All;
                     Caption = 'End Term';
+                    Editable = false;
                 }
                 field(ProgramCurrency; Rec.ProgramCurrency)
                 {
@@ -66,6 +89,7 @@ page 50231 "Portfolio Card"
                 field(Category; Rec.Category)
                 {
                     ApplicationArea = All;
+                    ShowMandatory = true;
                 }
                 field(Status; Rec.Status)
                 {
@@ -75,12 +99,12 @@ page 50231 "Portfolio Card"
                 }
 
             }
-            group("Contact Person")
+            group("Contact Person Details")
             {
-                field("Contact Person Detail"; Rec."Contact Person Detail")
-                {
-                    ApplicationArea = All;
-                }
+                // field("Contact Person Detail"; Rec."Contact Person Detail")
+                // {
+                //     ApplicationArea = All;
+                // }
                 field("Contact Person Name"; Rec."Contact Person Name")
                 {
                     ApplicationArea = All;
@@ -274,8 +298,71 @@ page 50231 "Portfolio Card"
         HasApprovalEntries := ApprovalsMgmt.HasApprovalEntries(Rec.RecordId);
     end;
 
+    trigger OnQueryClosePage(CloseAction: Action): Boolean
+    begin
+        if Rec.Category = '' then
+            Error('Category field is mandatory');
+
+    end;
+
+    trigger OnOpenPage()
+    var
+        _funderLoans: Record "Funder Loan";
+        _acculOutstanding: Decimal;
+    begin
+        "Region/Country".Reset();
+        if "Region/Country".IsEmpty() then begin
+            Error('Region/Country must have atleast one entry');
+            exit;
+        end;
+        // if Rec."Actual Program Size" = 0 then begin
+        _funderLoans.Reset();
+        _funderLoans.SetRange(Category, Rec.Category);
+        _funderLoans.SetRange(_funderLoans.Status, _funderLoans.Status::Approved);
+        if _funderLoans.Find('-') then begin
+            repeat
+                _funderLoans.CalcFields(OutstandingAmntDisbLCY);
+                _acculOutstanding := _acculOutstanding + _funderLoans.OutstandingAmntDisbLCY;
+            until _funderLoans.Next() = 0;
+        end;
+
+        if Rec."No." <> '' then begin
+            Rec."Actual Program Size" := _acculOutstanding;
+            Rec.OutstandingAmountToTarget := Rec.ProgramSize - _acculOutstanding;
+            Rec.Modify()
+        end;
+
+        // end;
+    end;
+
+    trigger OnInit()
+    var
+        _funderLoans: Record "Funder Loan";
+        _acculOutstanding: Decimal;
+    begin
+        // if Rec."Actual Program Size" = 0 then begin
+        //     _funderLoans.Reset();
+        //     _funderLoans.SetRange(Category, Rec.Category);
+        //     _funderLoans.SetRange(_funderLoans.Status, _funderLoans.Status::Approved);
+        //     if _funderLoans.Find('-') then begin
+        //         repeat
+        //             _funderLoans.CalcFields(OutstandingAmntDisbLCY);
+        //             _acculOutstanding := _acculOutstanding + _funderLoans.OutstandingAmntDisbLCY;
+        //         until _funderLoans.Next() = 0;
+        //     end;
+        //     Rec."Actual Program Size" := _acculOutstanding;
+        //     //  Rec.Modify()
+        // end;
+    end;
+
+    trigger OnInsertRecord(BelowxRec: Boolean): Boolean
+    begin
+
+    end;
+
     var
         OpenApprovalEntriesExistCurrUser, OpenApprovalEntriesExist, CanCancelApprovalForRecord
         , HasApprovalEntries : Boolean;
         ApprovalsMgmt: Codeunit "Approvals Mgmt.";
+        "Region/Country": Record Country_Region;
 }

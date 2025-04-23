@@ -1,74 +1,50 @@
-table 50284 "Country_Region"
+table 50291 "Redemption Log Tbl"
 {
     DataClassification = ToBeClassified;
-    LookupPageId = 50285;
-    DrillDownPageId = 50285;
-
+    DataCaptionFields = "Loan No.";
     fields
     {
-        field(5; "Country Name"; Code[50])
+        field(1; Line; Integer)
         {
             DataClassification = ToBeClassified;
-
+            AutoIncrement = true;
         }
-        field(6; "Country Prefix"; Code[50])
+        field(5; RedemptionType; Option)
         {
             DataClassification = ToBeClassified;
-
+            OptionMembers = "Full Redemption","Partial Redemption";
         }
-
-        field(10; "Country Currency"; Text[50])
+        field(10; PayingBank; Code[20])
         {
             DataClassification = ToBeClassified;
-
+            TableRelation = "Bank Account"."No.";
         }
-        field(15; "Phone Code"; Text[50])
-        {
-            DataClassification = ToBeClassified;
-
-        }
-        field(19; "Minimum Phone Length"; Integer)
+        field(20; TotalFloat; Decimal)
         {
             DataClassification = ToBeClassified;
         }
-        field(20; "Maximum Phone Length"; Integer)
+        field(21; PrincAmountRemoved; Decimal)
         {
             DataClassification = ToBeClassified;
         }
-
-        field(29; "Minimum Bank Length"; Integer)
+        field(29; IntrAmountRemoved; Decimal)
         {
             DataClassification = ToBeClassified;
         }
-        field(40; "Maximum Bank Length"; Integer)
+        field(22; "Loan No."; Code[20])
         {
             DataClassification = ToBeClassified;
         }
-
-        field(50; "KRA Min Length"; Integer)
+        field(24; "Redemption Date"; Date)
         {
             DataClassification = ToBeClassified;
         }
-        field(51; "KRA Max Length"; Integer)
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(60; "ID Min Length"; Integer)
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(61; "ID Max Length"; Integer)
-        {
-            DataClassification = ToBeClassified;
-        }
-
-
 
     }
 
     keys
     {
-        key(K1; "Country Name")
+        key(PK; Line)
         {
             Clustered = true;
         }

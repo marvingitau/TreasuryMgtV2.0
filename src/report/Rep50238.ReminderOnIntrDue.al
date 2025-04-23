@@ -83,7 +83,14 @@ report 50238 "Reminder On Intr. Due"
 
             }
 
-
+            trigger OnPreDataItem()
+            begin
+                if FunderNo <> '' then
+                    "Funder Loan".SetRange("No.", FunderNo);
+                "Funder Loan".SetRange(Status, Status::Approved);
+                "Funder Loan".SetFilter(MaturityDate, '>%1', Today);
+                GeneralSetup.Get(0)
+            end;
 
             trigger OnAfterGetRecord()
             var
@@ -137,11 +144,26 @@ report 50238 "Reminder On Intr. Due"
 
                 _withHoldingTax_Percent: Decimal;
                 _withHoldingTax_Amnt: Decimal;
+
+                _remainingDays: Integer;
             begin
                 /*
                 Ensure Processing only records whose waiting time is actually within the expected alert period
                 */
-                if true then begin //(Today - "Funder Loan".MaturityDate) = GeneralSetup."Placemnt. Matur Rem. Time"
+                _remainingDays := 0;
+                if "Funder Loan".PeriodicPaymentOfInterest = "Funder Loan".PeriodicPaymentOfInterest::Monthly then
+                    _remainingDays := TrsryCU.GetDaysUntilMonthEnd();
+                if "Funder Loan".PeriodicPaymentOfInterest = "Funder Loan".PeriodicPaymentOfInterest::Quarterly then
+                    _remainingDays := TrsryCU.GetDaysUntilQuarterEnd();
+                if "Funder Loan".PeriodicPaymentOfInterest = "Funder Loan".PeriodicPaymentOfInterest::Biannually then
+                    _remainingDays := TrsryCU.GetDaysUntilBiAnnualEnd();
+                if "Funder Loan".PeriodicPaymentOfInterest = "Funder Loan".PeriodicPaymentOfInterest::Annually then
+                    _remainingDays := TrsryCU.GetDaysUntilYearEnd();
+
+
+                if _remainingDays = GeneralSetup."Intr. Pay. Rem. Waiting Time" then begin //(Today - "Funder Loan".MaturityDate) = GeneralSetup."Placemnt. Matur Rem. Time"
+                                                                                           // _remainingDays = GeneralSetup."Intr. Pay. Rem. Waiting Time"
+
                     // FunderLoanTbl.Reset();
                     // FunderLoanTbl.SetRange("No.", FunderNo);
                     // if not FunderLoanTbl.Find('-') then
@@ -174,8 +196,8 @@ report 50238 "Reminder On Intr. Due"
                     FunderLoanTbl.CalcFields(OutstandingAmntDisbLCY);
                     _principle := FunderLoanTbl.OutstandingAmntDisbLCY;
 
-                    Loan.Reset();
-                    Loan.DeleteAll();
+                    // Loan.Reset();
+                    // Loan.DeleteAll();
                     if FunderLoanTbl.PeriodicPaymentOfPrincipal = FunderLoanTbl.PeriodicPaymentOfPrincipal::Monthly then begin
 
                         //No of days in that month
@@ -546,8 +568,8 @@ report 50238 "Reminder On Intr. Due"
     {
         layout(LayoutName)
         {
-            Type = Excel;
-            LayoutFile = './reports/reminderonintdue.xlsx';
+            Type = RDLC;
+            LayoutFile = './reports/reminderonintdue.rdlc';
         }
     }
     trigger OnInitReport()
@@ -558,6 +580,8 @@ report 50238 "Reminder On Intr. Due"
     trigger OnPreReport()
     var
     begin
+        Loan.Reset();
+        Loan.DeleteAll();
     end;
 
 
@@ -992,5 +1016,6 @@ report 50238 "Reminder On Intr. Due"
         BankBranch: Record BankBranch;
 
         DimensionValue: Record "Dimension Value";
-
+        TrsryCU: Codeunit "Treasury Mgt CU";
+        GeneralSetup: Record "Treasury General Setup";
 }

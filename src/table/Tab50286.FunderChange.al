@@ -1,15 +1,21 @@
-table 50230 Funders
+table 50286 "Funder Change"
 {
     DataClassification = ToBeClassified;
-    Caption = 'Funders';
-    LookupPageId = "Funder Card";
-    DrillDownPageId = "Funder Card";
+    Caption = 'Funder Change';
+    LookupPageId = "Funder Change Card";
+    DrillDownPageId = "Funder Change Card";
     DataCaptionFields = "No.", Name;
     fields
     {
         field(1; "No."; Code[20])
         {
             DataClassification = ToBeClassified;
+
+        }
+        field(5; "Funder No."; Code[20])
+        {
+            DataClassification = ToBeClassified;
+            TableRelation = Funders."No.";
 
         }
         field(20; Portfolio; Code[50])
@@ -227,22 +233,6 @@ table 50230 Funders
         field(2505; PersonalDetIDPassport; Text[250])
         {
             DataClassification = ToBeClassified;
-            trigger OnValidate()
-            var
-                _region: Code[20];
-                noLength: Integer;
-            begin
-                GenSetup.Get(0);
-                _region := GenSetup."Region/Country";
-                "Region/Country".Reset();
-                "Region/Country".SetRange("Country Name", _region);
-                if "Region/Country".Find('-') then begin
-                    noLength := StrLen(PersonalDetIDPassport);
-                    if (noLength < "Region/Country"."ID Min Length") or (noLength > "Region/Country"."ID Max Length") then begin
-                        Error('ID/Passport No. size must be between %1 and %2', "Region/Country"."ID Min Length", "Region/Country"."ID Max Length");
-                    end;
-                end;
-            end;
         }
         field(2506; PersonalDetOccupation; Text[250])
         {
@@ -255,22 +245,6 @@ table 50230 Funders
         field(2509; KRA; Text[250])
         {
             DataClassification = ToBeClassified;
-            trigger OnValidate()
-            var
-                _region: Code[20];
-                noLength: Integer;
-            begin
-                GenSetup.Get(0);
-                _region := GenSetup."Region/Country";
-                "Region/Country".Reset();
-                "Region/Country".SetRange("Country Name", _region);
-                if "Region/Country".Find('-') then begin
-                    noLength := StrLen(KRA);
-                    if (noLength < "Region/Country"."KRA Min Length") or (noLength > "Region/Country"."KRA Max Length") then begin
-                        Error('KRA No. size must be between %1 and %2', "Region/Country"."KRA Min Length", "Region/Country"."KRA Max Length");
-                    end;
-                end;
-            end;
         }
         field(2510; PersonalDetEmployer; Text[250])
         {
@@ -289,50 +263,10 @@ table 50230 Funders
         {
             DataClassification = ToBeClassified;
         }
-
-        field(4000; "Payables Account"; Code[20])
+        field(4010; ChangeReason; Text[2048])
         {
-            Caption = 'Payables Account';
-            TableRelation = "G/L Account";
-            // trigger OnValidate()
-            // begin
-            //     vPostingGroup.Reset();
-            //     vPostingGroup.SetRange(vPostingGroup.Code, "No.");
-            //     if vPostingGroup.Find('-') then begin
-            //         vPostingGroup."Payables Account" := "Payables Account";
-            //         vPostingGroup.Modify();
-            //     end;
-            // end;
+            DataClassification = ToBeClassified;
         }
-        field(4001; "Interest Expense"; Code[20])
-        {
-            Caption = 'Interest Expense';
-            TableRelation = "G/L Account";
-            // trigger OnValidate()
-            // begin
-            //     vPostingGroup.Reset();
-            //     vPostingGroup.SetRange(vPostingGroup.Code, "No.");
-            //     if vPostingGroup.Find('-') then begin
-            //         vPostingGroup."Interest Expense" := "Interest Expense";
-            //         vPostingGroup.Modify();
-            //     end;
-            // end;
-        }
-        field(4002; "Interest Payable"; Code[20])
-        {
-            Caption = 'Interest Payable';
-            TableRelation = "G/L Account";
-            // trigger OnValidate()
-            // begin
-            //     vPostingGroup.Reset();
-            //     vPostingGroup.SetRange(vPostingGroup.Code, "No.");
-            //     if vPostingGroup.Find('-') then begin
-            //         vPostingGroup."Interest Payable" := "Interest Payable";
-            //         vPostingGroup.Modify();
-            //     end;
-            // end;
-        }
-
     }
 
     keys
@@ -356,16 +290,10 @@ table 50230 Funders
 
     trigger OnInsert()
     begin
-        "Region/Country".Reset();
-        if "Region/Country".IsEmpty() then begin
-            Error('Region/Country must have atleast one entry');
-            exit
-        end;
-
         GenSetup.Get(0);
-        GenSetup.TestField("Funder No.");
+        GenSetup.TestField("Funder Change No.");
         if "No." = '' then
-            "No." := NoSer.GetNextNo(GenSetup."Funder No.", 0D, true);
+            "No." := NoSer.GetNextNo(GenSetup."Funder Change No.", 0D, true);
 
         "Region/Country".Reset();
         "Region/Country".SetRange("Country Name", GenSetup."Region/Country");
