@@ -36,6 +36,25 @@ table 50290 "Redemption Tbl"
             DataClassification = ToBeClassified;
         }
 
+        field(35; FloatPrinci; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(45; FloatIntr; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(46; FloatIntrPlusFloatPrinci; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(50; PartialAmount; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+
+
     }
 
     keys

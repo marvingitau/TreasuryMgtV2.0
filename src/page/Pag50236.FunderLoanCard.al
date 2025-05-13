@@ -717,8 +717,16 @@ page 50236 "Funder Loan Card"
                     Promoted = true;
                     PromotedCategory = Report;
                     PromotedIsBig = true;
-                    RunObject = report "Capitalize Interest";
-
+                    // RunObject = report "Capitalize Interest";
+                    trigger OnAction()
+                    var
+                        LoanRec: Record "Funder Loan";
+                        Capitalizarp: Report "Capitalize Interest";
+                    begin
+                        LoanRec.SetRange("No.", Rec."No.");
+                        Capitalizarp.SetTableView(LoanRec);
+                        Capitalizarp.Run();
+                    end;
                 }
                 action("ReEvaluateFX")
                 {
@@ -729,8 +737,17 @@ page 50236 "Funder Loan Card"
                     Promoted = true;
                     PromotedCategory = Report;
                     PromotedIsBig = true;
-                    RunObject = report ReEvaluateFX;
+                    // RunObject = report ReEvaluateFX;
+                    trigger OnAction()
+                    var
+                        // Report:Report ReEvaluateFX;
+                        _funderLoan: Record "Funder Loan";
+                    begin
+                        _funderLoan.Reset();
+                        _funderLoan.SetRange("No.", Rec."No.");
+                        Report.Run(Report::ReEvaluateFX, true, false, _funderLoan);
 
+                    end;
                 }
             }
             group(Documents)
@@ -773,6 +790,29 @@ page 50236 "Funder Loan Card"
 
                         Report.Run(Report::"Investment Confirmation");
                     end;
+
+                }
+                action(Redemption)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Redemption Document';
+                    Image = MoveNegativeLines;
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    // RunObject = report "Investment Confirmation";
+                    PromotedIsBig = true;
+                    trigger OnAction()
+                    var
+                        RedemptionDoc: Report "Redemption Document";
+                        LoanRec: Record "Funder Loan";
+                    // ReportFlag: Record "Report Flags";
+                    begin
+                        LoanRec.SetRange("No.", Rec."No.");
+                        RedemptionDoc.SetTableView(LoanRec);
+                        RedemptionDoc.Run();
+                        // Report.Run(Report::"Investment Confirmation");
+                    end;
+
                 }
             }
         }
@@ -845,6 +885,13 @@ page 50236 "Funder Loan Card"
         ReportFlag."Funder Loan No." := Rec."No.";
         ReportFlag."Utilizing User" := UserId;
         ReportFlag.Insert();
+
+        if Rec."Payables Account" = '' then
+            Rec."Payables Account" := FunderTbl."Payables Account";
+        if Rec."Interest Expense" = '' then
+            Rec."Interest Expense" := FunderTbl."Interest Expense";
+        if Rec."Interest Payable" = '' then
+            Rec."Interest Payable" := FunderTbl."Payables Account";
 
         UpdateInterestPaymentVisibility();
         FieldEditProp();

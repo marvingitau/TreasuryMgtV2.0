@@ -32,6 +32,10 @@ page 50281 "Funder Loan List"
                     ApplicationArea = All;
                     Caption = 'Funder Name';
                 }
+                field(Currency; Rec.Currency)
+                {
+                    ApplicationArea = All;
+                }
                 field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
                 {
                     ApplicationArea = All;
@@ -115,6 +119,35 @@ page 50281 "Funder Loan List"
                 end;
             }
 
+        }
+
+        area(Reporting)
+        {
+            action("ReEvaluateFX")
+            {
+                ApplicationArea = All;
+                Caption = 'ReEvaluateFX';
+                Image = Report;
+                // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                Promoted = true;
+                PromotedCategory = Report;
+                PromotedIsBig = true;
+                RunObject = report ReEvaluateFX;
+                Enabled = false;
+
+            }
+            action("Redemption Report")
+            {
+                ApplicationArea = All;
+                Caption = 'Redemption Report';
+                Image = Report;
+                // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                Promoted = true;
+                PromotedCategory = Report;
+                PromotedIsBig = true;
+                RunObject = report "Redemption Report";
+
+            }
         }
     }
 }

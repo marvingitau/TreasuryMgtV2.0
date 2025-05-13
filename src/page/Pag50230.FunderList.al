@@ -21,10 +21,10 @@ page 50230 "Funder List"
                 {
                     ApplicationArea = All;
                 }
-                field("Funder Type"; Rec."Funder Type")
-                {
-                    ApplicationArea = All;
-                }
+                // field("Funder Type"; Rec."Funder Type")
+                // {
+                //     ApplicationArea = All;
+                // }
                 field("Counterparty Name"; Rec.Name)
                 {
                     ApplicationArea = All;
@@ -106,6 +106,46 @@ page 50230 "Funder List"
                     // Report.Run(50237, true, false, _funderLoan);
                     // EmailingCU.SendReminderOnPlacementMaturity(Rec."No.")
                 end;
+            }
+
+        }
+        area(Reporting)
+        {
+            action("ReEvaluateFX")
+            {
+                ApplicationArea = All;
+                Caption = 'ReEvaluateFX';
+                Image = Report;
+                // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                Promoted = true;
+                PromotedCategory = Report;
+                PromotedIsBig = true;
+                RunObject = report ReEvaluateFX;
+
+            }
+            // action("Capitalize Interest")
+            // {
+            //     ApplicationArea = All;
+            //     Caption = 'Capitalize Interest';
+            //     Image = Report;
+            //     // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+            //     Promoted = true;
+            //     PromotedCategory = Report;
+            //     PromotedIsBig = true;
+            //     RunObject = report "Capitalize Interest";
+
+            // }
+            action("Redemption Report")
+            {
+                ApplicationArea = All;
+                Caption = 'Redemption Report';
+                Image = Report;
+                // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                Promoted = true;
+                PromotedCategory = Report;
+                PromotedIsBig = true;
+                RunObject = report "Redemption Report";
+
             }
         }
     }

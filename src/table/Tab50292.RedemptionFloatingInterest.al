@@ -1,8 +1,7 @@
-table 50244 "Treasury Document Setup"
+table 50292 "Redemption Floating Interest"
 {
     DataClassification = ToBeClassified;
-    DrillDownPageId = "Treasury Document Setup";
-    LookupPageId = "Treasury Document Setup";
+
     fields
     {
         field(1; Line; Integer)
@@ -10,35 +9,20 @@ table 50244 "Treasury Document Setup"
             DataClassification = ToBeClassified;
             AutoIncrement = true;
         }
-        field(10; "Document No."; Code[50])
+        field(10; FloatingInterest; Decimal)
         {
             DataClassification = ToBeClassified;
-
         }
-        field(20; Ownership; Option)
-        {
-            OptionMembers = Portfolio,"Funder Loan",Funders,"Related Party/Customer";
-            DataClassification = ToBeClassified;
-
-        }
-        field(30; "Document Description"; Text[250])
+        field(15; CurrentFloatingInterest; Decimal)
         {
             DataClassification = ToBeClassified;
-
         }
-
-        field(40; "Must Attached"; Boolean)
-        {
-            DataClassification = ToBeClassified;
-
-        }
-
 
     }
 
     keys
     {
-        key(Key1; Line, "Document No.")
+        key(PK; Line)
         {
             Clustered = true;
         }

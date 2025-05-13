@@ -60,6 +60,30 @@ page 50274 "Treasury Reports"
                 RunObject = report "Debt Maturity Currency";
 
             }
+            action("Redemption Report")
+            {
+                ApplicationArea = All;
+                Caption = 'Redemption Report';
+                Image = Report;
+                // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                RunObject = report "Redemption Report";
+
+            }
+            action("Interest accrual & capitalization report")
+            {
+                ApplicationArea = All;
+                Caption = 'Interest accrual & capitalization report';
+                Image = AccountingPeriods;
+                // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                RunObject = report "Intre. Accru & Cap";
+
+            }
 
 
         }

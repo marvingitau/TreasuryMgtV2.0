@@ -147,6 +147,30 @@ table 50231 Portfolio
         field(5000; Status; Enum PortfolioStatus)
         {
             DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                trsyDocSetup: Record "Treasury Document Setup";
+                porfolioRec: Record Portfolio;
+                docAttach: Record 1173;
+            begin
+                porfolioRec.Reset();
+                porfolioRec.SetRange(Code, Rec.Code);
+                if porfolioRec.Find('-') then begin
+                    trsyDocSetup.Reset();
+                    trsyDocSetup.SetRange(Ownership, trsyDocSetup.Ownership::Portfolio);
+                    if trsyDocSetup.Find('-') then begin
+                        repeat
+                            docAttach.Reset();
+                            docAttach.SetRange("No.", porfolioRec.Code);
+                            docAttach.SetRange("Document Name", trsyDocSetup."Document No.");
+                            if not docAttach.find('-') then
+                                Error('Document:  %1 not Attached', trsyDocSetup."Document No.");
+                        until trsyDocSetup.Next() = 0;
+                    end;
+                end;
+
+
+            end;
 
         }
     }

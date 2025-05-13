@@ -762,7 +762,7 @@ page 50233 "Funder Card"
                     PromotedCategory = Report;
                     PromotedIsBig = true;
                     RunObject = report "Capitalize Interest";
-                    Enabled = false;
+                    // Enabled = false;
 
                 }
                 action("attachment")

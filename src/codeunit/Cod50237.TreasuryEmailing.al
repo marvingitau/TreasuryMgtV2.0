@@ -47,7 +47,8 @@ codeunit 50237 "Treasury Emailing"
 
 
 
-        Body := '<p>Dear ' + Funders.Name + '</p><p> Thank you for your placement of ' + Format(FunderLoan."Original Disbursed Amount") + ' on ' + Format(FunderLoan.PlacementDate) + ' with ' + CompanyName + '.</p> <p> Please find attached the placement confirmation for your review. Kindly sign and return the document at your earliest convenience.</p> <p>If you have any questions or require further assistance, please feel free to contact us at ' + Company."Phone No." + '.</p> <p>Best regards,</p> <p>' + CompanyName + ' – Treasury</p> <br><br><br><br> <p>(This is a system-generated email.)</p>';
+        // Body := '<p>Dear ' + Funders.Name + '</p><p> Thank you for your placement of ' + Format(FunderLoan."Original Disbursed Amount") + ' on ' + Format(FunderLoan.PlacementDate) + ' with ' + CompanyName + '.</p> <p> Please find attached the placement confirmation for your review. Kindly sign and return the document at your earliest convenience.</p> <p>If you have any questions or require further assistance, please feel free to contact us at ' + Company."Phone No." + '.</p> <p>Best regards,</p> <p>' + CompanyName + ' – Treasury</p> <br><br><br><br> <p>(This is a system-generated email.)</p>';
+        Body := '<p>I hope youre doing well.Please find attached the placement confirmation certificate for your review.</p><p> Kindly let us know if you have any feedback. The final execution copy will be shared for sign-off at a later stage.Please don’t hesitate to reach out if you need any clarifications.</p> <p>Best regards,</p>' + GeneralSetup."Trsy Recipient Name" + ' – Treasury</p> <br><br><br><br> <p>(This is a system-generated email.)</p>';
 
         if Funders."Mailing Address" = '' then
             Error('Email Address is Empty');
@@ -390,6 +391,98 @@ codeunit 50237 "Treasury Emailing"
 
         Message('Mailed Confirmation');
     end;
+
+    procedure SendPartidalRedemptionEmailWithAttachment(funderLoanNo: Code[20]) Result: Text
+    var
+        RecordRef: RecordRef;
+        EMail: Codeunit Email;
+        EmailMessage: Codeunit "Email Message";
+        MailSent: Boolean;
+        ErrInfo: ErrorInfo;
+        Vendors: Record Vendor;
+
+        TempBlob: Codeunit "Temp Blob";
+        FileInStream: InStream;
+        FileOutStream: OutStream;
+        FileInStream1: InStream;
+        FileOutStream1: OutStream;
+        RecRef: RecordRef;
+        RecRef1: RecordRef;
+        FunderLoan: Record "Funder Loan";
+        Funders: Record Funders;
+        // BufferSetup: Record BufferSetup;
+        Body: Text;
+
+        PrimaryEmail: Text[100];
+
+    begin
+
+        FunderLoan.Reset();
+        FunderLoan.SetRange(FunderLoan."No.", funderLoanNo);
+        if not FunderLoan.Find('-') then
+            Error('Funder Loan %1 Not found.', funderLoanNo);
+
+        Funders.Reset();
+        Funders.SetRange("No.", FunderLoan."Funder No.");
+        if not Funders.Find('-') then
+            Error('Funder %1 Not found.', FunderLoan."Funder No.");
+
+        FunderMgtCU.SetFunderNoFilter(funderLoanNo);// Update report Mandatory Field
+        Company.get();
+
+
+
+
+
+        Body := '<p>Dear ' + Funders.Name + '</p><p> This is your Partial Redemption Document</p> <p>Best regards,</p> <p>' + CompanyName + ' – Treasury</p> <br><br><br><br> <p>(This is a system-generated email.)</p>';
+
+        if Funders."Mailing Address" = '' then
+            Error('Email Address is Empty');
+
+        EmailMessage.Create(Funders."Mailing Address", 'REDEMPTION / PARTIAL REDEMPTION CONFIRMATION', Body, true);
+
+        if GeneralSetup."Trsy Recipient mail" <> '' then
+            EmailMessage.AddRecipient(Enum::"Email Recipient Type"::Cc, GeneralSetup."Trsy Recipient mail");
+
+        // RecRef.GetTable(FunderLoan);
+        TempBlob.CreateOutStream(FileOutStream);
+        Report.SaveAs(Report::"Redemption Document", '', ReportFormat::Pdf, FileOutStream);
+        TempBlob.CreateInStream(FileInStream);
+        EmailMessage.AddAttachment('Partial Redemption.pdf', 'PDF', FileInStream);
+        // Clear(TempBlob);
+        // // RecRef1.GetTable(FunderLoan);
+        // TempBlob.CreateOutStream(FileOutStream1);
+        // Report.SaveAs(Report::"Interest Amortization", '', ReportFormat::Pdf, FileOutStream1);
+        // TempBlob.CreateInStream(FileInStream1);
+        // EmailMessage.AddAttachment('Amortization.pdf', 'PDF', FileInStream1);
+
+
+        MailSent := EMail.Send(EmailMessage, Enum::"Email Scenario"::Default);
+
+        if not MailSent then begin
+            ErrInfo := ErrorInfo.Create('This is error: ' + Format(1));
+            ErrInfo.ErrorType(ErrorType::Client);
+            ErrInfo.Verbosity(Verbosity::Error);
+            ErrInfo.DetailedMessage(GetLastErrorText());
+            ErrInfo.DataClassification(DataClassification::SystemMetadata);
+            ErrInfo.Collectible(true);
+            Error(ErrInfo);
+        end;
+
+        // if HasCollectedErrors then
+        //     Message(GetCollectedErrors().Get(1).Message)
+        // else begin
+
+
+        Message('Partial Redemption Mailed');
+        // end;
+
+
+
+
+
+    end;
+
 
     var
         FunderMgtCU: Codeunit 50231;

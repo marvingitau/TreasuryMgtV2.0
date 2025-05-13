@@ -5,10 +5,10 @@ pageextension 50233 "Doc. Attchment _" extends 1173
         // Add changes to page layout here
         addafter("File Type")
         {
-            // field(DocType; Rec.DocType)
-            // {
-            //     ApplicationArea = All;
-            // }
+            field("Document Name"; Rec."Document Name")
+            {
+                ApplicationArea = All;
+            }
         }
     }
 

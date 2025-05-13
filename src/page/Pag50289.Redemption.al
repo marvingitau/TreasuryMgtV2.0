@@ -27,23 +27,83 @@ page 50289 Redemption
                     ApplicationArea = All;
                     ShowMandatory = true;
                     trigger OnValidate()
+                    var
+                        funderLegderEntry: Record FunderLedgerEntry;
+                        funderLegderEntry_1: Record FunderLedgerEntry;
+                        funderLegderEntry_2: Record FunderLedgerEntry;
+                        startMonth: Date;
+                        endMonth: date;
+                        monthNo: Integer;
+                        yearNo: Integer;
+                        recondsCount: Integer;
+                        funder: Record Funders;
+
+                        NextEntryNo: Integer;
+
+                        TotalInterestAmount: Decimal;
+                        TotalAdjustedInterestAmount: Decimal;
+                        ThisMonthsIntrest: Decimal;
+                        ThisMonthsAdjustedInterest: Decimal;
                     begin
-                        // if Rec."Redemption Date" <> 0D then begin
-                        //     // Check if any interest for this loan has been computed for this month.
-                        //     // if so reverse it and use the redemption date as Maturity date.
-                        //     TrsyMgtCU.CheckIfAnyInterestWasCalculatedForThisMonth(Rec."Redemption Date", Rec."Loan No.");
+                        if (Rec."Redemption Date" <> 0D) and (Rec.RedemptionType = Rec.RedemptionType::"Partial Redemption") then begin
+                            // Check if any interest for this loan has been computed for this month.
+                            // if so reverse it and use the redemption date as Maturity date.
 
-                        //     //Get the Actual Float available for redemption
-                        //     FunderLoan.Reset();
-                        //     FunderLoan.SetRange("No.", LoanID);
-                        //     if not FunderLoan.Find('-') then
-                        //         Error('Funder Loan No %1 Not found', LoanID);
+                            startMonth := CalcDate('<-CM>', Rec."Redemption Date");
+                            endMonth := CalcDate('<+CM>', Rec."Redemption Date");
 
-                        //     FunderLoan.CalcFields("Final Float");
-                        //     Rec.Amount := FunderLoan."Final Float";
-                        // end;
+                            funderLegderEntry_1.Reset();
+                            funderLegderEntry_1.SetRange("Loan No.", LoanID);
+                            funderLegderEntry_1.SetRange("Document Type", funderLegderEntry."Document Type"::Interest);
+                            funderLegderEntry_1.SetRange("Posting Date", startMonth, endMonth);
+                            if funderLegderEntry_1.Find('-') then begin
+                                ThisMonthsIntrest := funderLegderEntry_1.Amount;
+                            end;
+
+                            ThisMonthsAdjustedInterest := FnderMgtCU.CalculateFloatInterest(LoanID, Rec."Redemption Date");
+
+                            //Get the Actual Float available for redemption
+                            FunderLoan.Reset();
+                            FunderLoan.SetRange("No.", LoanID);
+                            if not FunderLoan.Find('-') then
+                                Error('Funder Loan No %1 Not found', LoanID);
+
+                            // FunderLoan.CalcFields("Final Float");
+                            // TotalInterestAmount := FunderLoan."Final Float";
+                            FunderLoan.CalcFields("Outstanding Interest");
+                            TotalInterestAmount := FunderLoan."Outstanding Interest";
+                            TotalAdjustedInterestAmount := TotalInterestAmount - ThisMonthsIntrest + ThisMonthsAdjustedInterest;
+
+                            FunderLoan.CalcFields(OutstandingAmntDisbLCY);
+                            Rec.FloatPrinci := FunderLoan.OutstandingAmntDisbLCY;
+                            // FunderLoan.CalcFields("Outstanding Interest");
+                            Rec.FloatIntr := TotalAdjustedInterestAmount;
+                            Rec.FloatIntrPlusFloatPrinci := Rec.FloatPrinci + Rec.FloatIntr;
+                        end;
                     end;
 
+                }
+                group("Partial Redemption Values")
+                {
+                    Visible = Rec.RedemptionType = Rec.RedemptionType::"Partial Redemption";
+                    field(FloatIntr; Rec.FloatIntr)
+                    {
+                        ApplicationArea = All;
+                        Editable = false;
+                        Caption = 'Current Interest';
+                    }
+                    field(FloatPrinci; Rec.FloatPrinci)
+                    {
+                        ApplicationArea = All;
+                        Editable = false;
+                        Caption = 'Current Principal ';
+                    }
+                    field(FloatIntrPlusFloatPrinci; Rec.FloatIntrPlusFloatPrinci)
+                    {
+                        ApplicationArea = All;
+                        Editable = false;
+                        Caption = 'Amount';
+                    }
                 }
                 field(PayingBank; Rec.PayingBank)
                 {
@@ -51,18 +111,24 @@ page 50289 Redemption
                     Caption = 'Paying Bank';
                     ShowMandatory = true;
                 }
-                field(PrincipalAmount; Rec.PrincipalAmount)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Princical Amount';
-                    Editable = not (Rec.RedemptionType = Rec.RedemptionType::"Full Redemption");
-                }
-                field(InterestAmount; Rec.InterestAmount)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Interest Amount';
-                    Editable = not (Rec.RedemptionType = Rec.RedemptionType::"Full Redemption");
+                // field(PrincipalAmount; Rec.PrincipalAmount)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Princical Amount';
+                //     Editable = not (Rec.RedemptionType = Rec.RedemptionType::"Full Redemption");
+                // }
+                // field(InterestAmount; Rec.InterestAmount)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Interest Amount';
+                //     Editable = not (Rec.RedemptionType = Rec.RedemptionType::"Full Redemption");
 
+                // }
+                field(PartialAmount; Rec.PartialAmount)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Partial Amount';
+                    Editable = not (Rec.RedemptionType = Rec.RedemptionType::"Full Redemption");
                 }
             }
         }
@@ -93,30 +159,96 @@ page 50289 Redemption
                     if (Rec."Redemption Date" <> 0D) and (Rec.PayingBank <> '') then begin
                         // Check if any interest for this loan has been computed for this month.
                         // if so reverse it and use the redemption date as Maturity date.
-                        TrsyMgtCU.CheckIfAnyInterestWasCalculatedForThisMonth(Rec."Redemption Date", Rec."Loan No.", Rec.PayingBank);
+                        if Rec.RedemptionType = Rec.RedemptionType::"Full Redemption" then begin
+                            TrsyMgtCU.CheckIfAnyInterestWasCalculatedForThisMonth(Rec."Redemption Date", Rec."Loan No.", Rec.PayingBank);
 
-                        //Get the Actual Float available for redemption
-                        FunderLoan.Reset();
-                        FunderLoan.SetRange("No.", LoanID);
-                        if not FunderLoan.Find('-') then
-                            Error('Funder Loan No %1 Not found', LoanID);
+                            //Get the Actual Float available for redemption
+                            FunderLoan.Reset();
+                            FunderLoan.SetRange("No.", LoanID);
+                            if not FunderLoan.Find('-') then
+                                Error('Funder Loan No %1 Not found', LoanID);
 
-                        FunderLoan.CalcFields(OutstandingAmntDisbLCY);
-                        Rec.PrincipalAmount := FunderLoan.OutstandingAmntDisbLCY;
-                        FunderLoan.CalcFields("Outstanding Interest");
-                        Rec.InterestAmount := FunderLoan."Outstanding Interest";
+                            FunderLoan.CalcFields(OutstandingAmntDisbLCY);
+                            Rec.PrincipalAmount := FunderLoan.OutstandingAmntDisbLCY;
+                            FunderLoan.CalcFields("Outstanding Interest");
+                            Rec.InterestAmount := FunderLoan."Outstanding Interest";
 
-                        RedemptionLog.Init();
-                        RedemptionLog."Loan No." := Rec."Loan No.";
-                        if Rec.RedemptionType = Rec.RedemptionType::"Full Redemption" then
-                            RedemptionLog.RedemptionType := RedemptionLog.RedemptionType::"Full Redemption";
-                        if Rec.RedemptionType = Rec.RedemptionType::"Partial Redemption" then
-                            RedemptionLog.RedemptionType := RedemptionLog.RedemptionType::"Partial Redemption";
-                        RedemptionLog.PrincAmountRemoved := Rec.PrincipalAmount;
-                        RedemptionLog.IntrAmountRemoved := Rec.InterestAmount;
-                        RedemptionLog."Redemption Date" := Rec."Redemption Date";
-                        RedemptionLog.PayingBank := Rec.PayingBank;
-                        RedemptionLog.Insert();
+                            RedemptionLog.Reset();
+                            RedemptionLog.SetRange("Loan No.", LoanID);
+                            RedemptionLog.SetRange(RedemptionLog.RedemptionType, RedemptionLog.RedemptionType::"Partial Redemption");
+                            if RedemptionLog.Find('-') then begin
+                                RedemptionLog.PrincAmountRemoved := Rec.PrincipalAmount;
+                                RedemptionLog.IntrAmountRemoved := Rec.InterestAmount;
+                                RedemptionLog.AmountRemoved := Rec.PrincipalAmount + Rec.InterestAmount;
+                                RedemptionLog."Redemption Date" := Rec."Redemption Date";
+                                RedemptionLog.PayingBank := Rec.PayingBank;
+                                RedemptionLog.Modify();
+                            end else begin
+                                RedemptionLog.Init();
+                                RedemptionLog."Loan No." := Rec."Loan No.";
+                                if Rec.RedemptionType = Rec.RedemptionType::"Full Redemption" then
+                                    RedemptionLog.RedemptionType := RedemptionLog.RedemptionType::"Full Redemption";
+                                if Rec.RedemptionType = Rec.RedemptionType::"Partial Redemption" then
+                                    RedemptionLog.RedemptionType := RedemptionLog.RedemptionType::"Partial Redemption";
+                                RedemptionLog.PrincAmountRemoved := Rec.PrincipalAmount;
+                                RedemptionLog.IntrAmountRemoved := Rec.InterestAmount;
+                                RedemptionLog.AmountRemoved := Rec.PrincipalAmount + Rec.InterestAmount;
+                                RedemptionLog."Redemption Date" := Rec."Redemption Date";
+                                RedemptionLog.PayingBank := Rec.PayingBank;
+                                RedemptionLog.Insert();
+                            end;
+
+
+
+                            FunderLoan.State := FunderLoan.State::Terminated;
+                            FunderLoan.Modify();
+                        end;
+                        if Rec.RedemptionType = Rec.RedemptionType::"Partial Redemption" then begin
+
+                            FunderLoan.Reset();
+                            FunderLoan.SetRange("No.", LoanID);
+                            if not FunderLoan.Find('-') then
+                                Error('Funder Loan No %1 Not found', LoanID);
+
+                            RedemptionLog.Reset();
+                            RedemptionLog.SetRange("Loan No.", LoanID);
+                            RedemptionLog.SetRange(RedemptionLog.RedemptionType, RedemptionLog.RedemptionType::"Partial Redemption");
+                            if RedemptionLog.Find('-') then begin
+                                RedemptionLog.PrincAmountRemoved := Rec.PrincipalAmount;
+                                RedemptionLog.IntrAmountRemoved := Rec.InterestAmount;
+                                RedemptionLog.AmountRemoved := Rec.PartialAmount;
+                                RedemptionLog."Redemption Date" := Rec."Redemption Date";
+                                RedemptionLog.PayingBank := Rec.PayingBank;
+                                RedemptionLog.FloatingPrinc := Rec.FloatPrinci;
+                                RedemptionLog.FloatingIntr := Rec.FloatIntr;
+                                RedemptionLog.Modify();
+                            end else begin
+                                RedemptionLog.Init();
+                                RedemptionLog."Loan No." := Rec."Loan No.";
+                                if Rec.RedemptionType = Rec.RedemptionType::"Full Redemption" then
+                                    RedemptionLog.RedemptionType := RedemptionLog.RedemptionType::"Full Redemption";
+                                if Rec.RedemptionType = Rec.RedemptionType::"Partial Redemption" then
+                                    RedemptionLog.RedemptionType := RedemptionLog.RedemptionType::"Partial Redemption";
+                                RedemptionLog.PrincAmountRemoved := Rec.PrincipalAmount;
+                                RedemptionLog.IntrAmountRemoved := Rec.InterestAmount;
+                                RedemptionLog.AmountRemoved := Rec.PartialAmount;
+                                RedemptionLog."Redemption Date" := Rec."Redemption Date";
+                                RedemptionLog.PayingBank := Rec.PayingBank;
+                                RedemptionLog.FloatingPrinc := Rec.FloatPrinci;
+                                RedemptionLog.FloatingIntr := Rec.FloatIntr;
+                                RedemptionLog.Insert();
+                            end;
+
+
+                            FunderLoan.State := FunderLoan.State::Terminated;
+                            FunderLoan.Modify();
+
+                            TrsyMgtCU.PartialRedemptionPostings(Rec."Redemption Date", Rec."Loan No.", Rec.PayingBank, Rec.FloatPrinci, Rec.FloatIntr, Rec.PartialAmount);
+                            FnderMgtCU.PartialRedemptionDuplicateRecord(LoanID);
+                            //Email
+                            // The funder and Treasury
+                            MailingCU.SendPartidalRedemptionEmailWithAttachment(Rec."Loan No.")
+                        end;
 
                     end else
                         Error('Redemption Date/Bank missing');
@@ -173,6 +305,9 @@ page 50289 Redemption
         FunderLoan: Record "Funder Loan";
         AmountEnabled: Boolean;
         TrsyMgtCU: Codeunit "Treasury Mgt CU";
+        FnderMgtCU: Codeunit FunderMgtCU;
         RedemptionLog: Record "Redemption Log Tbl";
+        RedemptionIntererst: Record "Redemption Floating Interest";
+        MailingCU: Codeunit "Treasury Emailing";
 
 }

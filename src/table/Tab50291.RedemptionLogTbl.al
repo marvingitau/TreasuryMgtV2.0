@@ -27,6 +27,11 @@ table 50291 "Redemption Log Tbl"
         {
             DataClassification = ToBeClassified;
         }
+        field(23; AmountRemoved; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+
         field(29; IntrAmountRemoved; Decimal)
         {
             DataClassification = ToBeClassified;
@@ -35,11 +40,27 @@ table 50291 "Redemption Log Tbl"
         {
             DataClassification = ToBeClassified;
         }
+        field(25; "New Loan No."; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
         field(24; "Redemption Date"; Date)
         {
             DataClassification = ToBeClassified;
         }
 
+        field(30; RemainingAmount; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(33; FloatingPrinc; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(36; FloatingIntr; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
     }
 
     keys

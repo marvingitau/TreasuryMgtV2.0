@@ -19,9 +19,18 @@ page 50290 "Redemption Log"
                 {
                     ApplicationArea = All;
                 }
+                field("New Loan No."; Rec."New Loan No.")
+                {
+                    ApplicationArea = All;
+                }
                 field("Redemption Date"; Rec."Redemption Date")
                 {
                     ApplicationArea = All;
+                }
+                field(PayingBank; Rec.PayingBank)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Paying Bank';
                 }
                 field(RedemptionType; Rec.RedemptionType)
                 {
@@ -38,11 +47,27 @@ page 50290 "Redemption Log"
                     ApplicationArea = All;
                     Caption = 'Interest Removed';
                 }
-                field(PayingBank; Rec.PayingBank)
+                field(AmountRemoved; Rec.AmountRemoved)
                 {
                     ApplicationArea = All;
-                    Caption = 'Paying Bank';
+                    Caption = 'Amount Removed';
                 }
+                field(RemainingAmount; Rec.RemainingAmount)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Remaining Amount ';
+                }
+                field(FloatingPrinc; Rec.FloatingPrinc)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Floating Principal ';
+                }
+                field(FloatingIntr; Rec.FloatingIntr)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Floating Interest ';
+                }
+
             }
         }
         area(Factboxes)

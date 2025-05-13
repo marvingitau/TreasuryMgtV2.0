@@ -24,6 +24,18 @@ table 50232 "Funder Loan"
                 Funder.SetRange("No.", "Funder No.");
                 if Funder.Find('-') then begin
                     Name := Funder.Name;
+                    if Funder."Payables Account" = '' then begin
+                        Error('Payable A/c Missing');
+                        exit;
+                    end;
+                    if Funder."Interest Expense" = '' then begin
+                        Error('Interest Expense A/c Missing');
+                        exit;
+                    end;
+                    if Funder."Interest Payable" = '' then begin
+                        Error('Interest Payable A/c Missing');
+                        exit;
+                    end;
                     "Payables Account" := Funder."Payables Account";
                     Rec.Validate("Payables Account");
                     "Interest Expense" := Funder."Interest Expense";
@@ -599,6 +611,22 @@ table 50232 "Funder Loan"
         field(3500; "Final Float"; Decimal)
         {
             CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter("Original Amount" | Repayment | "Secondary Amount" | Interest | "Interest Paid" | Withholding | "Capitalized Interest")));
+            // Caption = 'Net Amount';
+            DecimalPlaces = 0 : 2;
+            Editable = false;
+            FieldClass = FlowField;
+        }
+        field(3509; AccruedIntr_WthdoldingTax; Decimal)
+        {
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest | Withholding)));
+            // Caption = 'Net Amount';
+            DecimalPlaces = 0 : 2;
+            Editable = false;
+            FieldClass = FlowField;
+        }
+        field(3515; WthdoldingTax; Decimal)
+        {
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Withholding)));
             // Caption = 'Net Amount';
             DecimalPlaces = 0 : 2;
             Editable = false;

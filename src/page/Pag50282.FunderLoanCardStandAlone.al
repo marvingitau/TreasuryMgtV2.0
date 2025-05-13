@@ -685,6 +685,50 @@ page 50282 "Funder Loan Card StandAlone"
 
 
                 }
+                action("Capitalize Interest")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Capitalize Interest';
+                    Image = Report;
+                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
+                    // RunObject = report "Capitalize Interest";
+                    trigger OnAction()
+                    var
+                        LoanRec: Record "Funder Loan";
+                        Capitalizarp: Report "Capitalize Interest";
+                    begin
+                        LoanRec.SetRange("No.", Rec."No.");
+                        Capitalizarp.SetTableView(LoanRec);
+                        Capitalizarp.Run();
+                    end;
+
+                }
+                action("ReEvaluateFX")
+                {
+                    ApplicationArea = All;
+                    Caption = 'ReEvaluateFX';
+                    Image = Report;
+                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
+                    // RunObject = report ReEvaluateFX;
+                    trigger OnAction()
+                    var
+                        LoanRec: Record "Funder Loan";
+                        ReEvalFX: Report ReEvaluateFX;
+                    begin
+                        LoanRec.SetRange("No.", Rec."No.");
+                        ReEvalFX.SetTableView(LoanRec);
+                        ReEvalFX.Run();
+                    end;
+
+
+                }
+
             }
             group(Documents)
             {
@@ -726,6 +770,28 @@ page 50282 "Funder Loan Card StandAlone"
 
                         Report.Run(Report::"Investment Confirmation");
                     end;
+                }
+                action(Redemption)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Redemption Document';
+                    Image = MoveNegativeLines;
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    // RunObject = report "Investment Confirmation";
+                    PromotedIsBig = true;
+                    trigger OnAction()
+                    var
+                        RedemptionDoc: Report "Redemption Document";
+                        LoanRec: Record "Funder Loan";
+                    // ReportFlag: Record "Report Flags";
+                    begin
+                        LoanRec.SetRange("No.", Rec."No.");
+                        RedemptionDoc.SetTableView(LoanRec);
+                        RedemptionDoc.Run();
+                        // Report.Run(Report::"Investment Confirmation");
+                    end;
+
                 }
             }
         }
