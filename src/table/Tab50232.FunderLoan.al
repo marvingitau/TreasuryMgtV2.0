@@ -46,6 +46,13 @@ table 50232 "Funder Loan"
                     Portfolio.Reset();
                     Portfolio.SetRange("No.", Funder.Portfolio);
                     if Portfolio.Find('-') then begin
+                        // if Portfolio.Category = Portfolio.Category::"Bank Loan" then
+                        //     Category := 'Bank Loan';
+                        // if Portfolio.Category = Portfolio.Category::Individual then
+                        //     Category := 'Individual';
+                        // if Portfolio.Category = Portfolio.Category::Institutional then
+                        //     Category := 'Institutional';
+
                         Category := Portfolio.Category;
                         Rec.Validate(Category);
                     end;
@@ -123,7 +130,7 @@ table 50232 "Funder Loan"
         field(505; "InterestRate"; Decimal)
         {
             DataClassification = ToBeClassified;
-            Caption = 'Interest rate (p.a)';
+            Caption = 'Gross Interest rate (p.a)';
         }
         field(506; "InterestRateType"; Enum InterestRateType)
         {
@@ -238,7 +245,7 @@ table 50232 "Funder Loan"
         {
             DataClassification = ToBeClassified;
             Caption = 'Category';
-            TableRelation = "Portfolio Category".Code;
+            // TableRelation = "Portfolio Category".Code;
         }
         field(525; Type; Enum FundingType)
         {
@@ -636,6 +643,64 @@ table 50232 "Funder Loan"
         {
             DataClassification = ToBeClassified;
             OptionMembers = Active,Terminated;
+        }
+
+        // Encumbrance Fields
+        field(4000; "Encumbrance Input"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                "G/L Account": Record "G/L Account";
+            begin
+                GenSetup.Get(0);
+                "G/L Account".Reset();
+                "G/L Account".SetRange("No.", GenSetup."Total Asset G/L");
+                if "G/L Account".Find('-') then begin
+                    "G/L Account".CalcFields(Balance);
+                    "Total Asset Value" := "G/L Account".Balance;
+
+                    "Encumbrance Percentage" := ("Encumbrance Input" / "Total Asset Value") * 100;
+                end;
+            end;
+        }
+
+        field(4005; "Total Asset Value"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(4010; "Encumbrance Percentage"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        // Tranche Fields
+
+        field(4015; "Tranche Loan"; Boolean)
+        {
+            DataClassification = ToBeClassified;
+            InitValue = false;
+        }
+        field(4017; "Total Payed"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        // Loan Repayment under Bank Loan Category
+
+        field(40200; "Repayment Frequency"; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
+        // field(40210; "Repayment interest"; Decimal)
+        // {
+        //     DataClassification = ToBeClassified;
+        // }
+
+        field(40220; "Repayment Amount"; Decimal)
+        {
+            DataClassification = ToBeClassified;
         }
 
     }

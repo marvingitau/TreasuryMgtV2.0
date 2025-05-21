@@ -183,18 +183,20 @@ report 50239 "Interest Payment Amortization"
         endYearDate := CALCDATE('CY', Today);
         remainingDays := endYearDate - FunderLoanTbl.PlacementDate;
 
-        _interestRate_Active := 0;
         _principle := 0;
         _amortization := 0;
         _totalPayment := 0;
         _outstandingAmount := 0;
-        if (FunderLoanTbl.InterestRateType = FunderLoanTbl.InterestRateType::"Fixed Rate") then
-            _interestRate_Active := FunderLoanTbl.InterestRate;
-        if (FunderLoanTbl.InterestRateType = FunderLoanTbl.InterestRateType::"Floating Rate") then
-            _interestRate_Active := (FunderLoanTbl."Reference Rate" + FunderLoanTbl.Margin);
+        _interestRate_Active := 0;
+        //TrsyMgt.GetInterestRate(FunderLoanTbl."No.", 'FUNDER_REPORT');
 
-        if _interestRate_Active = 0 then
-            Error('Interest Rate is Zero');
+        /* if (FunderLoanTbl.InterestRateType = FunderLoanTbl.InterestRateType::"Fixed Rate") then
+             _interestRate_Active := FunderLoanTbl.InterestRate;
+         if (FunderLoanTbl.InterestRateType = FunderLoanTbl.InterestRateType::"Floating Rate") then
+             _interestRate_Active := (FunderLoanTbl."Reference Rate" + FunderLoanTbl.Margin);
+
+         if _interestRate_Active = 0 then
+             Error('Interest Rate is Zero');*/
 
         _withHoldingTax_Percent := FunderLoanTbl.Withldtax;
         _withHoldingTax_Amnt := 0;
@@ -239,6 +241,8 @@ report 50239 "Interest Payment Amortization"
                     _outstandingAmount := 0;
                     _totalPayment := _principle;
                 end;
+
+                _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentMonthInLoop, 'FUNDER_REPORT');
 
                 if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"30/360" then begin
                     monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 360);
@@ -301,6 +305,7 @@ report 50239 "Interest Payment Amortization"
                 //Get quarter date. - sub the current date for days.
                 //Add to the next quarter
 
+                _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentQuarterInLoop, 'FUNDER_REPORT');
 
                 if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"30/360" then begin
                     monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 360);
@@ -368,6 +373,7 @@ report 50239 "Interest Payment Amortization"
                 end;
                 //Get quarter date. - sub the current date for days.
                 //Add to the next quarter
+                _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentBiannInLoop, 'FUNDER_REPORT');
 
 
                 if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"30/360" then begin
@@ -432,6 +438,7 @@ report 50239 "Interest Payment Amortization"
                 //Get quarter date. - sub the current date for days.
                 //Add to the next quarter
 
+                _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentAnnualInLoop, 'FUNDER_REPORT');
 
                 if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"30/360" then begin
                     monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 360);
@@ -467,6 +474,8 @@ report 50239 "Interest Payment Amortization"
             _amortization := _principle;
             _totalPayment := _principle;
             _currentAnnualInLoop := maturityDate;
+
+            _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentAnnualInLoop, 'FUNDER_REPORT');
 
             if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"30/360" then begin
                 monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 360);
@@ -1138,4 +1147,5 @@ report 50239 "Interest Payment Amortization"
         FunderNo: Code[20];
         FunderLoanTbl: Record "Funder Loan";
         ReportFlag: Record "Report Flags";
+        TrsyMgt: Codeunit "Treasury Mgt CU";
 }

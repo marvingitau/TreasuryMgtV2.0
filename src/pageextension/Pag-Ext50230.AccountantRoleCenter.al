@@ -53,13 +53,58 @@ pageextension 50230 AccountantRoleCenter extends 9027
                     RunObject = page "Trsy Journal";
                     ToolTip = 'Treasury Journal';
                 }
-                action("Treasury Reports")
+                // action("Treasury Reports")
+                // {
+                //     ApplicationArea = Basic, Suite;
+                //     Caption = 'Treasury Reports';
+                //     Image = ResourceJournal;
+                //     RunObject = page "Treasury Reports";
+                //     ToolTip = 'Treasury Reports';
+
+                // }
+                group("Treasury Reports")
                 {
-                    ApplicationArea = Basic, Suite;
                     Caption = 'Treasury Reports';
-                    Image = ResourceJournal;
-                    RunObject = page "Treasury Reports";
-                    ToolTip = 'Treasury Reports';
+                    action("Debt Maturity By Category")
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Image = Category;
+
+                        Caption = 'Debt Maturity By Category';
+                        ToolTip = 'Debt Maturity By Category';
+                        RunObject = report "Debt Maturity Category";
+
+                    }
+                    action("Debt Maturity By Currency")
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Image = Currencies;
+
+                        Caption = 'Debt Maturity By Currency';
+                        ToolTip = 'Debt Maturity By Currency';
+                        RunObject = report "Debt Maturity Currency";
+
+                    }
+                    action("Redemption Report")
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Redemption Report';
+                        Image = Report;
+                        // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+
+                        RunObject = report "Redemption Report";
+
+                    }
+                    action("Interest accrual & capitalization report")
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Interest accrual & capitalization report';
+                        Image = AccountingPeriods;
+                        // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+
+                        RunObject = report "Intre. Accru & Cap";
+
+                    }
                 }
 
                 action("Treasury Setup")

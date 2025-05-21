@@ -15,7 +15,8 @@ table 50230 Funders
         field(20; Portfolio; Code[50])
         {
             DataClassification = ToBeClassified;
-            TableRelation = Portfolio where(Status = const(Approved));
+            TableRelation = Portfolio;
+            //where(Status = const(Approved));
         }
         field(30; Name; Text[100])
         {

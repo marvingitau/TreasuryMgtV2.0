@@ -92,13 +92,13 @@ codeunit 50239 "RelatedCustomer Mgt CU"
 
                 //Monthly interest depending on Interest Method
                 monthlyInterest := 0;
-                _interestRate_Active := 0;
-                if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
+                _interestRate_Active := TrsyMgt.GetInterestRate(RelatedParty."No.", 'RELATEDPARTY');
+                /*if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
                     _interestRate_Active := RelatedParty.InterestRatePA;
                 if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
                     _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
                 if _interestRate_Active = 0 then
-                    Error('Interest Rate is Zero');
+                    Error('Interest Rate is Zero');*/
 
                 _differenceOriginalWithdrawal := _currentPrincipalAmnt;
                 if RelatedParty.InterestMethod = RelatedParty.InterestMethod::"30/360" then begin

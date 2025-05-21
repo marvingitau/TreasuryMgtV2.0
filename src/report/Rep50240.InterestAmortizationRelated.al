@@ -146,15 +146,16 @@ report 50240 "Interest Amortization Related"
         endYearDate := CALCDATE('CY', Today);
         remainingDays := endYearDate - RelatedPartyTbl.PlacementDate;
 
-        _interestRate_Active := 0;
         _principle := 0;
-        if (RelatedPartyTbl.InterestRateType = RelatedPartyTbl.InterestRateType::"Fixed Rate") then
-            _interestRate_Active := RelatedPartyTbl.InterestRatePA;
-        if (RelatedPartyTbl.InterestRateType = RelatedPartyTbl.InterestRateType::"Floating Rate") then
-            _interestRate_Active := (RelatedPartyTbl."Reference Rate" + RelatedPartyTbl.Margin);
+        _interestRate_Active := 0;
+        //TrsyMgt.GetInterestRate(RelatedPartyTbl."No.", 'RELATEDPARTY_REPORT');
+        /* if (RelatedPartyTbl.InterestRateType = RelatedPartyTbl.InterestRateType::"Fixed Rate") then
+             _interestRate_Active := RelatedPartyTbl.InterestRatePA;
+         if (RelatedPartyTbl.InterestRateType = RelatedPartyTbl.InterestRateType::"Floating Rate") then
+             _interestRate_Active := (RelatedPartyTbl."Reference Rate" + RelatedPartyTbl.Margin);
 
-        if _interestRate_Active = 0 then
-            Error('Interest Rate is Zero');
+         if _interestRate_Active = 0 then
+             Error('Interest Rate is Zero');*/
 
 
         _withHoldingTax_Percent := RelatedPartyTbl.Withldtax;
@@ -191,6 +192,8 @@ report 50240 "Interest Amortization Related"
                     //End Date
                     DaysInMonth := maturityDate - CalcDate('<-CM>', maturityDate);
                 end;
+
+                _interestRate_Active := TrsyMgt.GetInterestRateSchedule(RelatedPartyTbl."No.", _currentMonthInLoop, 'RELATEDPARTY_REPORT');
 
                 if RelatedPartyTbl.InterestMethod = RelatedPartyTbl.InterestMethod::"30/360" then begin
                     monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 360);
@@ -252,6 +255,7 @@ report 50240 "Interest Amortization Related"
                 //Get quarter date. - sub the current date for days.
                 //Add to the next quarter
 
+                _interestRate_Active := TrsyMgt.GetInterestRateSchedule(RelatedPartyTbl."No.", _currentQuarterInLoop, 'RELATEDPARTY_REPORT');
 
                 if RelatedPartyTbl.InterestMethod = RelatedPartyTbl.InterestMethod::"30/360" then begin
                     monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 360);
@@ -311,6 +315,7 @@ report 50240 "Interest Amortization Related"
                 end;
                 //Get quarter date. - sub the current date for days.
                 //Add to the next quarter
+                _interestRate_Active := TrsyMgt.GetInterestRateSchedule(RelatedPartyTbl."No.", _currentBiannInLoop, 'RELATEDPARTY_REPORT');
 
 
                 if RelatedPartyTbl.InterestMethod = RelatedPartyTbl.InterestMethod::"30/360" then begin
@@ -368,6 +373,7 @@ report 50240 "Interest Amortization Related"
                 //Get quarter date. - sub the current date for days.
                 //Add to the next quarter
 
+                _interestRate_Active := TrsyMgt.GetInterestRateSchedule(RelatedPartyTbl."No.", _currentAnnualInLoop, 'RELATEDPARTY_REPORT');
 
                 if RelatedPartyTbl.InterestMethod = RelatedPartyTbl.InterestMethod::"30/360" then begin
                     monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 360);
@@ -804,5 +810,5 @@ report 50240 "Interest Amortization Related"
         RelatedNo: Code[20];
         RelatedPartyTbl: Record "RelatedParty- Cust";
         ReportFlag: Record "Report Flags";
-
+        TrsyMgt: Codeunit "Treasury Mgt CU";
 }

@@ -87,13 +87,13 @@ codeunit 50231 FunderMgtCU
 
                     //Monthly interest depending on Interest Method
                     monthlyInterest := 0;
-                    _interestRate_Active := 0;
-                    if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                    _interestRate_Active := TrsyMgt.GetInterestRate(funderLoan."No.", 'FUNDER');
+                    /*if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
                         _interestRate_Active := funderLoan.InterestRate;
                     if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
                         _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
                     if _interestRate_Active = 0 then
-                        Error('Interest Rate is Zero');
+                        Error('Interest Rate is Zero');*/
 
                     _differenceOriginalWithdrawal := _currentPrincipalAmnt;
                     if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
@@ -311,13 +311,13 @@ codeunit 50231 FunderMgtCU
 
                 //Monthly interest depending on Interest Method
                 monthlyInterest := 0;
-                _interestRate_Active := 0;
-                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                _interestRate_Active := TrsyMgt.GetInterestRate(funderLoan."No.", 'FUNDER');
+                /*if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
                     _interestRate_Active := funderLoan.InterestRate;
                 if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
                     _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
                 if _interestRate_Active = 0 then
-                    Error('Interest Rate is Zero');
+                    Error('Interest Rate is Zero');*/
 
                 _differenceOriginalWithdrawal := _currentPrincipalAmnt;
                 if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
@@ -537,13 +537,13 @@ codeunit 50231 FunderMgtCU
 
                 //Monthly interest depending on Interest Method
                 monthlyInterest := 0;
-                _interestRate_Active := 0;
-                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                _interestRate_Active := TrsyMgt.GetInterestRate(funderLoan."No.", 'FUNDER');
+                /*if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
                     _interestRate_Active := funderLoan.InterestRate;
                 if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
                     _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
                 if _interestRate_Active = 0 then
-                    Error('Interest Rate is Zero');
+                    Error('Interest Rate is Zero');*/
 
                 _differenceOriginalWithdrawal := _currentPrincipalAmnt;
                 if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
@@ -782,13 +782,13 @@ codeunit 50231 FunderMgtCU
 
                 //Monthly interest depending on Interest Method
                 monthlyInterest := 0;
-                _interestRate_Active := 0;
-                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                _interestRate_Active := TrsyMgt.GetInterestRate(funderLoan."No.", 'FUNDER');
+                /*if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
                     _interestRate_Active := funderLoan.InterestRate;
                 if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
                     _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
                 if _interestRate_Active = 0 then
-                    Error('Interest Rate is Zero');
+                    Error('Interest Rate is Zero');*/
 
                 _differenceOriginalWithdrawal := _currentPrincipalAmnt;
                 if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
@@ -982,13 +982,13 @@ codeunit 50231 FunderMgtCU
 
                 //Monthly interest depending on Interest Method
                 monthlyInterest := 0;
-                _interestRate_Active := 0;
-                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                _interestRate_Active := TrsyMgt.GetInterestRate(funderLoan."No.", 'FUNDER');
+                /*if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
                     _interestRate_Active := funderLoan.InterestRate;
                 if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
                     _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
                 if _interestRate_Active = 0 then
-                    Error('Interest Rate is Zero');
+                    Error('Interest Rate is Zero');*/
 
                 _differenceOriginalWithdrawal := _currentPrincipalAmnt;
                 if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin

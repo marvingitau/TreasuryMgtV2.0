@@ -113,6 +113,40 @@ table 50233 "Treasury General Setup"
             TableRelation = "No. Series";
         }
 
+        field(260; "Total Asset G/L"; Code[100])
+        {
+            ToolTip = 'Encumbrance Total Asset G/L Account';
+            DataClassification = ToBeClassified;
+            TableRelation = "G/L Account";
+
+        }
+
+        field(300; "Enable Dynamic Interest"; Boolean)
+        {
+
+            DataClassification = ToBeClassified;
+            InitValue = false;
+            trigger OnValidate()
+            var
+                dyinte: Record "Interest Rate Change";
+            begin
+                dyinte.Reset();
+                dyinte.SetFilter(LineNo, '<>%1', 0);
+                if dyinte.Find('-') then begin
+                    repeat
+                        if "Enable Dynamic Interest" = true then begin
+                            dyinte.Enabled := true;
+                        end;
+                        if "Enable Dynamic Interest" = false then begin
+                            dyinte.Enabled := false;
+                        end;
+                        dyinte.Modify();
+                    until dyinte.Next() = 0;
+                end;
+            end;
+
+        }
+
 
     }
 

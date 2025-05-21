@@ -8,7 +8,8 @@ page 50281 "Funder Loan List"
     ModifyAllowed = false;
     DeleteAllowed = false;
     Editable = false;
-    CardPageId = 50282;
+    CardPageId = "Funder Loan Card";//Funder Loan Card
+    // CardPageId = 50282;//Funder Loan Card
     layout
     {
         area(Content)

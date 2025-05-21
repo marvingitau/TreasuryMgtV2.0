@@ -1,39 +1,39 @@
 {
-  "id": "4058e2bd-c292-47b1-9909-729d75ff411d",
-  "name": "TreasuryMgtV2.0",
-  "publisher": "Marvin",
-  "version": "1.0.0.3",
-  "brief": "",
-  "description": "",
-  "privacyStatement": "",
-  "EULA": "",
-  "help": "",
-  "url": "",
-  "logo": "",
-  "dependencies": [
-    {
-      "id": "cc672989-69c9-4697-a3ca-25025049e828",
-      "name": "Payments",
-      "publisher": "Stephen Maina",
-      "version": "1.0.0.43"
-    }
-  ],
-  "screenshots": [],
-  "platform": "1.0.0.0",
-  "application": "24.0.0.0",
-  "idRanges": [
-    {
-      "from": 50200,
-      "to": 50999
-    }
-  ],
-  "resourceExposurePolicy": {
-    "allowDebugging": true,
-    "allowDownloadingSource": false,
-    "includeSourceInSymbolFile": false
-  },
-  "runtime": "13.0",
-  "features": [
-    "NoImplicitWith"
-  ]
+    "id": "4058e2bd-c292-47b1-9909-729d75ff411d",
+    "name": "TreasuryMgtV2.0",
+    "publisher": "Marvin",
+    "version": "1.0.0.3",
+    "brief": "",
+    "description": "",
+    "privacyStatement": "",
+    "EULA": "",
+    "help": "",
+    "url": "",
+    "logo": "",
+    "dependencies": [
+        {
+            "id": "cc672989-69c9-4697-a3ca-25025049e828",
+            "name": "Payments",
+            "publisher": "Stephen Maina",
+            "version": "1.0.0.108"
+        }
+    ],
+    "screenshots": [],
+    "platform": "25.2.0.0",
+    "application": "26.0.30643.32100",
+    "idRanges": [
+        {
+            "from": 50200,
+            "to": 50999
+        }
+    ],
+    "resourceExposurePolicy": {
+        "allowDebugging": true,
+        "allowDownloadingSource": false,
+        "includeSourceInSymbolFile": false
+    },
+    "runtime": "15.0",
+    "features": [
+        "NoImplicitWith"
+    ]
 }

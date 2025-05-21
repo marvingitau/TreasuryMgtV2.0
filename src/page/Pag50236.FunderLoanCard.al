@@ -119,7 +119,13 @@ page 50236 "Funder Loan Card"
                         Editable = false;
                     }
                 }
-
+                field("Total Payed"; Rec."Total Payed")
+                {
+                    ApplicationArea = All;
+                    Enabled = Rec."Tranche Loan";
+                    Editable = not (Rec.Status = Rec.Status::Approved);
+                    ToolTip = 'This indicates the Total to Be Payed under Tranches Loan';
+                }
                 field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
                 {
                     ApplicationArea = All;
@@ -273,6 +279,11 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                 }
+                field("Tranche Loan"; Rec."Tranche Loan")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Is this loan a Tranched Loan';
+                }
 
                 field(Category; Rec.Category)
                 {
@@ -378,10 +389,44 @@ page 50236 "Funder Loan Card"
 
                 }
             }
+            group(Encumbrance)
+            {
+                field("Encumbrance Input"; Rec."Encumbrance Input")
+                {
+                    ApplicationArea = All;
+                }
+                field("Total Asset Value"; Rec."Total Asset Value")
+                {
+                    ApplicationArea = All;
+                    Editable = false;
+                }
+                field("Encumbrance Percentage"; Rec."Encumbrance Percentage")
+                {
+                    ApplicationArea = All;
+                    Editable = false;
+                }
+            }
+            group("Loan Repayment")
+            {
+                // Visible = Rec.Category = 'BANK LOAN';
+                field("Repayment Frequency"; Rec."Repayment Frequency")
+                {
+                    ApplicationArea = All;
+                }
+                field("Repayment Amount"; Rec."Repayment Amount")
+                {
+                    ApplicationArea = All;
+                }
+                // field("Repayment interest"; Rec."Repayment interest")
+                // {
+                //     ApplicationArea = All;
+                // }
+            }
+
         }
         area(FactBoxes)
         {
-            part("Attached Documents"; "Document Attachment Factbox")
+            part("Attached Documents"; "Doc. Attachment List Factbox")
             {
                 ApplicationArea = All;
                 Caption = 'Attachments';
@@ -486,6 +531,30 @@ page 50236 "Funder Loan Card"
 
                         GFilter.SetGlobalLoanFilter(Rec."No.");
                         RD.Run();
+                    end;
+                }
+
+                action("Loan Tranche")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Image = Trace;
+                    PromotedIsBig = true;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    Caption = 'Loan Tranche';
+                    ToolTip = 'Loan Tranche';
+                    Enabled = Rec."Tranche Loan" = true;
+
+                    trigger OnAction()
+                    var
+                        tranchLoan: Record "Disbur. Tranched Loan";
+                        GFilter: Codeunit GlobalFilters;
+                    begin
+                        GFilter.SetGlobalLoanFilter(Rec."No.");
+                        tranchLoan.SETRANGE(tranchLoan."Loan No.", Rec."No.");
+                        // tranchLoan.SetFilter(tranchLoan."Document Type", '<>%1', tranchLoan."Document Type"::"Remaining Amount");
+                        PAGE.RUN(PAGE::"Disbur. Tranched Loan", tranchLoan);
+
                     end;
                 }
             }
@@ -699,6 +768,25 @@ page 50236 "Funder Loan Card"
                     PromotedCategory = Report;
                     PromotedIsBig = true;
                     RunObject = report "Payment Amortization";
+                    trigger OnAction()
+                    var
+                        _funderLoan: Record "Funder Loan";
+                    begin
+                        _funderLoan.Reset();
+                        _funderLoan.SetRange("No.", Rec."No.");
+                        // Report.Run(50230, true, false, _funderLoan);
+                    end;
+                }
+                action("Loan Repayment Schedule")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Loan Repayment';
+                    Image = Replan;
+                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
+                    RunObject = report "Loan Repayment Schedule";
                     trigger OnAction()
                     var
                         _funderLoan: Record "Funder Loan";

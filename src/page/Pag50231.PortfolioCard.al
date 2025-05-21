@@ -34,7 +34,7 @@ page 50231 "Portfolio Card"
                     var
                         loans: Record "Funder Loan";
                     begin
-                        loans.SetRange(Category, Rec.Category);
+                        // loans.SetRange(Category, Rec.Category);
                         loans.SetRange(loans.Status, loans.Status::Approved);
                         Page.Run(Page::"Funder Loans List", loans);
                     end;
@@ -70,6 +70,7 @@ page 50231 "Portfolio Card"
                 {
                     ApplicationArea = All;
                     Caption = 'Fee Applicable (%)';
+                    Editable = false;
                 }
                 // field("Interest Rate Applicable"; Rec."Interest Rate Applicable")
                 // {
@@ -126,7 +127,7 @@ page 50231 "Portfolio Card"
         }
         area(Factboxes)
         {
-            part("Attached Documents"; "Document Attachment Factbox")
+            part("Attached Documents"; "Doc. Attachment List Factbox")
             {
                 ApplicationArea = All;
                 Caption = 'Attachments';
@@ -300,8 +301,8 @@ page 50231 "Portfolio Card"
 
     trigger OnQueryClosePage(CloseAction: Action): Boolean
     begin
-        if Rec.Category = '' then
-            Error('Category field is mandatory');
+        // if Rec.Category = '' then
+        //     Error('Category field is mandatory');
 
     end;
 
@@ -317,7 +318,7 @@ page 50231 "Portfolio Card"
         end;
         // if Rec."Actual Program Size" = 0 then begin
         _funderLoans.Reset();
-        _funderLoans.SetRange(Category, Rec.Category);
+        // _funderLoans.SetRange(Category, Rec.Category);
         _funderLoans.SetRange(_funderLoans.Status, _funderLoans.Status::Approved);
         if _funderLoans.Find('-') then begin
             repeat

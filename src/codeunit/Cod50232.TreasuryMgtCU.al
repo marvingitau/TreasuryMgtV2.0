@@ -2083,10 +2083,367 @@ codeunit 50232 "Treasury Mgt CU"
 
     end;
 
+    procedure GetInterestRate(OriginNo: code[20]; Origin: Code[100]): Decimal
+    var
+        _interestRate_Active: Decimal;
+        _interestRateTbl: Record "Interest Rate Change";
+        _setup: Record "Treasury General Setup";
+    begin
+        _setup.Get(0);
+        if _setup."Enable Dynamic Interest" = true then begin
+            if Origin = 'FUNDER' then begin
+                _interestRateTbl.Reset();
+                _interestRateTbl.SetFilter(Active, '=%1', true);
+                _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                if _interestRateTbl.Find('-') then begin
+                    exit(_interestRateTbl."New Interest Rate")
+                end
+                else begin
+                    funderLoan.Reset();
+                    funderLoan.SetRange("No.", OriginNo);
+                    if not funderLoan.Find('-') then
+                        Error('Get Interest Funder Loan %1 Dont Exist', OriginNo);
+
+                    _interestRate_Active := 0;
+                    if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                        _interestRate_Active := funderLoan.InterestRate;
+                    if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
+                        _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
+                    if _interestRate_Active = 0 then
+                        Error('Interest Rate is Zero');
+                    exit(_interestRate_Active)
+                end;
+
+            end;
+            if Origin = 'FUNDER_REPORT' then begin
+                _interestRateTbl.Reset();
+                _interestRateTbl.SetFilter(Active, '=%1', true);
+                _interestRateTbl.SetFilter("Effective Dates", '%1..%2', Today);
+                if _interestRateTbl.Find('-') then begin
+                    exit(_interestRateTbl."New Interest Rate")
+                end
+                else begin
+                    funderLoan.Reset();
+                    funderLoan.SetRange("No.", OriginNo);
+                    if not funderLoan.Find('-') then
+                        Error('Get Interest Funder Loan %1 Dont Exist', OriginNo);
+
+                    _interestRate_Active := 0;
+                    if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                        _interestRate_Active := funderLoan.InterestRate;
+                    if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
+                        _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
+                    // if _interestRate_Active = 0 then
+                    //     Error('Interest Rate is Zero');
+                    exit(_interestRate_Active)
+                end;
+            end;
+            if Origin = 'RELATEDPARTY' then begin
+                _interestRateTbl.Reset();
+                _interestRateTbl.SetFilter(Active, '=%1', true);
+                _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                if _interestRateTbl.Find('-') then begin
+                    exit(_interestRateTbl."New Interest Rate")
+                end
+                else begin
+                    RelatedParty.Reset();
+                    RelatedParty.SetRange("No.", OriginNo);
+                    if not RelatedParty.Find('-') then
+                        Error('Get Interest RelatedParty  %1 Dont Exist', OriginNo);
+
+                    _interestRate_Active := 0;
+                    if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
+                        _interestRate_Active := RelatedParty.InterestRatePA;
+                    if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
+                        _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
+                    if _interestRate_Active = 0 then
+                        Error('Interest Rate is Zero');
+                    exit(_interestRate_Active)
+                end
+            end;
+
+            if Origin = 'RELATEDPARTY_REPORT' then begin
+                _interestRateTbl.Reset();
+                _interestRateTbl.SetFilter(Active, '=%1', true);
+                _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                if _interestRateTbl.Find('-') then begin
+                    exit(_interestRateTbl."New Interest Rate")
+                end
+                else begin
+                    RelatedParty.Reset();
+                    RelatedParty.SetRange("No.", OriginNo);
+                    if not RelatedParty.Find('-') then
+                        Error('Get Interest RelatedParty  %1 Dont Exist', OriginNo);
+
+                    _interestRate_Active := 0;
+                    if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
+                        _interestRate_Active := RelatedParty.InterestRatePA;
+                    if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
+                        _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
+                    if _interestRate_Active = 0 then
+                        Error('Interest Rate is Zero');
+                    exit(_interestRate_Active)
+                end
+            end;
+
+        end else begin
+            if Origin = 'FUNDER' then begin
+
+                funderLoan.Reset();
+                funderLoan.SetRange("No.", OriginNo);
+                if not funderLoan.Find('-') then
+                    Error('Get Interest Funder Loan %1 Dont Exist', OriginNo);
+                _interestRate_Active := 0;
+                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                    _interestRate_Active := funderLoan.InterestRate;
+                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
+                    _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
+                if _interestRate_Active = 0 then
+                    Error('Interest Rate is Zero');
+                exit(_interestRate_Active)
+
+            end;
+            if Origin = 'FUNDER_REPORT' then begin
+
+                funderLoan.Reset();
+                funderLoan.SetRange("No.", OriginNo);
+                if not funderLoan.Find('-') then
+                    Error('Get Interest Funder Loan %1 Dont Exist', OriginNo);
+                _interestRate_Active := 0;
+                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                    _interestRate_Active := funderLoan.InterestRate;
+                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
+                    _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
+                // if _interestRate_Active = 0 then
+                //     Error('Interest Rate is Zero');
+                exit(_interestRate_Active)
+
+            end;
+            if Origin = 'RELATEDPARTY' then begin
+
+                RelatedParty.Reset();
+                RelatedParty.SetRange("No.", OriginNo);
+                if not RelatedParty.Find('-') then
+                    Error('Get Interest RelatedParty  %1 Dont Exist', OriginNo);
+                _interestRate_Active := 0;
+                if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
+                    _interestRate_Active := RelatedParty.InterestRatePA;
+                if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
+                    _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
+                if _interestRate_Active = 0 then
+                    Error('Interest Rate is Zero');
+                exit(_interestRate_Active)
+
+            end;
+
+            if Origin = 'RELATEDPARTY_REPORT' then begin
+
+                RelatedParty.Reset();
+                RelatedParty.SetRange("No.", OriginNo);
+                if not RelatedParty.Find('-') then
+                    Error('Get Interest RelatedParty  %1 Dont Exist', OriginNo);
+                _interestRate_Active := 0;
+                if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
+                    _interestRate_Active := RelatedParty.InterestRatePA;
+                if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
+                    _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
+                if _interestRate_Active = 0 then
+                    Error('Interest Rate is Zero');
+                exit(_interestRate_Active)
+
+            end
+        end;
+
+    end;
+
+    procedure GetInterestRateSchedule(OriginNo: code[20]; TerminalDate: Date; Origin: Code[100]): Decimal
+    var
+        _interestRate_Active: Decimal;
+        _interestRateTbl: Record "Interest Rate Change";
+        _setup: Record "Treasury General Setup";
+    begin
+        _setup.Get(0);
+        if _setup."Enable Dynamic Interest" = true then begin
+            if Origin = 'FUNDER' then begin
+                _interestRateTbl.Reset();
+                _interestRateTbl.SetFilter(Active, '=%1', true);
+                _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                _interestRateTbl.SetFilter("Effective Dates", '>=%1', TerminalDate); // This that period(Month,Quarter,..) group end date
+                if _interestRateTbl.Find('-') then begin
+                    exit(_interestRateTbl."New Interest Rate")
+                end
+                else begin
+                    funderLoan.Reset();
+                    funderLoan.SetRange("No.", OriginNo);
+                    if not funderLoan.Find('-') then
+                        Error('Get Interest Funder Loan %1 Dont Exist', OriginNo);
+
+                    _interestRate_Active := 0;
+                    if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                        _interestRate_Active := funderLoan.InterestRate;
+                    if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
+                        _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
+                    if _interestRate_Active = 0 then
+                        Error('Interest Rate is Zero');
+                    exit(_interestRate_Active)
+                end;
+
+            end;
+
+            if Origin = 'FUNDER_REPORT' then begin
+                _interestRateTbl.Reset();
+                _interestRateTbl.SetFilter(Active, '=%1', true);
+                // _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                _interestRateTbl.SetFilter("Effective Dates", '<=%1', TerminalDate); // This that period group end date
+
+                if _interestRateTbl.Find('-') then begin
+                    exit(_interestRateTbl."New Interest Rate")
+                end
+                else begin
+                    funderLoan.Reset();
+                    funderLoan.SetRange("No.", OriginNo);
+                    if not funderLoan.Find('-') then
+                        Error('Get Interest Funder Loan %1 Dont Exist', OriginNo);
+
+                    _interestRate_Active := 0;
+                    if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                        _interestRate_Active := funderLoan.InterestRate;
+                    if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
+                        _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
+                    // if _interestRate_Active = 0 then
+                    //     Error('Interest Rate is Zero');
+                    exit(_interestRate_Active)
+                end;
+            end;
+
+            if Origin = 'RELATEDPARTY' then begin
+                _interestRateTbl.Reset();
+                _interestRateTbl.SetFilter(Active, '=%1', true);
+                _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                _interestRateTbl.SetFilter("Effective Dates", '>=%1', TerminalDate); // This that period group end date
+
+                if _interestRateTbl.Find('-') then begin
+                    exit(_interestRateTbl."New Interest Rate")
+                end
+                else begin
+                    RelatedParty.Reset();
+                    RelatedParty.SetRange("No.", OriginNo);
+                    if not RelatedParty.Find('-') then
+                        Error('Get Interest RelatedParty  %1 Dont Exist', OriginNo);
+
+                    _interestRate_Active := 0;
+                    if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
+                        _interestRate_Active := RelatedParty.InterestRatePA;
+                    if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
+                        _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
+                    if _interestRate_Active = 0 then
+                        Error('Interest Rate is Zero');
+                    exit(_interestRate_Active)
+                end
+            end;
+
+            if Origin = 'RELATEDPARTY_REPORT' then begin
+                _interestRateTbl.Reset();
+                _interestRateTbl.SetFilter(Active, '=%1', true);
+                // _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                _interestRateTbl.SetFilter("Effective Dates", '<=%1', TerminalDate); // This that period group end date
+
+                if _interestRateTbl.Find('-') then begin
+                    exit(_interestRateTbl."New Interest Rate")
+                end
+                else begin
+                    RelatedParty.Reset();
+                    RelatedParty.SetRange("No.", OriginNo);
+                    if not RelatedParty.Find('-') then
+                        Error('Get Interest RelatedParty  %1 Dont Exist', OriginNo);
+
+                    _interestRate_Active := 0;
+                    if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
+                        _interestRate_Active := RelatedParty.InterestRatePA;
+                    if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
+                        _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
+                    if _interestRate_Active = 0 then
+                        Error('Interest Rate is Zero');
+                    exit(_interestRate_Active)
+                end
+            end;
+
+        end else begin
+            if Origin = 'FUNDER' then begin
+
+                funderLoan.Reset();
+                funderLoan.SetRange("No.", OriginNo);
+                if not funderLoan.Find('-') then
+                    Error('Get Interest Funder Loan %1 Dont Exist', OriginNo);
+                _interestRate_Active := 0;
+                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                    _interestRate_Active := funderLoan.InterestRate;
+                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
+                    _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
+                if _interestRate_Active = 0 then
+                    Error('Interest Rate is Zero');
+                exit(_interestRate_Active)
+
+            end;
+            if Origin = 'FUNDER_REPORT' then begin
+
+                funderLoan.Reset();
+                funderLoan.SetRange("No.", OriginNo);
+                if not funderLoan.Find('-') then
+                    Error('Get Interest Funder Loan %1 Dont Exist', OriginNo);
+                _interestRate_Active := 0;
+                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
+                    _interestRate_Active := funderLoan.InterestRate;
+                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
+                    _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
+                // if _interestRate_Active = 0 then
+                //     Error('Interest Rate is Zero');
+                exit(_interestRate_Active)
+
+            end;
+            if Origin = 'RELATEDPARTY' then begin
+
+                RelatedParty.Reset();
+                RelatedParty.SetRange("No.", OriginNo);
+                if not RelatedParty.Find('-') then
+                    Error('Get Interest RelatedParty  %1 Dont Exist', OriginNo);
+                _interestRate_Active := 0;
+                if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
+                    _interestRate_Active := RelatedParty.InterestRatePA;
+                if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
+                    _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
+                if _interestRate_Active = 0 then
+                    Error('Interest Rate is Zero');
+                exit(_interestRate_Active)
+
+            end;
+
+            if Origin = 'RELATEDPARTY_REPORT' then begin
+
+                RelatedParty.Reset();
+                RelatedParty.SetRange("No.", OriginNo);
+                if not RelatedParty.Find('-') then
+                    Error('Get Interest RelatedParty  %1 Dont Exist', OriginNo);
+                _interestRate_Active := 0;
+                if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
+                    _interestRate_Active := RelatedParty.InterestRatePA;
+                if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
+                    _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
+                if _interestRate_Active = 0 then
+                    Error('Interest Rate is Zero');
+                exit(_interestRate_Active)
+
+            end
+        end;
+
+    end;
+
     var
         funderLedgerEntries: Page FunderLedgerEntry;
         funder3: Record Funders;
+        funderLoan: Record "Funder Loan";
         funderLoan3: Record "Funder Loan";
         EmailingCU: Codeunit "Treasury Emailing";
         FunderMGTCU: Codeunit FunderMgtCU;
+        RelatedParty: Record "RelatedParty- Cust";
 }

@@ -124,10 +124,26 @@ table 50231 Portfolio
             OptionMembers = Portfolio;
             DataClassification = ToBeClassified;
         }
-        field(70; Category; Code[50])
+        // field(70; Category; Code[50])
+        // {
+        //     DataClassification = ToBeClassified;
+        //     TableRelation = "Portfolio Category".Code;
+        // }
+        field(71; Category; Code[100])
         {
             DataClassification = ToBeClassified;
-            TableRelation = "Portfolio Category".Code;
+            // OptionMembers = " ","Bank Loan",Institutional,Individual;
+            TableRelation = "Portfolio Fee Setup".Code;
+            trigger OnValidate()
+            var
+                PortfolioFeeSetup: Record "Portfolio Fee Setup";
+            begin
+                PortfolioFeeSetup.Reset();
+                PortfolioFeeSetup.SetRange(Code, Category);
+                if PortfolioFeeSetup.Find('-') then begin
+                    "Fee Applicable" := PortfolioFeeSetup."Fee Applicable %";
+                end;
+            end;
         }
         field(80; "Actual Program Size"; Decimal)
         {

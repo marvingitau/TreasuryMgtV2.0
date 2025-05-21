@@ -64,6 +64,12 @@ page 50234 "General Setup"
                     Caption = 'Region/Country';
                     ApplicationArea = All;
                 }
+                field("Enable Dynamic Interest"; Rec."Enable Dynamic Interest")
+                {
+
+                    ApplicationArea = All;
+                }
+
 
             }
             group(Dimension)
@@ -113,6 +119,14 @@ page 50234 "General Setup"
                     ApplicationArea = All;
                 }
             }
+            group("GL Accounts")
+            {
+                field("Total Asset G/L"; Rec."Total Asset G/L")
+                {
+                    ApplicationArea = All;
+                }
+            }
+
         }
 
     }
@@ -121,6 +135,24 @@ page 50234 "General Setup"
     {
         area(Processing)
         {
+            action("Delete All Loans")
+            {
+                Image = DeleteRow;
+                Promoted = true;
+                PromotedIsBig = true;
+                PromotedCategory = Process;
+                Caption = 'Delete All Loans';
+                Visible = false;
+                // RunObject = page "Treasury Documents Setup";
+                trigger OnAction()
+                var
+                    loans: Record "Funder Loan";
+                begin
+                    loans.Reset();
+                    loans.SetFilter("No.", '<>%1', '');
+                    loans.DeleteAll();
+                end;
+            }
             action("Treasury Document Setup")
             {
                 Image = DocumentsMaturity;
@@ -142,6 +174,24 @@ page 50234 "General Setup"
                 PromotedCategory = Process;
                 PromotedIsBig = true;
                 RunObject = page 50284;
+            }
+            action("Portfolio Fee Setup")
+            {
+                Caption = 'Portfolio Fee Setup';
+                Image = InsertStartingFee;
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                RunObject = page "Portfolio Fee Setup";
+            }
+            action("Dynamic Interest Rate")
+            {
+                Caption = 'Dynamic Interest Rate';
+                Image = InsertTravelFee;
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                RunObject = page "Intr. Rate Change";
             }
         }
     }

@@ -37,7 +37,7 @@ page 50246 "Portfolio List"
                     var
                         loans: Record "Funder Loan";
                     begin
-                        loans.SetRange(Category, Rec.Category);
+                        // loans.SetRange(Category, Rec.Category);
                         loans.SetRange(loans.Status, loans.Status::Approved);
                         Page.Run(Page::"Funder Loans List", loans);
                     end;
