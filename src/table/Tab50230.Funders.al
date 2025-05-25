@@ -42,9 +42,56 @@ table 50230 Funders
         {
             DataClassification = ToBeClassified;
         }
+        field(59; "Identification Doc."; Option)
+        {
+            DataClassification = ToBeClassified;
+            OptionMembers = ID,Passport;
+        }
         field(60; "Employer Identification Number"; Text[50])
         {
             DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Employer Identification Number");
+                    if (noLength < "Region/Country"."ID Min Length") or (noLength > "Region/Country"."ID Max Length") then begin
+                        Error('ID No. size must be between %1 and %2', "Region/Country"."ID Min Length", "Region/Country"."ID Max Length");
+                    end;
+                end;
+
+            end;
+
+        }
+        field(61; "Employer Passport Number"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Employer Passport Number");
+                    if (noLength < "Region/Country"."Passport Min Length") or (noLength > "Region/Country"."Passport Max Length") then begin
+                        Error('Passport No. size must be between %1 and %2', "Region/Country"."Passport Min Length", "Region/Country"."Passport Max Length");
+                    end;
+                end;
+                if TrsyMgtCU.ValidateAlphanumeric("Employer Passport Number") then
+                    Error('Invalid Character(s)');
+            end;
+
+
         }
         field(70; "VAT Number"; Text[50])
         {
@@ -67,6 +114,17 @@ table 50230 Funders
         field(110; "Mailing Address"; Text[50])
         {
             DataClassification = ToBeClassified;
+            ExtendedDatatype = EMail;
+            trigger OnValidate()
+            var
+                MailManagement: Codeunit "Mail Management";
+            begin
+                if "Mailing Address" = '' then
+                    exit;
+                // MailManagement.CheckValidEmailAddresses("Mailing Address");
+                if not TrsyMgtCU.ValidateEmail("Mailing Address") then
+                    FieldError("Mailing Address", 'Must be a valid email address');
+            end;
         }
         field(111; "Postal Address"; Text[250])
         {
@@ -190,6 +248,14 @@ table 50230 Funders
 
         }
 
+        field(601; "Short. Dim 1 Code_Joint 2"; Code[50])
+        {
+            CaptionClass = '1,1,1';
+            DataClassification = ToBeClassified;
+            TableRelation = "Dimension Value".Code WHERE("Global Dimension No." = CONST(1), "Dimension Value Type" = CONST(Standard), Blocked = CONST(false));
+
+        }
+
         field(700; "Bank Code"; Code[200])
         {
             DataClassification = ToBeClassified;
@@ -200,6 +266,296 @@ table 50230 Funders
             DataClassification = ToBeClassified;
             // TableRelation = BankBranch.BankCode;
         }
+
+        //Joint 2 and 3
+        field(1000; PersonalDetIDPassport_Joint2; Text[250])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen(PersonalDetIDPassport);
+                    if (noLength < "Region/Country"."ID Min Length") or (noLength > "Region/Country"."ID Max Length") then begin
+                        Error('ID/Passport No. size must be between %1 and %2', "Region/Country"."ID Min Length", "Region/Country"."ID Max Length");
+                    end;
+                end;
+            end;
+        }
+        field(1002; PersonalDetIDPassport_Joint3; Text[250])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen(PersonalDetIDPassport);
+                    if (noLength < "Region/Country"."ID Min Length") or (noLength > "Region/Country"."ID Max Length") then begin
+                        Error('ID/Passport No. size must be between %1 and %2', "Region/Country"."ID Min Length", "Region/Country"."ID Max Length");
+                    end;
+                end;
+            end;
+        }
+
+        field(1020; KRA_Joint2; Text[250])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen(KRA);
+                    if (noLength < "Region/Country"."KRA Min Length") or (noLength > "Region/Country"."KRA Max Length") then begin
+                        Error('KRA No. size must be between %1 and %2', "Region/Country"."KRA Min Length", "Region/Country"."KRA Max Length");
+                    end;
+                end;
+            end;
+        }
+        field(1022; KRA_Joint3; Text[250])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen(KRA);
+                    if (noLength < "Region/Country"."KRA Min Length") or (noLength > "Region/Country"."KRA Max Length") then begin
+                        Error('KRA No. size must be between %1 and %2', "Region/Country"."KRA Min Length", "Region/Country"."KRA Max Length");
+                    end;
+                end;
+            end;
+        }
+
+        field(1030; PersonalDetOccupation_Joint2; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(1032; PersonalDetOccupation_Joint3; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(1040; PersonalDetNatOfBus_Joint2; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(1042; PersonalDetNatOfBus_Joint3; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(1043; PersonalDetEmployer_Joint2; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(1045; PersonalDetEmployer_Joint3; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(1056; "Physical Address Joint2"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+            ToolTip = 'Full address of the counterparty’s registered office or place of business.';
+        }
+
+        field(1057; "Physical Address Joint3"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+            ToolTip = 'Full address of the counterparty’s registered office or place of business.';
+        }
+
+        field(1058; "Phone Number Joint2"; Code[100])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Phone Number");
+                    if (noLength < "Region/Country"."Minimum Phone Length") or (noLength > "Region/Country"."Maximum Phone Length") then begin
+                        Error('Phone No. size must be between %1 and %2', "Region/Country"."Minimum Phone Length", "Region/Country"."Maximum Phone Length");
+                    end;
+                end;
+            end;
+        }
+
+        field(1059; "Phone Number Joint3"; Code[100])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Phone Number");
+                    if (noLength < "Region/Country"."Minimum Phone Length") or (noLength > "Region/Country"."Maximum Phone Length") then begin
+                        Error('Phone No. size must be between %1 and %2', "Region/Country"."Minimum Phone Length", "Region/Country"."Maximum Phone Length");
+                    end;
+                end;
+            end;
+        }
+
+        field(1061; "Postal Address Joint2"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(1063; "Postal Address Joint3"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(1065; "Postal Code Joint2"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(1067; "Postal Code Joint3"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(1068; "Mailing Address Joint2"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+            ExtendedDatatype = EMail;
+            trigger OnValidate()
+            var
+                MailManagement: Codeunit "Mail Management";
+            begin
+                if "Mailing Address" = '' then
+                    exit;
+                MailManagement.CheckValidEmailAddresses("Mailing Address");
+                // if not TrezMgtCU.ValidateEmailAddress("Contact Person Address") then
+                //     FieldError("Mailing Address", 'Must be a valid email address');
+            end;
+        }
+
+        field(1069; "Mailing Address Joint3"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+            ExtendedDatatype = EMail;
+            trigger OnValidate()
+            var
+                MailManagement: Codeunit "Mail Management";
+            begin
+                if "Mailing Address" = '' then
+                    exit;
+                MailManagement.CheckValidEmailAddresses("Mailing Address");
+                // if not TrezMgtCU.ValidateEmailAddress("Contact Person Address") then
+                //     FieldError("Mailing Address", 'Must be a valid email address');
+            end;
+        }
+
+        field(1072; ContactDetailName_Joint2; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(1074; ContactDetailName_Joint3; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(1076; ContactDetailRelation_Joint2; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(1078; ContactDetailRelation_Joint3; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(1079; ContactDetailIdPassport_Joint2; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(1080; ContactDetailIdPassport_Joint3; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(1090; ContactDetailPhone_Joint2; Text[250])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen(ContactDetailPhone_Joint3);
+                    if (noLength < "Region/Country"."Minimum Phone Length") or (noLength > "Region/Country"."Maximum Phone Length") then begin
+                        Error('Phone No. size must be between %1 and %2', "Region/Country"."Minimum Phone Length", "Region/Country"."Maximum Phone Length");
+                    end;
+                end;
+            end;
+        }
+        field(1091; ContactDetailPhone_Joint3; Text[250])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen(ContactDetailPhone_Joint3);
+                    if (noLength < "Region/Country"."Minimum Phone Length") or (noLength > "Region/Country"."Maximum Phone Length") then begin
+                        Error('Phone No. size must be between %1 and %2', "Region/Country"."Minimum Phone Length", "Region/Country"."Maximum Phone Length");
+                    end;
+                end;
+            end;
+        }
+
+
+
+
+
+
 
         // Neext of Kin -> Contact Details
 
@@ -260,6 +616,7 @@ table 50230 Funders
             var
                 _region: Code[20];
                 noLength: Integer;
+
             begin
                 GenSetup.Get(0);
                 _region := GenSetup."Region/Country";
@@ -271,6 +628,9 @@ table 50230 Funders
                         Error('KRA No. size must be between %1 and %2', "Region/Country"."KRA Min Length", "Region/Country"."KRA Max Length");
                     end;
                 end;
+
+                if not TrsyMgtCU.ValidateAlphanumeric(KRA) then
+                    Error('Invalid Character(s)');
             end;
         }
         field(2510; PersonalDetEmployer; Text[250])
@@ -279,7 +639,7 @@ table 50230 Funders
         }
         field(3000; FunderType; Option)
         {
-            OptionMembers = Individual,"Joint Application",Corporate;
+            OptionMembers = Individual,"Joint Application",Corporate,Institutional,"Bank Loan";
             DataClassification = ToBeClassified;
         }
         field(3010; CompanyNo; Text[250])
@@ -354,6 +714,7 @@ table 50230 Funders
         GenSetup: Record "Treasury General Setup";
         DimensionValue: Record "Dimension Value";
         "Region/Country": Record Country_Region;
+        TrsyMgtCU: Codeunit 50232;
 
     trigger OnInsert()
     begin

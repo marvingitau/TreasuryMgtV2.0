@@ -109,12 +109,26 @@ page 50233 "Funder Card"
                         ShowMandatory = true;
                         Editable = EditStatus;
                     }
+                    field("Identification Doc."; Rec."Identification Doc.")
+                    {
+                        ApplicationArea = All;
+                    }
                     field("Employer Identification Number"; Rec."Employer Identification Number")
                     {
                         ApplicationArea = All;
-                        Caption = 'ID/Passport No.';
+                        Caption = 'ID  No.';
                         ShowMandatory = true;
                         Editable = EditStatus;
+                        Enabled = Rec."Identification Doc." = Rec."Identification Doc."::ID;
+
+                    }
+                    field("Employer Passport Number"; Rec."Employer Passport Number")
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Passport No.';
+                        ShowMandatory = true;
+                        Editable = EditStatus;
+                        Enabled = Rec."Identification Doc." = Rec."Identification Doc."::Passport;
                     }
 
                     field(IndNatureOfBusiness; Rec.IndNatureOfBusiness)
@@ -255,7 +269,7 @@ page 50233 "Funder Card"
                 }
 
             }
-            group("Personal Detail (Joint Applications)")
+            group("Personal Detail (Joint Applications 1)")
             {
                 Visible = ShowJointFastTab;
                 group("Joint General")
@@ -367,6 +381,123 @@ page 50233 "Funder Card"
                     }
                 }
             }
+
+            group("Personal Detail (Joint Applications 2)")
+            {
+                Visible = ShowJointFastTab;
+                group("Joint General 2")
+                {
+                    field("JointShortcut Dimension 1 Joint_2"; Rec."Short. Dim 1 Code_Joint 2")
+                    {
+                        ApplicationArea = all;
+                        ShowMandatory = true;
+                        trigger OnValidate()
+                        begin
+                            CurrPage.Update();
+                        end;
+
+                    }
+                    field("JointBranch Name_2"; BranchName)
+                    {
+                        ApplicationArea = All;
+                        Editable = false;
+                    }
+                    field(PersonalDetIDPassport_Joint2; Rec.PersonalDetIDPassport_Joint2)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'ID/Passport';
+                        ShowMandatory = true;
+
+                    }
+                    field(PersonalDetKRA_Joint2; Rec.KRA_Joint2)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'KRA Pin No.';
+                        ShowMandatory = true;
+                    }
+                    field(PersonalDetOccupation_Joint2; Rec.PersonalDetOccupation_Joint2)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Occupation';
+                        ShowMandatory = true;
+                    }
+                    field(PersonalDetNatOfBus_Joint2; Rec.PersonalDetNatOfBus_Joint2)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Nature of Business';
+                        ShowMandatory = true;
+                    }
+                    field(PersonalDetEmployer_Joint2; Rec.PersonalDetEmployer_Joint2)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Employer';
+                        ShowMandatory = true;
+                    }
+                }
+                group("Joint Contact 2")
+                {
+                    field("Joint Physical Address Joint2"; Rec."Physical Address Joint2")
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Residential Address/Registered Office';
+                        ShowMandatory = true;
+                    }
+                    field("Joint Phone Number Joint2"; Rec."Phone Number Joint2")
+                    {
+                        ApplicationArea = All;
+                        ExtendedDatatype = PhoneNo;
+                        ShowMandatory = true;
+                    }
+                    field("Joint Postal Address joint2"; Rec."Postal Address Joint2")
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field("Joint Postal Code J2"; Rec."Postal Code Joint2")
+                    {
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field("Joint Mailing Address J2"; Rec."Mailing Address Joint2")
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Email';
+                        ShowMandatory = true;
+                    }
+
+                }
+                group("Joint Contact Details 2")
+                {
+                    field(JointContactDetailName_J2; Rec.ContactDetailName_Joint2)
+                    {
+                        Caption = 'Name';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field(JointContactDetailRelation_J2; Rec.ContactDetailRelation_Joint2)
+                    {
+                        Caption = 'Relation';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field(JointContactDetailIdPassport_J2; Rec.ContactDetailIdPassport_Joint2)
+                    {
+                        Caption = 'Passport/ID No.';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                    field(JointContactDetailPhone_J2; Rec.ContactDetailPhone_Joint2)
+                    {
+                        Caption = 'Phone';
+                        ApplicationArea = All;
+                        ShowMandatory = true;
+                    }
+                }
+            }
+
+
+
+
             group("Corporate Details (Corporates)")
             {
                 Visible = ShowCorporateFastTab;
@@ -910,8 +1041,11 @@ page 50233 "Funder Card"
     begin
         if Rec.Portfolio = '' then
             Error('Portfolio Mandatory');
-        if Rec."Mailing Address" = '' then
-            Error('Email Required');
+        if Rec.FunderType = Rec.FunderType::Individual then begin
+            if Rec."Mailing Address" = '' then
+                Error('Email Required');
+        end;
+
     end;
     // Local procedure to update FastTab visibility
     local procedure UpdateFastTabVisibility()

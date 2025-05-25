@@ -918,9 +918,11 @@ page 50236 "Funder Loan Card"
         _funderNo := GlobalFilters.GetGlobalFilter();
         if _funderNo <> '' then begin
             if FunderTbl.Get(_funderNo) then begin
-                if FunderTbl."Mailing Address" = '' then begin
-                    Error('Email Required');
-                    exit;
+                if FunderTbl.FunderType = FunderTbl.FunderType::Individual then begin
+                    if FunderTbl."Mailing Address" = '' then begin
+                        Error('Email Required');
+                        exit;
+                    end;
                 end;
             end;
         end;

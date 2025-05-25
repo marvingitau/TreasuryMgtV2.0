@@ -29,7 +29,15 @@ table 50231 Portfolio
         field(10; ProgramSize; Decimal)
         {
             DataClassification = ToBeClassified;
-
+            trigger OnValidate()
+            var
+                loans: Record "Funder Loan";
+            begin
+                // loans.SetRange(Category, Rec.Category);
+                loans.SetRange(Category_Line_No, Rec.Category_Line_No);
+                loans.SetRange(loans.Status, loans.Status::Approved);
+                // Page.Run(Page::"Funder Loans List", loans);
+            end;
         }
         field(15; BeginDate; Date)
         {
@@ -98,6 +106,22 @@ table 50231 Portfolio
         {
             DataClassification = ToBeClassified;
 
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Contact Person Phone No.");
+                    if (noLength < "Region/Country"."Minimum Phone Length") or (noLength > "Region/Country"."Maximum Phone Length") then begin
+                        Error('Phone No. size must be between %1 and %2', "Region/Country"."Minimum Phone Length", "Region/Country"."Maximum Phone Length");
+                    end;
+                end;
+            end;
         }
         field(40; "Contact Person Email"; Text[250])
         {
@@ -129,31 +153,61 @@ table 50231 Portfolio
         //     DataClassification = ToBeClassified;
         //     TableRelation = "Portfolio Category".Code;
         // }
-        field(71; Category; Code[100])
+        field(71; Category; Option)
         {
             DataClassification = ToBeClassified;
-            // OptionMembers = " ","Bank Loan",Institutional,Individual;
-            TableRelation = "Portfolio Fee Setup".Code;
+            OptionMembers = " ","Bank Loan",Institutional,Individual,"Asset Term Manager","Medium Term Notes";
+            // TableRelation = "Portfolio Fee Setup".Code;
+            // trigger OnValidate()
+            // var
+            //     PortfolioFeeSetup: Record "Portfolio Fee Setup";
+            // begin
+            //     PortfolioFeeSetup.Reset();
+            //     PortfolioFeeSetup.SetRange(Code, Category);
+            //     if PortfolioFeeSetup.Find('-') then begin
+            //         "Fee Applicable" := PortfolioFeeSetup."Fee Applicable %";
+            //         Category_Line_No := PortfolioFeeSetup.LineNo;
+            //     end;
+            // end;
+        }
+        field(72; Category_Line_No; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(75; "Category Fee"; Code[100])
+        {
+            DataClassification = ToBeClassified;
+
+            // TableRelation = "Portfolio Fee Setup".Code;
             trigger OnValidate()
             var
                 PortfolioFeeSetup: Record "Portfolio Fee Setup";
             begin
-                PortfolioFeeSetup.Reset();
-                PortfolioFeeSetup.SetRange(Code, Category);
-                if PortfolioFeeSetup.Find('-') then begin
-                    "Fee Applicable" := PortfolioFeeSetup."Fee Applicable %";
-                end;
+                // PortfolioFeeSetup.Reset();
+                // if Category = Category::"Bank Loan" then
+                //     PortfolioFeeSetup.SetRange(Code, 'Bank Loan');
+                // if Category = Category::Individual then
+                //     PortfolioFeeSetup.SetRange(Code, 'Individual');
+                // if Category = Category::Institutional then
+                //     PortfolioFeeSetup.SetRange(Code, 'Institutional');
+
+                // if PortfolioFeeSetup.Find('-') then begin
+                //     "Fee Applicable" := PortfolioFeeSetup."Fee Applicable %";
+                //     Category_Line_No := PortfolioFeeSetup.LineNo;
+                // end;
             end;
         }
         field(80; "Actual Program Size"; Decimal)
         {
-            // AutoFormatType = 1;
-            // CalcFormula = sum("Funder Loan".OutstandingAmntDisbLCY where(Category = field(Category), Status = filter(Approved)));
-            // Caption = 'Actual Program Size';
+            // // AutoFormatType = 1;
+            // CalcFormula = lookup("Funder Loan".OutstandingAmntDisbLCY where(Category = field(Category), Category_line_No = field(Category_Line_No), Status = filter(Approved)));
+            // // CalcFormula = sum("Funder Loan".OutstandingAmntDisbLCY where(Category = field(Category), Category_line_No = field(Category_Line_No), Status = filter(Approved)));
+            // // Caption = 'Actual Program Size';
             // DecimalPlaces = 0 : 2;
-            // Editable = false;
+            // // Editable = false;
             // FieldClass = FlowField;
-            DataClassification = ToBeClassified;
+            // DataClassification = ToBeClassified;
+
         }
         field(81; "OutstandingAmountToTarget"; Decimal)
         {
@@ -246,6 +300,12 @@ table 50231 Portfolio
 
         if ProgramTerm <> 0 then begin
             EndTerm := CalcDate(StrSubstNo('<%1Y>', ProgramTerm), BeginDate);
+        end;
+
+        "Region/Country".Reset();
+        "Region/Country".SetRange("Country Name", GenSetup."Region/Country");
+        if "Region/Country".Find('-') then begin
+            Rec."Contact Person Phone No." := "Region/Country"."Phone Code";
         end;
 
     end;

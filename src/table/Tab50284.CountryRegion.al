@@ -61,6 +61,14 @@ table 50284 "Country_Region"
         {
             DataClassification = ToBeClassified;
         }
+        field(65; "Passport Min Length"; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(66; "Passport Max Length"; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
 
 
 

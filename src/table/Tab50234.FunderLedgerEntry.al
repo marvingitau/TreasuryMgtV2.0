@@ -117,6 +117,10 @@ table 50234 FunderLedgerEntry
         {
             DataClassification = ToBeClassified;
         }
+        field(38; Category_Line; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
 
         field(49900; "Shortcut Dimension 1 Code"; Code[50])
         {

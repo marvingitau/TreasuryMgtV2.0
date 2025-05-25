@@ -46,14 +46,15 @@ table 50232 "Funder Loan"
                     Portfolio.Reset();
                     Portfolio.SetRange("No.", Funder.Portfolio);
                     if Portfolio.Find('-') then begin
-                        // if Portfolio.Category = Portfolio.Category::"Bank Loan" then
-                        //     Category := 'Bank Loan';
-                        // if Portfolio.Category = Portfolio.Category::Individual then
-                        //     Category := 'Individual';
-                        // if Portfolio.Category = Portfolio.Category::Institutional then
-                        //     Category := 'Institutional';
+                        if Portfolio.Category = Portfolio.Category::"Bank Loan" then
+                            Category := 'Bank Loan';
+                        if Portfolio.Category = Portfolio.Category::Individual then
+                            Category := 'Individual';
+                        if Portfolio.Category = Portfolio.Category::Institutional then
+                            Category := 'Institutional';
 
-                        Category := Portfolio.Category;
+                        // Category := Portfolio.Category;
+                        Category_line_No := Portfolio.Category_Line_No;
                         Rec.Validate(Category);
                     end;
                 end;
@@ -247,6 +248,10 @@ table 50232 "Funder Loan"
             Caption = 'Category';
             // TableRelation = "Portfolio Category".Code;
         }
+        field(523; Category_line_No; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
         field(525; Type; Enum FundingType)
         {
             DataClassification = ToBeClassified;
@@ -387,6 +392,7 @@ table 50232 "Funder Loan"
                     funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::"Original Amount";
                     funderLegderEntry."Document No." := _docNo;
                     funderLegderEntry.Category := Category; // Funder Loan Category
+                    funderLegderEntry.Category_Line := Category_line_No; // Funder Loan Category
                     // funderLegderEntry."Transaction Type" := funderLegderEntry."Transaction Type"::"Original Amount";
                     funderLegderEntry.Description := Name + ' ' + "Bank Ref. No." + ' Original Amount ' + Format(Today);
                     funderLegderEntry."Currency Code" := Currency;

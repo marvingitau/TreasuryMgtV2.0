@@ -71,7 +71,7 @@ codeunit 50233 TreasuryGeneralCU
                 end;
             DATABASE::Portfolio:
                 begin
-                    FieldRef := RecRef.Field(1);
+                    FieldRef := RecRef.Field(50);
                     RecNo := FieldRef.Value;
                     DocumentAttachment.SetRange("No.", RecNo);
                 end;
@@ -99,7 +99,7 @@ codeunit 50233 TreasuryGeneralCU
                 end;
             DATABASE::Portfolio:
                 begin
-                    FieldRef := RecRef.Field(16);
+                    FieldRef := RecRef.Field(50);
                     RecNo := FieldRef.Value;
                     DocumentAttachment.Validate("No.", RecNo);
                 end;

@@ -35,6 +35,7 @@ page 50231 "Portfolio Card"
                         loans: Record "Funder Loan";
                     begin
                         // loans.SetRange(Category, Rec.Category);
+                        loans.SetRange(Category_Line_No, Rec.Category_Line_No);
                         loans.SetRange(loans.Status, loans.Status::Approved);
                         Page.Run(Page::"Funder Loans List", loans);
                     end;
@@ -91,6 +92,32 @@ page 50231 "Portfolio Card"
                 {
                     ApplicationArea = All;
                     ShowMandatory = true;
+
+                }
+                field("Category Fee"; Rec."Category Fee")
+                {
+                    ApplicationArea = All;
+                    // ShowMandatory = true;
+                    DrillDownPageId = "Portfolio Fee Setup";
+                    trigger OnDrillDown()
+                    var
+                        FeePage: Page "Portfolio Fee Setup";
+                        PortfolioFeeSetup: Record "Portfolio Fee Setup";
+                    begin
+                        PortfolioFeeSetup.Reset();
+                        if Rec.Category = Rec.Category::"Bank Loan" then
+                            PortfolioFeeSetup.SetRange(Code, 'Bank Loan');
+                        if Rec.Category = Rec.Category::Individual then
+                            PortfolioFeeSetup.SetRange(Code, 'Individual');
+                        if Rec.Category = Rec.Category::Institutional then
+                            PortfolioFeeSetup.SetRange(Code, 'Institutional');
+
+                        if Page.RunModal(Page::"Portfolio Fee Setup", PortfolioFeeSetup) = Action::LookupOK then begin
+                            Rec."Fee Applicable" := PortfolioFeeSetup."Fee Applicable %";
+                            Rec.Category_Line_No := PortfolioFeeSetup.LineNo;
+                            CurrPage.Update();
+                        end;
+                    end;
                 }
                 field(Status; Rec.Status)
                 {
@@ -132,7 +159,7 @@ page 50231 "Portfolio Card"
                 ApplicationArea = All;
                 Caption = 'Attachments';
                 SubPageLink = "Table ID" = CONST(50231),
-                              "No." = FIELD(Code);
+                              "No." = FIELD("No.");
             }
         }
     }

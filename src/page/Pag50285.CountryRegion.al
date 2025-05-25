@@ -59,6 +59,14 @@ page 50285 "Country Region"
                 {
                     ApplicationArea = All;
                 }
+                field("Passport Min Length"; Rec."Passport Min Length")
+                {
+                    ApplicationArea = All;
+                }
+                field("Passport Max Length"; Rec."Passport Max Length")
+                {
+                    ApplicationArea = All;
+                }
             }
         }
     }

@@ -2438,6 +2438,34 @@ codeunit 50232 "Treasury Mgt CU"
 
     end;
 
+    // Alpha Numeric check
+    procedure ValidateAlphanumeric(InputText: Text): Boolean
+    var
+        Regex: Codeunit Regex;
+        Pattern: Text;
+    begin
+        // Alphanumeric pattern (letters and numbers only)
+        Pattern := '^[a-zA-Z0-9]*$';
+
+        // Create regex and validate
+        if not Regex.IsMatch(InputText, Pattern) then
+            exit(false);
+
+        exit(true);
+    end;
+
+    procedure ValidateEmail(EmailAddress: Text): Boolean
+    var
+        Regex: Codeunit Regex;
+        Pattern: Text;
+    begin
+        // Standard email regex pattern
+        Pattern := '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+
+        // Validate using Regex codeunit
+        exit(Regex.IsMatch(EmailAddress, Pattern));
+    end;
+
     var
         funderLedgerEntries: Page FunderLedgerEntry;
         funder3: Record Funders;
