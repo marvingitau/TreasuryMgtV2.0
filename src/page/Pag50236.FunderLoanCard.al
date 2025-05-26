@@ -40,7 +40,7 @@ page 50236 "Funder Loan Card"
                     trigger OnValidate()
                     begin
                         if (Rec.PlacementDate <> 0D) and (Rec.MaturityDate <> 0D) then begin
-                            PlacementAndMaturityDifference := (Rec.MaturityDate - Rec.PlacementDate) + 1;
+                            PlacementAndMaturityDifference := (Rec.MaturityDate - Rec.PlacementDate);
                             Message('Loan Duration is %1', Format(PlacementAndMaturityDifference));
                         end;
                     end;
@@ -52,7 +52,7 @@ page 50236 "Funder Loan Card"
                     begin
                         if (Rec.PlacementDate <> 0D) and (Rec.MaturityDate <> 0D) then begin
 
-                            PlacementAndMaturityDifference := (Rec.MaturityDate - Rec.PlacementDate) + 1;
+                            PlacementAndMaturityDifference := (Rec.MaturityDate - Rec.PlacementDate);
                             Message('Loan Duration is %1', Format(PlacementAndMaturityDifference));
                         end;
                     end;
