@@ -2453,6 +2453,36 @@ codeunit 50232 "Treasury Mgt CU"
 
         exit(true);
     end;
+    // Numeric check
+    procedure ValidateNumeric_a(InputText: Text): Boolean
+    var
+        Regex: Codeunit Regex;
+        Pattern: Text;
+    begin
+        // Alphanumeric pattern (letters and numbers only)
+        Pattern := '^[0-9]+$';
+        // Create regex and validate
+        if not Regex.IsMatch(InputText, Pattern) then
+            exit(false);
+
+        exit(true);
+    end;
+
+    procedure ValidateNumeric(InputText: Text): Boolean
+    var
+        i: Integer;
+    begin
+        // Check for empty string
+        if InputText = '' then
+            exit(false);
+
+        // Check each character is a digit
+        for i := 1 to StrLen(InputText) do
+            if not (InputText[i] in ['0' .. '9']) then
+                exit(false);
+
+        exit(true);
+    end;
 
     procedure ValidateEmail(EmailAddress: Text): Boolean
     var

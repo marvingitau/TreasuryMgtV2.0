@@ -135,7 +135,7 @@ page 50233 "Funder Card"
                     {
                         ApplicationArea = All;
                         ShowMandatory = true;
-                        Caption = 'Nature of Business';
+                        Caption = 'Employement Status';
                         Editable = EditStatus;
                     }
                     field(IndOccupation; Rec.IndOccupation)
@@ -152,6 +152,22 @@ page 50233 "Funder Card"
                         // ShowMandatory = true;
                         Caption = 'Employer';
                         Editable = Rec.IndNatureOfBusiness = Rec.IndNatureOfBusiness::Employed;
+
+                    }
+                    field(IndEmployerPosition; Rec.IndEmployerPosition)
+                    {
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
+                        Caption = 'Position';
+                        Editable = Rec.IndNatureOfBusiness = Rec.IndNatureOfBusiness::Employed;
+
+                    }
+                    field(IndEmployementOther; Rec.IndEmployementOther)
+                    {
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
+                        Caption = 'Other';
+                        Editable = Rec.IndNatureOfBusiness = Rec.IndNatureOfBusiness::Other;
 
                     }
                     // field("VAT Number"; Rec."VAT Number")

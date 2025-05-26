@@ -31,9 +31,21 @@ page 50245 "Funder Ben. Trus."
                 {
                     ApplicationArea = All;
                 }
-                field("ID/Passport No."; Rec."ID/Passport No.")
+                field("Identification Doc."; Rec."Identification Doc.")
                 {
                     ApplicationArea = All;
+                }
+                field("Employer Identification Number"; Rec."Employer Identification Number")
+                {
+                    ApplicationArea = All;
+                    Caption = 'ID No.';
+                    Enabled = Rec."Identification Doc." = Rec."Identification Doc."::ID;
+                }
+                field("Employer Passport Number"; Rec."Employer Passport Number")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Passport No.';
+                    Enabled = Rec."Identification Doc." = Rec."Identification Doc."::Passport;
                 }
                 field(PhoneNo; Rec.PhoneNo)
                 {

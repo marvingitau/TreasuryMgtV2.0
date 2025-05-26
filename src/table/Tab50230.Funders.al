@@ -65,7 +65,8 @@ table 50230 Funders
                         Error('ID No. size must be between %1 and %2', "Region/Country"."ID Min Length", "Region/Country"."ID Max Length");
                     end;
                 end;
-
+                if not TrsyMgtCU.ValidateNumeric("Employer Identification Number") then
+                    Error('Invalid Character(s)');
             end;
 
         }
@@ -232,10 +233,18 @@ table 50230 Funders
         }
         field(291; "IndNatureOfBusiness"; Option)
         {
-            OptionMembers = Employed,"Self Employed";
+            OptionMembers = Employed,"Self Employed",Other;
             DataClassification = ToBeClassified;
         }
         field(292; IndEmployer; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(294; IndEmployerPosition; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(296; IndEmployementOther; Text[1000])
         {
             DataClassification = ToBeClassified;
         }

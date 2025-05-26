@@ -50,6 +50,24 @@ table 50286 "Funder Change"
         field(60; "Employer Identification Number"; Text[50])
         {
             DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Employer Identification Number");
+                    if (noLength < "Region/Country"."ID Min Length") or (noLength > "Region/Country"."ID Max Length") then begin
+                        Error('ID No. size must be between %1 and %2', "Region/Country"."ID Min Length", "Region/Country"."ID Max Length");
+                    end;
+                end;
+                if not TrsyMgtCU.ValidateNumeric("Employer Identification Number") then
+                    Error('Invalid Character(s)');
+            end;
         }
         field(70; "VAT Number"; Text[50])
         {
@@ -287,6 +305,8 @@ table 50286 "Funder Change"
         GenSetup: Record "Treasury General Setup";
         DimensionValue: Record "Dimension Value";
         "Region/Country": Record Country_Region;
+
+        TrsyMgtCU: Codeunit 50232;
 
     trigger OnInsert()
     begin

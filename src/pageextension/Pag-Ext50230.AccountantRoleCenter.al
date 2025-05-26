@@ -13,13 +13,25 @@ pageextension 50230 AccountantRoleCenter extends 9027
             group("Treasury Management")
             {
                 Caption = 'Treasury Management';
-                action(PortfolioList)
+                group("Portfolio")
                 {
-                    ApplicationArea = Basic, Suite;
                     Caption = 'Portfolio';
-                    Image = ResourceJournal;
-                    RunObject = page 50246;
-                    ToolTip = 'Portfolio';
+                    action(PortfolioList)
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Caption = 'Portfolio List';
+                        Image = ResourceJournal;
+                        RunObject = page 50246;
+                        ToolTip = 'Portfolio';
+                    }
+                    action(PortfolioRenewalList)
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Caption = 'Portfolio Renewal List';
+                        Image = ReOpen;
+                        RunObject = page 50297;
+                        ToolTip = 'Portfolio Renewal List';
+                    }
                 }
                 action(Funder)
                 {

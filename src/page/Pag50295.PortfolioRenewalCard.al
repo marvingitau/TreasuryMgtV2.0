@@ -1,8 +1,8 @@
-page 50231 "Portfolio Card"
+page 50295 "Portfolio Renewal Card"
 {
     PageType = Card;
     ApplicationArea = All;
-    SourceTable = Portfolio;
+    SourceTable = "Portfolio Renewal";
     DataCaptionFields = "No.", Code;
     layout
     {
@@ -123,7 +123,7 @@ page 50231 "Portfolio Card"
                 {
                     ApplicationArea = All;
                     Caption = 'Status';
-                    // Editable = false;
+                    Editable = false;
                 }
 
             }
@@ -158,7 +158,7 @@ page 50231 "Portfolio Card"
             {
                 ApplicationArea = All;
                 Caption = 'Attachments';
-                SubPageLink = "Table ID" = CONST(50231),
+                SubPageLink = "Table ID" = CONST(50297),
                               "No." = FIELD("No.");
             }
         }
@@ -184,7 +184,7 @@ page 50231 "Portfolio Card"
                     trigger OnAction()
 
                     var
-                        CustomWorkflowMgmt: Codeunit "Portfolio Approval Mgt";
+                        CustomWorkflowMgmt: Codeunit "Portfolio Renewal Approval Mgt";
                         RecRef: RecordRef;
                     begin
                         RecRef.GetTable(Rec);
@@ -203,31 +203,11 @@ page 50231 "Portfolio Card"
                     PromotedCategory = Process;
                     trigger OnAction()
                     var
-                        CustomWorkflowMgmt: Codeunit "Portfolio Approval Mgt";
-                        RecRef: RecordRef;
-                    begin
-                        RecRef.GetTable(Rec);
-                        CustomWorkflowMgmt.OnCancelWorkflowForApproval(RecRef);
-                    end;
-                }
-                action(SendReopenApprovalRequest)
-                {
-                    ApplicationArea = Basic, Suite;
-                    Caption = 'Send Reopen A&pproval Request';
-                    Enabled = HasApprovedApprovalEntries;
-                    Image = SendApprovalRequest;
-                    ToolTip = 'Request approval to change the record.';
-                    Promoted = true;
-                    PromotedCategory = Process;
-                    trigger OnAction()
-
-                    var
                         CustomWorkflowMgmt: Codeunit "Portfolio Renewal Approval Mgt";
                         RecRef: RecordRef;
                     begin
                         RecRef.GetTable(Rec);
-                        if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
-                            CustomWorkflowMgmt.OnSendWorkflowForApproval(RecRef);
+                        CustomWorkflowMgmt.OnCancelWorkflowForApproval(RecRef);
                     end;
                 }
             }

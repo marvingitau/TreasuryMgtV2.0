@@ -28,6 +28,58 @@ table 50243 "Funder Ben/Trus"
         {
             DataClassification = ToBeClassified;
         }
+        field(59; "Identification Doc."; Option)
+        {
+            DataClassification = ToBeClassified;
+            OptionMembers = ID,Passport;
+        }
+        field(60; "Employer Identification Number"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Employer Identification Number");
+                    if (noLength < "Region/Country"."ID Min Length") or (noLength > "Region/Country"."ID Max Length") then begin
+                        Error('ID No. size must be between %1 and %2', "Region/Country"."ID Min Length", "Region/Country"."ID Max Length");
+                    end;
+                end;
+                if not TrsyMgtCU.ValidateNumeric("Employer Identification Number") then
+                    Error('Invalid Character(s)');
+            end;
+
+        }
+        field(61; "Employer Passport Number"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Employer Passport Number");
+                    if (noLength < "Region/Country"."Passport Min Length") or (noLength > "Region/Country"."Passport Max Length") then begin
+                        Error('Passport No. size must be between %1 and %2', "Region/Country"."Passport Min Length", "Region/Country"."Passport Max Length");
+                    end;
+                end;
+                if TrsyMgtCU.ValidateAlphanumeric("Employer Passport Number") then
+                    Error('Invalid Character(s)');
+            end;
+
+
+        }
         field(6; "ID/Passport No."; Text[50])
         {
             DataClassification = ToBeClassified;
@@ -35,6 +87,22 @@ table 50243 "Funder Ben/Trus"
         field(7; PhoneNo; Text[50])
         {
             DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen(PhoneNo);
+                    if (noLength < "Region/Country"."Minimum Phone Length") or (noLength > "Region/Country"."Maximum Phone Length") then begin
+                        Error('Phone No. size must be between %1 and %2', "Region/Country"."Minimum Phone Length", "Region/Country"."Maximum Phone Length");
+                    end;
+                end;
+            end;
         }
 
         field(8; Type; Option)
@@ -58,11 +126,20 @@ table 50243 "Funder Ben/Trus"
     }
 
     var
-        myInt: Integer;
+        GenSetup: Record "Treasury General Setup";
+        DimensionValue: Record "Dimension Value";
+        "Region/Country": Record Country_Region;
+        TrsyMgtCU: Codeunit 50232;
 
     trigger OnInsert()
     begin
+        GenSetup.Get(0);
 
+        "Region/Country".Reset();
+        "Region/Country".SetRange("Country Name", GenSetup."Region/Country");
+        if "Region/Country".Find('-') then begin
+            Rec.PhoneNo := "Region/Country"."Phone Code";
+        end;
     end;
 
     trigger OnModify()
