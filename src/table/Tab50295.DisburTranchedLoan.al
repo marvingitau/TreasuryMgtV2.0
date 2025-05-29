@@ -15,7 +15,10 @@ table 50295 "Disbur. Tranched Loan"
         {
             DataClassification = ToBeClassified;
         }
-
+        field(4; "No."; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
         field(5; "Total Payed"; Decimal)
         {
             DataClassification = ToBeClassified;
@@ -45,6 +48,16 @@ table 50295 "Disbur. Tranched Loan"
             DataClassification = ToBeClassified;
 
         }
+        field(17; "New Repayment Amount"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+
+        }
+        field(18; "Bank Reference No"; Code[200])
+        {
+            DataClassification = ToBeClassified;
+
+        }
         field(30; "Cumulative Disbursed"; Decimal)
         {
             DataClassification = ToBeClassified;
@@ -54,10 +67,14 @@ table 50295 "Disbur. Tranched Loan"
         {
             DataClassification = ToBeClassified;
         }
+        field(50; "Interest Rate"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
         field(5000; Status; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = Open,"Pending Approval",Approved;
+            OptionMembers = Open,"Pending Approval",Approved,Rejected;
             trigger OnValidate()
             var
                 funderLegderEntry: Record FunderLedgerEntry;
@@ -70,6 +87,7 @@ table 50295 "Disbur. Tranched Loan"
                 _loanAccount: Code[20];
                 _trache: Record "Disbur. Tranched Loan";
                 _cumulValue: Decimal;
+                _funders: Record Funders;
             begin
                 if not (Status = Status::Approved) then
                     exit;
@@ -77,6 +95,11 @@ table 50295 "Disbur. Tranched Loan"
                 _funderLoan.SetRange("No.", "Loan No.");
                 if not _funderLoan.Find('-') then
                     Error('Loan No %1 is not found', "Loan No.");
+                _funders.Reset();
+                _funders.SetRange("No.", _funderLoan."Funder No.");
+                if not _funders.find('-') then
+                    Error('Funder %1 Not Found _tranLoan', _funderLoan."Funder No.");
+
                 if _funderLoan.Currency <> '' then
                     _ConvertedCurrency := FunderMgt.ConvertCurrencyAmount(_funderLoan.Currency, "Tranche Amount", false)
 
@@ -86,6 +109,12 @@ table 50295 "Disbur. Tranched Loan"
 
                 _bankAccount := "Bank Account";
                 _loanAccount := _funderLoan."Payables Account";
+
+                //Update interest Rate if Applicable
+                if "Interest Rate" <> 0 then begin
+                    _funderLoan.InterestRate := "Interest Rate";
+                    _funderLoan.Modify()
+                end;
 
                 looper.LockTable();
                 looper.Reset();
@@ -104,14 +133,14 @@ table 50295 "Disbur. Tranched Loan"
                 funderLegderEntry."Document No." := _docNo;
                 funderLegderEntry.Category := _funderLoan.Category; // Funder Loan Category
                                                                     // funderLegderEntry."Transaction Type" := funderLegderEntry."Transaction Type"::"Original Amount";
-                funderLegderEntry.Description := _funderLoan.Name + ' ' + _funderLoan."Bank Ref. No." + ' Tranch_Original Amount ' + Format(Today);
+                funderLegderEntry.Description := _funderLoan."No." + ' ' + _funderLoan.Name + '-' + _funderLoan."Bank Ref. No." + '-' + Format(_funderLoan.PlacementDate) + Format(_funderLoan.MaturityDate) + ' Tranch_Original Amount ';
                 funderLegderEntry."Currency Code" := _funderLoan.Currency;
                 funderLegderEntry.Amount := "Tranche Amount";
                 funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
                 funderLegderEntry."Remaining Amount" := "Tranche Amount";
                 funderLegderEntry.Insert();
                 if _funderLoan.EnableGLPosting = true then
-                    FunderMgt.DirectGLPosting('init', _loanAccount, Rec."Tranche Amount", 'Tranch Amount', "Loan No.", _bankAccount, _funderLoan.Currency, '', '', '');
+                    FunderMgt.DirectGLPosting('init', _loanAccount, Rec."Tranche Amount", 'Tranch Amount', "Loan No.", _bankAccount, _funderLoan.Currency, '', '', '', _funders."Shortcut Dimension 1 Code");
 
                 _trache.Reset();
                 _trache.SetRange(_trache."Loan No.", "Loan No.");
@@ -134,7 +163,7 @@ table 50295 "Disbur. Tranched Loan"
 
     keys
     {
-        key(PK; LineNo, "Loan No.")
+        key(PK; LineNo, "Loan No.", "No.")
         {
             Clustered = true;
         }
@@ -151,18 +180,28 @@ table 50295 "Disbur. Tranched Loan"
         LoanNo: Code[20];
         TrsyMgt: Codeunit "Treasury Mgt CU";
         FunderMgt: Codeunit FunderMgtCU;
+        GenSetup: Record "Treasury General Setup";
+        NoSer: Codeunit "No. Series";
 
     trigger OnInsert()
     var
         _funderLoan: Record "Funder Loan";
     begin
+        GenSetup.Get(0);
+        GenSetup.TestField("Funder Loan No.");
+        if "No." = '' then
+            "No." := NoSer.GetNextNo(GenSetup."Funder Loan No.", 0D, true);
+
+
         LoanNo := GFilter.GetGlobalLoanFilter();
         "Loan No." := LoanNo;
         _funderLoan.Reset();
         _funderLoan.SetRange("No.", LoanNo);
         if _funderLoan.Find('-') then begin
             "Total Payed" := _funderLoan."Total Payed";
+            "Bank Reference No" := _funderLoan."Bank Ref. No.";
         end;
+
     end;
 
     trigger OnModify()

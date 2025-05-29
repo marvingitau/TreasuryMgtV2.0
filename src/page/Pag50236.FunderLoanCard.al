@@ -105,6 +105,7 @@ page 50236 "Funder Loan Card"
 
                         ApplicationArea = All;
                         Editable = false;
+                        Caption = 'Principal Account';
                     }
                     field("Interest Expense"; Rec."Interest Expense")
                     {
@@ -125,6 +126,8 @@ page 50236 "Funder Loan Card"
                     Enabled = Rec."Tranche Loan";
                     Editable = not (Rec.Status = Rec.Status::Approved);
                     ToolTip = 'This indicates the Total to Be Payed under Tranches Loan';
+                    Caption = 'Total Expected Amount';
+
                 }
                 field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
                 {
@@ -181,10 +184,12 @@ page 50236 "Funder Loan Card"
                     ApplicationArea = All;
                     ShowMandatory = true;
                     Editable = not isFloatRate;
+                    Caption = 'Gross Interest rate (p.a)';
                 }
                 field(NetInterestRate; Rec.NetInterestRate)
                 {
                     ApplicationArea = All;
+                    Caption = 'Net Interest Rate';
                 }
                 group(FloatInterestFields)
                 {
@@ -266,11 +271,11 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                 }
-                field(InvestmentTenor; Rec.InvestmentTenor)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Investment Tenor (Months)';
-                }
+                // field(InvestmentTenor; Rec.InvestmentTenor)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Investment Tenor (Months)';
+                // }
                 field(InvstPINNo; Rec.InvstPINNo)
                 {
                     ApplicationArea = All;
@@ -283,6 +288,7 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                     ToolTip = 'Is this loan a Tranched Loan';
+                    Editable = TranchesView;
                 }
 
                 field(Category; Rec.Category)
@@ -379,9 +385,9 @@ page 50236 "Funder Loan Card"
 
 
             }
-            group("Quartery Interest Payment Advanced Settings")
+            group("Interest Calculation Advanced Settings")
             {
-                Visible = EnableInterestPaymentVisibility;
+                //     // Visible = EnableInterestPaymentVisibility;
                 field(FirstDueDate; Rec.FirstDueDate)
                 {
                     Caption = 'First Due Date ';
@@ -391,6 +397,8 @@ page 50236 "Funder Loan Card"
             }
             group(Encumbrance)
             {
+                Visible = EncumberanceView;
+
                 field("Encumbrance Input"; Rec."Encumbrance Input")
                 {
                     ApplicationArea = All;
@@ -408,7 +416,8 @@ page 50236 "Funder Loan Card"
             }
             group("Loan Repayment")
             {
-                // Visible = Rec.Category = 'BANK LOAN';
+                Visible = LoanRepaymentView;
+
                 field("Repayment Frequency"; Rec."Repayment Frequency")
                 {
                     ApplicationArea = All;
@@ -544,6 +553,7 @@ page 50236 "Funder Loan Card"
                     Caption = 'Loan Tranche';
                     ToolTip = 'Loan Tranche';
                     Enabled = Rec."Tranche Loan" = true;
+                    Visible = TranchesView;
 
                     trigger OnAction()
                     var
@@ -555,6 +565,27 @@ page 50236 "Funder Loan Card"
                         // tranchLoan.SetFilter(tranchLoan."Document Type", '<>%1', tranchLoan."Document Type"::"Remaining Amount");
                         PAGE.RUN(PAGE::"Disbur. Tranched Loan", tranchLoan);
 
+                    end;
+                }
+
+                action("Portfolio Fee Setup")
+                {
+                    Caption = 'Applicable Fee';
+                    Image = InsertStartingFee;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    PromotedIsBig = true;
+                    // RunObject = page "Portfolio Fee Setup";
+                    trigger OnAction()
+                    var
+                        _portfolio: page "Portfolio Fee Setup";
+                        GFilter: Codeunit GlobalFilters;
+                    begin
+                        // Page.Run(Page::"Portfolio Fee Setup", Rec, Rec."No.");
+                        GFilter.SetGlobalLoanFilter(Rec."No.");
+                        _portfolio.Run();
+                        // _portfolio.SetTableView(Rec);
+                        // _portfolio.run()
                     end;
                 }
             }
@@ -630,10 +661,11 @@ page 50236 "Funder Loan Card"
                     var
                         PlacementReminder: Report "Reminder on Placement Mature";
                         _funderLoan: Record "Funder Loan";
+                        EmailingCU: Codeunit "Treasury Emailing";
                     begin
                         //PlacementReminder.Run();
                         _funderLoan.SetRange("No.", Rec."No.");
-                        Report.Run(50237, true, false, _funderLoan);
+                        Report.Run(Report::"Reminder on Placement Mature", true, false, _funderLoan);
                         // EmailingCU.SendReminderOnPlacementMaturity(Rec."No.")
                     end;
                 }
@@ -745,14 +777,14 @@ page 50236 "Funder Loan Card"
                     Promoted = true;
                     PromotedCategory = Report;
                     PromotedIsBig = true;
-                    RunObject = report "Interest Amortization";
+                    // RunObject = report "Interest Amortization";
                     trigger OnAction()
                     var
                         _funderLoan: Record "Funder Loan";
                     begin
                         _funderLoan.Reset();
                         _funderLoan.SetRange("No.", Rec."No.");
-                        // Report.Run(50230, true, false, _funderLoan);
+                        Report.Run(Report::"Interest Amortization", true, false, _funderLoan);
                     end;
 
 
@@ -986,6 +1018,10 @@ page 50236 "Funder Loan Card"
         UpdateInterestPaymentVisibility();
         FieldEditProp();
         RolloveredChecker();
+
+        EncumberanceView := false;
+        LoanRepaymentView := false;
+        TranchesView := false;
     end;
 
 
@@ -1027,6 +1063,16 @@ page 50236 "Funder Loan Card"
         UpdateInterestPaymentVisibility();
         FieldEditProp();
         RolloveredChecker();
+
+        EncumberanceView := Rec.Category = UpperCase('Bank Loan');
+        LoanRepaymentView := Rec.Category = UpperCase('Bank Loan');
+        TranchesView := Rec.Category = UpperCase('Institutional');
+
+    end;
+
+    trigger OnAfterGetRecord()
+    begin
+
     end;
 
     trigger OnQueryClosePage(CloseAction: Action): Boolean
@@ -1074,7 +1120,7 @@ page 50236 "Funder Loan Card"
         , HasApprovalEntries : Boolean;
         ApprovalsMgmt: Codeunit "Approvals Mgmt.";
         PlacementAndMaturityDifference: Integer;
-        EnableInterestPaymentVisibility: Boolean;
+        EnableInterestPaymentVisibility, EncumberanceView, LoanRepaymentView, TranchesView : Boolean;
         "Region/Country": Record Country_Region;
         EditStatus: Boolean;
         IsRollovered: Boolean;

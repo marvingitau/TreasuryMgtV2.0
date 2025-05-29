@@ -34,6 +34,8 @@ codeunit 50231 FunderMgtCU
         _currentPrincipalAmnt: Decimal;
 
         _interestComputationTimes: Integer;
+        _funder: Record Funders;
+        _portfolio: Record Portfolio;
     begin
         //Interest Rate Type (Fixed/Float)
         //Interest Rate value
@@ -133,6 +135,16 @@ codeunit 50231 FunderMgtCU
                     if interestAccPayable = '' then
                         Error('Missing Payable Interest A/C: %1', funder."No.");
 
+                    _funder.Reset();
+                    _funder.SetRange("No.", funderLoan."Funder No.");
+                    if not _funder.Find('-') then
+                        Error('Funder %1 not found _fl', funderLoan."Funder No.");
+
+                    _portfolio.Reset();
+                    _portfolio.SetRange("No.", _funder.Portfolio);
+                    if not _portfolio.Find('-') then
+                        Error('Portfolio %1 not found _fl', _funder.Portfolio);
+
                     if not generalSetup.FindFirst() then
                         Error('Please Define Withholding Tax under General Setup');
                     withholdingAcc := generalSetup.FunderWithholdingAcc;
@@ -156,16 +168,17 @@ codeunit 50231 FunderMgtCU
                     funderLegderEntry."Loan No." := _loanNo;
                     funderLegderEntry."Posting Date" := Today;
                     funderLegderEntry."Document No." := _docNo;
+                    funderLegderEntry."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                     funderLegderEntry.Category := funderLoan.Category; // Funder Loan Category
                     funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
-                    funderLegderEntry.Description := 'Interest calculation' + funder.Name + ' ' + funder."No." + ' ' + Format(Today);
+                    funderLegderEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>');
                     funderLegderEntry.Amount := monthlyInterest;
                     funderLegderEntry."Amount(LCY)" := monthlyInterest;
                     funderLegderEntry."Remaining Amount" := (monthlyInterest - witHldInterest);
                     funderLegderEntry.Insert();
                     if (funderLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
-                        DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.");//GROSS Interest
-                                                                                                                                                                                   //Commit();
+                        DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");//GROSS Interest
+                                                                                                                                                                                                                        //Commit();
                     funderLegderEntry1.Init();
                     funderLegderEntry1."Entry No." := NextEntryNo + 1;
                     funderLegderEntry1."Funder No." := funder."No.";
@@ -174,6 +187,7 @@ codeunit 50231 FunderMgtCU
                     funderLegderEntry1."Loan No." := _loanNo;
                     funderLegderEntry1."Posting Date" := Today;
                     funderLegderEntry1."Document No." := _docNo;
+                    funderLegderEntry1."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                     funderLegderEntry1.Category := funderLoan.Category; // Funder Loan Category
                     funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
                     funderLegderEntry1.Description := 'Withholding calculation ' + Format(Today);
@@ -181,7 +195,7 @@ codeunit 50231 FunderMgtCU
                     funderLegderEntry1."Amount(LCY)" := -witHldInterest;
                     funderLegderEntry1.Insert();
                     if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
-                        DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.");
+                        DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
                     //Commit();
 
                     funderLegderEntry2.Init(); //
@@ -191,6 +205,7 @@ codeunit 50231 FunderMgtCU
                     funderLegderEntry2."Loan Name" := _loanName;
                     funderLegderEntry2."Loan No." := _loanNo;
                     funderLegderEntry2."Document No." := _docNo;
+                    funderLegderEntry2."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                     funderLegderEntry2.Category := funderLoan.Category; // Funder Loan Category
                     funderLegderEntry2."Posting Date" := Today;
                     funderLegderEntry2."Document Type" := funderLegderEntry."Document Type"::"Remaining Amount";
@@ -245,6 +260,9 @@ codeunit 50231 FunderMgtCU
         _currentPrincipalAmnt: Decimal;
 
         _interestComputationTimes: Integer;
+
+        _funder: Record Funders;
+        _portfolio: Record Portfolio;
     begin
         //Interest Rate Type (Fixed/Float)
         //Interest Rate value
@@ -266,6 +284,17 @@ codeunit 50231 FunderMgtCU
             // repeat
             if funderLoan.Status <> funderLoan.Status::Approved then
                 Error('Loan Status is %1', funderLoan.Status);
+
+            _funder.Reset();
+            _funder.SetRange("No.", funderLoan."Funder No.");
+            if not _funder.Find('-') then
+                Error('Funder %1 not found _fl', funderLoan."Funder No.");
+
+            _portfolio.Reset();
+            _portfolio.SetRange("No.", _funder.Portfolio);
+            if not _portfolio.Find('-') then
+                Error('Portfolio %1 not found _fl', _funder.Portfolio);
+
 
             //Fixed Interest Type
             if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") OR (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
@@ -381,16 +410,17 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry."Loan No." := _loanNo;
                 funderLegderEntry."Posting Date" := Today;
                 funderLegderEntry."Document No." := _docNo;
+                funderLegderEntry."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                 funderLegderEntry.Category := funderLoan.Category; // Funder Loan Category
                 funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
-                funderLegderEntry.Description := 'Interest calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
+                funderLegderEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>');
                 funderLegderEntry.Amount := monthlyInterest;
                 funderLegderEntry."Amount(LCY)" := monthlyInterest;
                 funderLegderEntry."Remaining Amount" := (monthlyInterest - witHldInterest);
                 funderLegderEntry.Insert();
                 if (funderLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
-                    DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.");//GROSS Interest
-                                                                                                                                                                               //Commit();
+                    DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");//GROSS Interest
+                                                                                                                                                                                                                    //Commit();
                 funderLegderEntry1.Init();
                 funderLegderEntry1."Entry No." := NextEntryNo + 1;
                 funderLegderEntry1."Funder No." := funder."No.";
@@ -400,13 +430,14 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry1."Posting Date" := Today;
                 funderLegderEntry1.Category := funderLoan.Category; // Funder Loan Category
                 funderLegderEntry1."Document No." := _docNo;
+                funderLegderEntry1."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                 funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
                 funderLegderEntry1.Description := 'Withholding calculation' + Format(Today);
                 funderLegderEntry1.Amount := -witHldInterest;
                 funderLegderEntry1."Amount(LCY)" := -witHldInterest;
                 funderLegderEntry1.Insert();
                 if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
-                    DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.");
+                    DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
                 //Commit();
 
                 funderLegderEntry2.Init(); //
@@ -471,6 +502,9 @@ codeunit 50231 FunderMgtCU
         _currentPrincipalAmnt: Decimal;
 
         _interestComputationTimes: Integer;
+
+        _funder: Record Funders;
+        _portfolio: Record Portfolio;
     begin
         //Interest Rate Type (Fixed/Float)
         //Interest Rate value
@@ -492,6 +526,16 @@ codeunit 50231 FunderMgtCU
             // repeat
             if funderLoan.Status <> funderLoan.Status::Approved then
                 Error('Loan Status is %1', funderLoan.Status);
+
+            _funder.Reset();
+            _funder.SetRange("No.", funderLoan."Funder No.");
+            if not _funder.Find('-') then
+                Error('Funder %1 not found _fl', funderLoan."Funder No.");
+
+            _portfolio.Reset();
+            _portfolio.SetRange("No.", _funder.Portfolio);
+            if not _portfolio.Find('-') then
+                Error('Portfolio %1 not found _fl', _funder.Portfolio);
 
             //Fixed Interest Type
             if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") OR (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
@@ -607,16 +651,17 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry."Loan No." := _loanNo;
                 funderLegderEntry."Posting Date" := RedemptionDate;
                 funderLegderEntry."Document No." := _docNo;
+                funderLegderEntry."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                 funderLegderEntry.Category := funderLoan.Category; // Funder Loan Category
                 funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
-                funderLegderEntry.Description := 'Interest calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(RedemptionDate);
+                funderLegderEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>');
                 funderLegderEntry.Amount := monthlyInterest;
                 funderLegderEntry."Amount(LCY)" := monthlyInterest;
                 funderLegderEntry."Remaining Amount" := (monthlyInterest - witHldInterest);
                 funderLegderEntry.Insert();
                 if (funderLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
-                    DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.");//GROSS Interest
-                                                                                                                                                                               //Commit();
+                    DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");//GROSS Interest
+                                                                                                                                                                                                                    //Commit();
                 funderLegderEntry1.Init();
                 funderLegderEntry1."Entry No." := NextEntryNo + 1;
                 funderLegderEntry1."Funder No." := funder."No.";
@@ -626,13 +671,14 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry1."Posting Date" := RedemptionDate;
                 funderLegderEntry1.Category := funderLoan.Category; // Funder Loan Category
                 funderLegderEntry1."Document No." := _docNo;
+                funderLegderEntry1."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                 funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
                 funderLegderEntry1.Description := 'Withholding calculation' + Format(RedemptionDate);
                 funderLegderEntry1.Amount := -witHldInterest;
                 funderLegderEntry1."Amount(LCY)" := -witHldInterest;
                 funderLegderEntry1.Insert();
                 if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
-                    DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.");
+                    DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
                 //Commit();
 
                 funderLegderEntry3.Init();
@@ -644,13 +690,14 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry3."Posting Date" := RedemptionDate;
                 funderLegderEntry3.Category := funderLoan.Category; // Funder Loan Category
                 funderLegderEntry3."Document No." := _docNo;
+                funderLegderEntry3."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                 funderLegderEntry3."Document Type" := funderLegderEntry."Document Type"::Repayment;
                 funderLegderEntry3.Description := 'Redemption Repayment calculation' + Format(RedemptionDate);
                 funderLegderEntry3.Amount := -_differenceOriginalWithdrawal;
                 funderLegderEntry3."Amount(LCY)" := -_differenceOriginalWithdrawal;
                 funderLegderEntry3.Insert();
                 if (funderLoan.EnableGLPosting = true) and (_differenceOriginalWithdrawal <> 0) then
-                    DirectGLPosting('redemption', withholdingAcc, witHldInterest, 'Redemption Repayment', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No."); // Debit Paying Bank
+                    DirectGLPosting('redemption', withholdingAcc, witHldInterest, 'Redemption Repayment', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code"); // Debit Paying Bank
                 //Commit();
 
 
@@ -675,7 +722,7 @@ codeunit 50231 FunderMgtCU
                 end;
                 funderLegderEntry2.Insert();
 
-                Message('Interest Calculated');
+                Message('Interest Calculated (non-partial)');
             end else begin
                 Message('Select Interest Rate Type');
             end;
@@ -716,6 +763,9 @@ codeunit 50231 FunderMgtCU
         _currentPrincipalAmnt: Decimal;
 
         _interestComputationTimes: Integer;
+
+        _funder: Record Funders;
+        _portfolio: Record Portfolio;
     begin
         //Interest Rate Type (Fixed/Float)
         //Interest Rate value
@@ -737,6 +787,17 @@ codeunit 50231 FunderMgtCU
             // repeat
             if funderLoan.Status <> funderLoan.Status::Approved then
                 Error('Loan Status is %1', funderLoan.Status);
+
+
+            _funder.Reset();
+            _funder.SetRange("No.", funderLoan."Funder No.");
+            if not _funder.Find('-') then
+                Error('Funder %1 not found _fl', funderLoan."Funder No.");
+
+            _portfolio.Reset();
+            _portfolio.SetRange("No.", _funder.Portfolio);
+            if not _portfolio.Find('-') then
+                Error('Portfolio %1 not found _fl', _funder.Portfolio);
 
             //Fixed Interest Type
             if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") OR (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
@@ -852,16 +913,17 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry."Loan No." := _loanNo;
                 funderLegderEntry."Posting Date" := RedemptionDate;
                 funderLegderEntry."Document No." := _docNo;
+                funderLegderEntry."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                 funderLegderEntry.Category := funderLoan.Category; // Funder Loan Category
                 funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
-                funderLegderEntry.Description := 'Interest calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(RedemptionDate);
+                funderLegderEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>');
                 funderLegderEntry.Amount := monthlyInterest;
                 funderLegderEntry."Amount(LCY)" := monthlyInterest;
                 funderLegderEntry."Remaining Amount" := (monthlyInterest - witHldInterest);
                 funderLegderEntry.Insert();
                 if (funderLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
-                    DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.");//GROSS Interest
-                                                                                                                                                                               //Commit();
+                    DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");//GROSS Interest
+                                                                                                                                                                                                                    //Commit();
                 funderLegderEntry1.Init();
                 funderLegderEntry1."Entry No." := NextEntryNo + 1;
                 funderLegderEntry1."Funder No." := funder."No.";
@@ -871,17 +933,18 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry1."Posting Date" := RedemptionDate;
                 funderLegderEntry1.Category := funderLoan.Category; // Funder Loan Category
                 funderLegderEntry1."Document No." := _docNo;
+                funderLegderEntry1."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                 funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
                 funderLegderEntry1.Description := 'Withholding calculation' + Format(RedemptionDate);
                 funderLegderEntry1.Amount := -witHldInterest;
                 funderLegderEntry1."Amount(LCY)" := -witHldInterest;
                 funderLegderEntry1.Insert();
                 if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
-                    DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.");
+                    DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
                 //Commit();
 
 
-                Message('Interest Calculated');
+                Message('Interest  Calculated (partial)');
             end else begin
                 Message('Select Interest Rate Type');
             end;
@@ -922,6 +985,9 @@ codeunit 50231 FunderMgtCU
         _currentPrincipalAmnt: Decimal;
 
         _interestComputationTimes: Integer;
+
+        _funder: Record Funders;
+        _portfolio: Record Portfolio;
     begin
 
         latestRemainingAmount := 0;
@@ -937,6 +1003,16 @@ codeunit 50231 FunderMgtCU
             // repeat
             if funderLoan.Status <> funderLoan.Status::Approved then
                 Error('Loan Status is %1', funderLoan.Status);
+
+            _funder.Reset();
+            _funder.SetRange("No.", funderLoan."Funder No.");
+            if not _funder.Find('-') then
+                Error('Funder %1 not found _fl', funderLoan."Funder No.");
+
+            _portfolio.Reset();
+            _portfolio.SetRange("No.", _funder.Portfolio);
+            if not _portfolio.Find('-') then
+                Error('Portfolio %1 not found _fl', _funder.Portfolio);
 
             //Fixed Interest Type
             if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") OR (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
@@ -1017,7 +1093,7 @@ codeunit 50231 FunderMgtCU
     end;
 
 
-    procedure DirectGLPosting(Origin: Text[100]; GLAcc: Code[100]; Amount: Decimal; Desc: Text[100]; FunderLoanNo: Code[20]; BankAc: Code[100]; Currency: Code[20]; PostingGroup: Code[50]; DocNo: Code[20]; ExtDocNo: text[250])
+    procedure DirectGLPosting(Origin: Text[100]; GLAcc: Code[100]; Amount: Decimal; Desc: Text[100]; FunderLoanNo: Code[20]; BankAc: Code[100]; Currency: Code[20]; PostingGroup: Code[50]; DocNo: Code[20]; ExtDocNo: text[250]; ShortcutDim1: Code[20])
     var
         GLEntry: Record "G/L Entry";
         NextEntryNo: Integer;
@@ -1034,6 +1110,9 @@ codeunit 50231 FunderMgtCU
         funderLoan: Record "Funder Loan";
 
         _ConvertedCurrency: Decimal;
+
+        _funder: Record Funders;
+        _portfolio: Record Portfolio;
     begin
         JournalEntry.LockTable();
         if JournalEntry.FindLast() then
@@ -1079,6 +1158,16 @@ codeunit 50231 FunderMgtCU
         //     Error('Missing Principle A/C: %1', funderLoan."No.");
 
         // end;
+        _funder.Reset();
+        _funder.SetRange("No.", funderLoan."Funder No.");
+        if not _funder.Find('-') then
+            Error('Funder %1 not found _fl', funderLoan."Funder No.");
+
+        _portfolio.Reset();
+        _portfolio.SetRange("No.", _funder.Portfolio);
+        if not _portfolio.Find('-') then
+            Error('Portfolio %1 not found _fl', _funder.Portfolio);
+
         if not generalSetup.FindFirst() then
             Error('Please Define Withholding Tax under General Setup');
         withholdingAcc := generalSetup.FunderWithholdingAcc;
@@ -1096,6 +1185,8 @@ codeunit 50231 FunderMgtCU
         //JournalEntry.Validate(JournalEntry.Amount);
         JournalEntry."Posting Date" := Today;
         JournalEntry.Creation_Date := Today;
+        JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
+        JournalEntry.Validate("Shortcut Dimension 1 Code");
         if DocNo <> '' then
             JournalEntry."Document No." := DocNo
         else
@@ -1112,7 +1203,7 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Bal. Account No." := GLAcc;
         end;
         if Origin = 'interest' then begin
-            JournalEntry.Description := funderLoan.Name + ' ' + funderLoan."No." + ' ' + Format(Today);
+            JournalEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>');
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Account No." := GLAcc;
             JournalEntry.Amount := Round(Amount, 0.01, '=');
@@ -1126,7 +1217,7 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Account No." := GLAcc;
             JournalEntry.Amount := -Round(Amount, 0.01, '=');
             JournalEntry."Amount (LCY)" := -Round(_ConvertedCurrency, 0.01, '=');
-            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
+            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
             JournalEntry."Bal. Account No." := BankAc;//interestAccPayable
         end;
         if Origin = 'reverse-interest' then begin
@@ -1135,7 +1226,7 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Account No." := GLAcc;
             JournalEntry.Amount := -Round(Amount, 0.01, '=');
             JournalEntry."Amount (LCY)" := -Round(_ConvertedCurrency, 0.01, '=');
-            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
+            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
             JournalEntry."Bal. Account No." := BankAc;//interestAccPayable
         end;
         if Origin = 'withholding' then begin
@@ -1148,13 +1239,13 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Bal. Account No." := BankAc;//interestAccPayable
         end;
         if Origin = 'redemption' then begin
-            JournalEntry.Description := Desc;
-            JournalEntry."Account Type" := JournalEntry."Account Type"::"Bank Account";
-            JournalEntry."Account No." := BankAc; // Paying Bank
+            JournalEntry.Description := Desc + ' _Redemption';
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Account No." := GLAcc;
             JournalEntry.Amount := Round(Amount, 0.01, '=');
             JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
-            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
-            JournalEntry."Bal. Account No." := GLAcc;
+            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
+            JournalEntry."Bal. Account No." := BankAc;
         end;
         // else begin
         //     JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";

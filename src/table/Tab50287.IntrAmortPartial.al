@@ -58,6 +58,10 @@ table 50287 "Intr- Amort Partial"
         {
             DataClassification = ToBeClassified;
         }
+        field(200; NumberofDays; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
     }
 
     keys

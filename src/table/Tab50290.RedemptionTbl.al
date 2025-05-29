@@ -53,6 +53,10 @@ table 50290 "Redemption Tbl"
         {
             DataClassification = ToBeClassified;
         }
+        field(150; ReferenceNo; Code[1000])
+        {
+            DataClassification = ToBeClassified;
+        }
 
 
     }

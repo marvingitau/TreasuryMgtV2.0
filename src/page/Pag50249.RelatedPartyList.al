@@ -9,7 +9,7 @@ page 50249 "Related Party List"
     {
         area(Content)
         {
-            repeater(GroupName)
+            repeater(General)
             {
                 field("No."; Rec."No.")
                 {

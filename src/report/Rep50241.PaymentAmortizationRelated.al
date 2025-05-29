@@ -146,7 +146,7 @@ report 50241 "Payment Amortization Related"
         _fNo := RelatedPartyTbl."No.";
         placementDate := RelatedPartyTbl.PlacementDate;
         maturityDate := RelatedPartyTbl.MaturityDate;
-        dateDiff := (maturityDate - placementDate) + 1;
+        dateDiff := (maturityDate - placementDate);
         endYearDate := CALCDATE('CY', Today);
         remainingDays := endYearDate - RelatedPartyTbl.PlacementDate;
 

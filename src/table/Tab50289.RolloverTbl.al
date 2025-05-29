@@ -27,6 +27,10 @@ table 50289 "Roll over Tbl"
         {
             DataClassification = ToBeClassified;
         }
+        field(40; "Rollover Date"; Date)
+        {
+            DataClassification = ToBeClassified;
+        }
 
     }
 

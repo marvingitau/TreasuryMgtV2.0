@@ -1848,7 +1848,7 @@ codeunit 50232 "Treasury Mgt CU"
             funderLegderEntry."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
             funderLegderEntry.Insert();
             if (funderLoan3.EnableGLPosting = true) and (funderLegderEntry_1.Amount <> 0) then
-                FunderMGTCU.DirectGLPosting('reverse-interest', funderLoan3."Interest Payable", funderLegderEntry_1.Amount, 'Interest', funderLoan3."No.", PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.");//reverse Interest (Db Paying Bank)
+                FunderMGTCU.DirectGLPosting('reverse-interest', funderLoan3."Interest Payable", funderLegderEntry_1.Amount, 'Interest', funderLoan3."No.", PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//reverse Interest (Db Paying Bank)
 
             //Create a Correction One.
             FunderMGTCU.CalculateInterest(LoanNo, RedemptionDate, PayingBankCode);
@@ -1899,7 +1899,7 @@ codeunit 50232 "Treasury Mgt CU"
         // funderLegderEntry_2."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
         funderLegderEntry_2.Insert();
         if (funderLoan3.EnableGLPosting = true) and (TotalInterestAmount <> 0) then
-            FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", TotalInterestAmount, 'Interest', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.");//Clear All the Interest (Db Paying Bank)
+            FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", TotalInterestAmount, 'Interest', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
 
 
     end;
@@ -1964,7 +1964,7 @@ codeunit 50232 "Treasury Mgt CU"
             funderLegderEntry."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
             funderLegderEntry.Insert();
             if (funderLoan3.EnableGLPosting = true) and (funderLegderEntry_1.Amount <> 0) then
-                FunderMGTCU.DirectGLPosting('reverse-interest', funderLoan3."Interest Payable", funderLegderEntry_1.Amount, 'Interest', funderLoan3."No.", PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.");//reverse Interest (Db Paying Bank)
+                FunderMGTCU.DirectGLPosting('reverse-interest', funderLoan3."Interest Payable", funderLegderEntry_1.Amount, 'Interest', funderLoan3."No.", PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//reverse Interest (Db Paying Bank)
 
             //Create a Correction One.
             FunderMGTCU.CalculateInterestForPartial(LoanNo, RedemptionDate, PayingBankCode);
@@ -2012,7 +2012,7 @@ codeunit 50232 "Treasury Mgt CU"
             // funderLegderEntry_2."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
             funderLegderEntry_2.Insert();
             if (funderLoan3.EnableGLPosting = true) and (PartialAmount <> 0) then
-                FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", PartialAmount, 'Interest', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.");//Clear All the Interest (Db Paying Bank)
+                FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", PartialAmount, 'Interest', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
 
             RedemptionLogs.Reset();
             RedemptionLogs.SetRange("Loan No.", LoanNo);
@@ -2047,7 +2047,7 @@ codeunit 50232 "Treasury Mgt CU"
             // funderLegderEntry_2."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
             funderLegderEntry_2.Insert();
             if (funderLoan3.EnableGLPosting = true) and (FloatingInter <> 0) then
-                FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", FloatingInter, 'Interest', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.");//Clear All the Interest (Db Paying Bank)
+                FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", FloatingInter, 'Interest', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
 
             funderLegderEntry_3.Init();
             funderLegderEntry_3."Entry No." := NextEntryNo + 8;
@@ -2065,7 +2065,7 @@ codeunit 50232 "Treasury Mgt CU"
             // funderLegderEntry_3."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
             funderLegderEntry_3.Insert();
             if (funderLoan3.EnableGLPosting = true) and ((PartialAmount - FloatingInter) <> 0) then
-                FunderMGTCU.DirectGLPosting('redemption', funderLoan3."Interest Payable", (PartialAmount - FloatingInter), 'Partial Redemption Repayment', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.");//
+                FunderMGTCU.DirectGLPosting('redemption', funderLoan3."Interest Payable", (PartialAmount - FloatingInter), 'Partial Redemption Repayment', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//
 
             RedemptionLogs.Reset();
             RedemptionLogs.SetRange("Loan No.", LoanNo);

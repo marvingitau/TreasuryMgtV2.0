@@ -16,6 +16,11 @@ codeunit 50230 GlobalFilters
         FunderLoanGlobalFilterValue := NewFilterValue;
     end;
 
+    procedure SetGlobalPortfolioFilter(NewFilterValue: Text[30])
+    begin
+        PortfolioGlobalFilterValue := NewFilterValue;
+    end;
+
     procedure GetGlobalFilter(): Text[30]
     begin
         exit(FunderGlobalFilterValue);
@@ -26,7 +31,13 @@ codeunit 50230 GlobalFilters
         exit(FunderLoanGlobalFilterValue);
     end;
 
+    procedure GetGlobalPortfolioFilter(): Text[30]
+    begin
+        exit(PortfolioGlobalFilterValue);
+    end;
+
     var
         FunderGlobalFilterValue: Text[30];
-        FunderLoanGlobalFilterValue: Text[30];
+        FunderLoanGlobalFilterValue: Text[20];
+        PortfolioGlobalFilterValue: Text[20];
 }

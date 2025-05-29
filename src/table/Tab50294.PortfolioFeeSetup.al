@@ -12,7 +12,7 @@ table 50294 "Portfolio Fee Setup"
         field(10; Category; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = " ","Bank Loan",Institutional,Individual;
+            OptionMembers = " ","Bank Loan",Institutional,Individual,"Asset Term Manager","Medium Term Notes";
             trigger OnValidate()
             begin
                 if Category = Category::"Bank Loan" then
@@ -21,6 +21,10 @@ table 50294 "Portfolio Fee Setup"
                     Code := 'Individual';
                 if Category = Category::Institutional then
                     Code := 'Institutional';
+                if Category = Category::"Asset Term Manager" then
+                    Code := 'Asset Term Manager';
+                if Category = Category::"Medium Term Notes" then
+                    Code := 'Medium Term Notes';
 
             end;
         }
@@ -37,10 +41,30 @@ table 50294 "Portfolio Fee Setup"
         {
             DataClassification = ToBeClassified;
         }
-        field(25; "Fee Applicable %"; Decimal)
+        // field(25; "Fee Applicable %"; Decimal)
+        // {
+        //     DataClassification = ToBeClassified;
+        // }
+
+        field(50; PortfolioNo; Code[20])
         {
             DataClassification = ToBeClassified;
         }
+        field(150; FunderNo; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(250; FunderLoanNo; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(350; Applicable; Boolean)
+        {
+            DataClassification = ToBeClassified;
+            InitValue = true;
+        }
+
     }
 
     keys

@@ -30,7 +30,7 @@ report 50233 "Capitalize Interest"
 
                 // is TODAY_Date End Month/End Quarter/ End Biannual / End Year ?
                 if ((FunderLoan.PeriodicPaymentOfInterest = FunderLoan.PeriodicPaymentOfInterest::Monthly) and (FunderLoan.Status = FunderLoan.Status::Approved)) then begin
-                    if TrsyMgt.IsTodayEndOfMonth() then
+                    if true then //TrsyMgt.IsTodayEndOfMonth()
                         CapitalizeMethod(FunderLoan."No.");
                 end;
                 if ((FunderLoan.PeriodicPaymentOfInterest = FunderLoan.PeriodicPaymentOfInterest::Quarterly) and (FunderLoan.Status = FunderLoan.Status::Approved)) then begin
@@ -38,11 +38,11 @@ report 50233 "Capitalize Interest"
                         CapitalizeMethod(FunderLoan."No.");
                 end;
                 if ((FunderLoan.PeriodicPaymentOfInterest = FunderLoan.PeriodicPaymentOfInterest::Biannually) and (FunderLoan.Status = FunderLoan.Status::Approved)) then begin
-                    if TrsyMgt.IsTodayEndOfBiAnnual() then
+                    if true then //TrsyMgt.IsTodayEndOfBiAnnual()
                         CapitalizeMethod(FunderLoan."No.");
                 end;
                 if ((FunderLoan.PeriodicPaymentOfInterest = FunderLoan.PeriodicPaymentOfInterest::Annually) and (FunderLoan.Status = FunderLoan.Status::Approved)) then begin
-                    if TrsyMgt.IsTodayEndOfYear() then
+                    if true then //TrsyMgt.IsTodayEndOfYear()
                         CapitalizeMethod(FunderLoan."No.");
                 end;
 

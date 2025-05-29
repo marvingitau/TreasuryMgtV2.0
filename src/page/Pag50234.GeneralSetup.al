@@ -126,6 +126,17 @@ page 50234 "General Setup"
                     ApplicationArea = All;
                 }
             }
+            group("Loan Confirmation Document")
+            {
+                field("Signatory Name"; Rec."Signatory Name")
+                {
+                    ApplicationArea = All;
+                }
+                field("Signatory Position"; Rec."Signatory Position")
+                {
+                    ApplicationArea = All;
+                }
+            }
 
         }
 
@@ -175,15 +186,15 @@ page 50234 "General Setup"
                 PromotedIsBig = true;
                 RunObject = page 50284;
             }
-            action("Portfolio Fee Setup")
-            {
-                Caption = 'Portfolio Fee Setup';
-                Image = InsertStartingFee;
-                Promoted = true;
-                PromotedCategory = Process;
-                PromotedIsBig = true;
-                RunObject = page "Portfolio Fee Setup";
-            }
+            // action("Portfolio Fee Setup")
+            // {
+            //     Caption = 'Portfolio Fee Setup';
+            //     Image = InsertStartingFee;
+            //     Promoted = true;
+            //     PromotedCategory = Process;
+            //     PromotedIsBig = true;
+            //     RunObject = page "Portfolio Fee Setup";
+            // }
             action("Dynamic Interest Rate")
             {
                 Caption = 'Dynamic Interest Rate';

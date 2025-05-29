@@ -738,6 +738,7 @@
                                   <Value>=Fields!Interest.Value</Value>
                                   <Style>
                                     <FontSize>8pt</FontSize>
+                                    <Format>#,0.00</Format>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -898,6 +899,7 @@
                                   <Value>=Fields!Payment_Due_Date.Value</Value>
                                   <Style>
                                     <FontSize>8pt</FontSize>
+                                    <Format>M/d/yy</Format>
                                   </Style>
                                 </TextRun>
                               </TextRuns>
@@ -1115,7 +1117,7 @@
             <Top>0.25in</Top>
             <Left>0.25in</Left>
             <Height>0.44444in</Height>
-            <Width>8.29167in</Width>
+            <Width>8.29165in</Width>
             <Style>
               <Border>
                 <Style>None</Style>

@@ -75,7 +75,7 @@ report 50237 "Reminder on Placement Mature"
                 /** 
                 Ensure Processing only records whose waiting time is actually within the expected alert period
                 */
-                if (20290430D - "Funder Loan".MaturityDate) = GeneralSetup."Placemnt. Matur Rem. Time" then begin //
+                if true then begin // (20290430D - "Funder Loan".MaturityDate) = GeneralSetup."Placemnt. Matur Rem. Time"
 
                     // FunderLoanTbl.Reset();
                     // FunderLoanTbl.SetRange("No.", FunderNo);
@@ -87,7 +87,7 @@ report 50237 "Reminder on Placement Mature"
                     _fNo := FunderLoanTbl."No.";
                     placementDate := FunderLoanTbl.PlacementDate;
                     maturityDate := FunderLoanTbl.MaturityDate;
-                    dateDiff := (maturityDate - placementDate) + 1;
+                    dateDiff := (maturityDate - placementDate);
                     endYearDate := CALCDATE('CY', Today);
                     remainingDays := endYearDate - FunderLoanTbl.PlacementDate;
 

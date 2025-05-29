@@ -21,11 +21,29 @@ page 50288 "Roll over"
                 field(RollOverType; Rec.RollOverType)
                 {
                     ApplicationArea = All;
+
                 }
+                field("Rollover Date"; Rec."Rollover Date")
+                {
+                    ApplicationArea = All;
+                    Enabled = Rec.RollOverType = Rec.RollOverType::"Full Rollover";
+                }
+
                 field(PlacementMaturity; Rec.PlacementMaturity)
                 {
                     ApplicationArea = All;
-                    Editable = false;
+                    // Editable = false;
+                    trigger OnValidate()
+                    begin
+                        FunderLoan.Reset();
+                        FunderLoan.SetRange("No.", Rec."Loan No.");
+                        if FunderLoan.Find('-') then begin
+                            // if Rec.PlacementMaturity = Rec.PlacementMaturity::
+                            FunderLoan.PlacementMaturity := Rec.PlacementMaturity;
+                            FunderLoan.Modify()
+                        end;
+
+                    end;
                 }
                 field(Amount; Rec.Amount)
                 {

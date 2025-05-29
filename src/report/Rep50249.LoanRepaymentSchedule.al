@@ -143,7 +143,7 @@ report 50249 "Loan Repayment Schedule"
         dueDate := FunderLoanTbl.FirstDueDate;
         placementDate := FunderLoanTbl.PlacementDate;
         maturityDate := FunderLoanTbl.MaturityDate;
-        dateDiff := (maturityDate - placementDate) + 1;
+        dateDiff := (maturityDate - placementDate);
         endYearDate := CALCDATE('CY', Today);
         remainingDays := endYearDate - FunderLoanTbl.PlacementDate;
 

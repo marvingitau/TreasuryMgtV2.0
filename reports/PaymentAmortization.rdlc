@@ -22,7 +22,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-                    <Value>Payment</Value>
+                    <Value>Payment Schedule</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -33,9 +33,8 @@
             </Paragraphs>
             <rd:DefaultName>Textbox1</rd:DefaultName>
             <Top>0.18278in</Top>
-            <Left>3.60409in</Left>
             <Height>0.25in</Height>
-            <Width>0.61111in</Width>
+            <Width>8.36257in</Width>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -62,7 +61,10 @@
                   <Width>1.05556in</Width>
                 </TablixColumn>
                 <TablixColumn>
-                  <Width>1.05556in</Width>
+                  <Width>0.91667in</Width>
+                </TablixColumn>
+                <TablixColumn>
+                  <Width>1in</Width>
                 </TablixColumn>
                 <TablixColumn>
                   <Width>1.22917in</Width>
@@ -209,6 +211,36 @@
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>Textbox12</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="Textbox3">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>Numberof Days</Value>
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>Textbox3</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -395,13 +427,45 @@
                               <TextRuns>
                                 <TextRun>
                                   <Value>=Fields!InterestRate.Value</Value>
-                                  <Style />
+                                  <Style>
+                                    <Format>#,0.00;- #,0.00</Format>
+                                  </Style>
                                 </TextRun>
                               </TextRuns>
                               <Style />
                             </Paragraph>
                           </Paragraphs>
                           <rd:DefaultName>InterestRate</rd:DefaultName>
+                          <Style>
+                            <Border>
+                              <Color>LightGrey</Color>
+                              <Style>Solid</Style>
+                            </Border>
+                            <PaddingLeft>2pt</PaddingLeft>
+                            <PaddingRight>2pt</PaddingRight>
+                            <PaddingTop>2pt</PaddingTop>
+                            <PaddingBottom>2pt</PaddingBottom>
+                          </Style>
+                        </Textbox>
+                      </CellContents>
+                    </TablixCell>
+                    <TablixCell>
+                      <CellContents>
+                        <Textbox Name="NumberofDays">
+                          <CanGrow>true</CanGrow>
+                          <KeepTogether>true</KeepTogether>
+                          <Paragraphs>
+                            <Paragraph>
+                              <TextRuns>
+                                <TextRun>
+                                  <Value>=Fields!NumberofDays.Value</Value>
+                                  <Style />
+                                </TextRun>
+                              </TextRuns>
+                              <Style />
+                            </Paragraph>
+                          </Paragraphs>
+                          <rd:DefaultName>NumberofDays</rd:DefaultName>
                           <Style>
                             <Border>
                               <Color>LightGrey</Color>
@@ -459,6 +523,7 @@
                 <TablixMember />
                 <TablixMember />
                 <TablixMember />
+                <TablixMember />
               </TablixMembers>
             </TablixColumnHierarchy>
             <TablixRowHierarchy>
@@ -473,9 +538,9 @@
             </TablixRowHierarchy>
             <DataSetName>DataSet_Result</DataSetName>
             <Top>0.85639in</Top>
-            <Left>0.7013in</Left>
+            <Left>0.25in</Left>
             <Height>0.44444in</Height>
-            <Width>6.85419in</Width>
+            <Width>7.7153in</Width>
             <ZIndex>1</ZIndex>
             <Style>
               <Border>
@@ -487,7 +552,7 @@
         <Height>2in</Height>
         <Style />
       </Body>
-      <Width>8.05007in</Width>
+      <Width>8.36257in</Width>
       <Page>
         <Style />
       </Page>
@@ -570,6 +635,9 @@ End Function
         </Field>
         <Field Name="OutStandingAmtFormat">
           <DataField>OutStandingAmtFormat</DataField>
+        </Field>
+        <Field Name="NumberofDays">
+          <DataField>NumberofDays</DataField>
         </Field>
       </Fields>
       <Query>

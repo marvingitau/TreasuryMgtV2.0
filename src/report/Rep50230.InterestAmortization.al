@@ -36,6 +36,7 @@ report 50230 "Interest Amortization"
             {
 
             }
+            column(NumberofDays; NumberofDays) { }
 
         }
     }
@@ -153,7 +154,7 @@ report 50230 "Interest Amortization"
         placementDate := FunderLoanTbl.PlacementDate;
 
         maturityDate := FunderLoanTbl.MaturityDate;
-        dateDiff := (maturityDate - placementDate) + 1;
+        dateDiff := (maturityDate - placementDate);
         endYearDate := CALCDATE('CY', Today);
         remainingDays := endYearDate - FunderLoanTbl.PlacementDate;
 
@@ -175,7 +176,9 @@ report 50230 "Interest Amortization"
 
         FunderLoanTbl.CalcFields(OrigAmntDisbLCY);
         _principle := FunderLoanTbl.OrigAmntDisbLCY;
-
+        if (_principle = 0) then begin
+            _principle := FunderLoanTbl."Original Disbursed Amount";
+        end;
 
 
         // // StartDate := DMY2Date(1, 1, DATE2DMY(TODAY, 3)); // January 1 of the current year
@@ -244,16 +247,58 @@ report 50230 "Interest Amortization"
                     _withHoldingTax_Amnt := (monthlyInterest * _withHoldingTax_Percent / 100)
                 end;
 
-                Loan.Init();
-                Loan.DueDate := _currentMonthInLoop;
-                Loan.Interest := monthlyInterest;
-                Loan.CalculationDate := _currentMonthInLoop;
-                Loan.LoanNo := _fNo;
-                Loan.WithHldTaxAmt := _withHoldingTax_Amnt;
-                Loan.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
-                Loan.LoopCount := monthCounter;
-                Loan.Insert();
+                if (dueDate <> 0D) and (dueDate > _currentMonthInLoop) then begin
+                    //FirstDueAccumulator.Init();
+                    FirstDueAccumulator.Line := QuarterCounter + 1;
+                    FirstDueAccumulator.DueDate := _currentMonthInLoop;
+                    FirstDueAccumulator.Interest := monthlyInterest;
+                    FirstDueAccumulator.CalculationDate := _currentMonthInLoop;
+                    FirstDueAccumulator.LoanNo := _fNo;
+                    FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
+                    FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
+                    FirstDueAccumulator.LoopCount := monthCounter;
+                    FirstDueAccumulator.NumberofDays := _currentMonthInLoop - FunderLoanTbl.PlacementDate;
+                    FirstDueAccumulator.Insert();
+                end else begin
+                    FirstDueAccumulator.Reset();
+                    FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
+                    FirstDueAccumulator.SetRange(Reviewed, false);
+                    FirstDueAccumulator.CalcSums(Interest);
+                    FirstDueAccumulator.CalcSums(NetInterest);
+                    FirstDueAccumulator.CalcSums(WithHldTaxAmt);
 
+                    if FirstDueAccumulator.Count > 0 then begin
+                        _sumInterest := FirstDueAccumulator.Interest;
+                        _sumNetInterest := FirstDueAccumulator.NetInterest;
+                        _sumWtholding := FirstDueAccumulator.WithHldTaxAmt;
+                        FirstDueAccumulator.Reviewed := true;
+                        FirstDueAccumulator.Modify();
+                    end else begin
+                        _sumInterest := 0;
+                        _sumNetInterest := 0;
+                        _sumWtholding := 0;
+                    end;
+
+                    Loan.Init();
+                    Loan.DueDate := _currentMonthInLoop;
+                    Loan.Interest := monthlyInterest;
+                    Loan.CalculationDate := _currentMonthInLoop;
+                    Loan.LoanNo := _fNo;
+                    Loan.WithHldTaxAmt := _withHoldingTax_Amnt;
+                    Loan.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
+                    Loan.LoopCount := monthCounter;
+                    // Loan.NumberofDays := DaysInMonth;
+                    if (dueDate <> 0D) and (dueDate > _currentMonthInLoop) then begin
+                        Loan.NumberofDays := _currentMonthInLoop - FunderLoanTbl.PlacementDate;
+                    end else begin
+                        Loan.NumberofDays := DaysInMonth;
+                    end;
+                    Loan.Insert();
+
+                    FirstDueAccumulator.Reset();
+                    if FirstDueAccumulator.Count > 0 then
+                        FirstDueAccumulator.DeleteAll();
+                end;
                 // monthCounter := monthCounter + 1;
             end;
         end;
@@ -285,14 +330,15 @@ report 50230 "Interest Amortization"
                     _currentQuarterInLoop := GetEndOfQuarter(maturityDate);
                 end
                 else begin
-                    _currentQuarterInLoop := CALCDATE('<+' + Format(QuarterCounter) + 'Q>', StatingQuarterEndDate);
+                    // _currentQuarterInLoop := CALCDATE('<+' + Format(QuarterCounter) + 'Q>', StatingQuarterEndDate);
+                    _currentQuarterInLoop := AddQuartersToQuarterEnd(QuarterCounter, StatingQuarterEndDate);
                     // QuarterCounterRem := QuarterCounter mod 4;
                     QuarterCounterRem := GetQuarter(_currentQuarterInLoop);
-                    // DaysInQuarter := GetDaysInQuarter(QuarterCounter, DATE2DMY(_currentQuarterInLoop, 3)) + 1;
-                    if QuarterCounterRem = 4 then
-                        DaysInQuarter := GetDaysInQuarter(_currentQuarterInLoop) - 1
-                    else
-                        DaysInQuarter := GetDaysInQuarter(_currentQuarterInLoop);
+                    // // DaysInQuarter := GetDaysInQuarter(QuarterCounter, DATE2DMY(_currentQuarterInLoop, 3)) + 1;
+                    // if QuarterCounterRem = 4 then
+                    //     DaysInQuarter := GetDaysInQuarter(_currentQuarterInLoop) - 1
+                    // else
+                    DaysInQuarter := GetDaysInQuarter(_currentQuarterInLoop);
 
                     if QuarterCounterRem = 0 then
                         QuarterCounterRem := 4;
@@ -326,7 +372,8 @@ report 50230 "Interest Amortization"
                     FirstDueAccumulator.LoanNo := _fNo;
                     FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
                     FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
-                    FirstDueAccumulator.LoopCount := monthCounter;
+                    FirstDueAccumulator.LoopCount := QuarterCounter;
+                    FirstDueAccumulator.NumberofDays := _currentQuarterInLoop - FunderLoanTbl.PlacementDate;
                     FirstDueAccumulator.Insert();
                 end else begin
                     FirstDueAccumulator.Reset();
@@ -357,6 +404,12 @@ report 50230 "Interest Amortization"
                     Loan.WithHldTaxAmt := _withHoldingTax_Amnt + _sumWtholding;
                     Loan.NetInterest := (monthlyInterest - _withHoldingTax_Amnt) + _sumNetInterest;
                     Loan.LoopCount := QuarterCounter;
+                    if (dueDate <> 0D) and (dueDate > _currentQuarterInLoop) then begin
+                        Loan.NumberofDays := _currentQuarterInLoop - FunderLoanTbl.PlacementDate;
+
+                    end else begin
+                        Loan.NumberofDays := DaysInQuarter;
+                    end;
                     Loan.Insert();
 
                     FirstDueAccumulator.Reset();
@@ -424,16 +477,58 @@ report 50230 "Interest Amortization"
                     _withHoldingTax_Amnt := (monthlyInterest * _withHoldingTax_Percent / 100)
                 end;
 
-                Loan.Init();
-                Loan.DueDate := _currentBiannInLoop;
-                Loan.Interest := monthlyInterest;
-                Loan.CalculationDate := _currentBiannInLoop;
-                Loan.LoanNo := _fNo;
-                Loan.WithHldTaxAmt := _withHoldingTax_Amnt;
-                Loan.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
-                Loan.LoopCount := BiannCounter;
-                Loan.Insert();
+                if (dueDate <> 0D) and (dueDate > _currentBiannInLoop) then begin
+                    //FirstDueAccumulator.Init();
+                    FirstDueAccumulator.Line := QuarterCounter + 1;
+                    FirstDueAccumulator.DueDate := _currentBiannInLoop;
+                    FirstDueAccumulator.Interest := monthlyInterest;
+                    FirstDueAccumulator.CalculationDate := _currentBiannInLoop;
+                    FirstDueAccumulator.LoanNo := _fNo;
+                    FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
+                    FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
+                    FirstDueAccumulator.LoopCount := BiannCounter;
+                    FirstDueAccumulator.NumberofDays := _currentBiannInLoop - FunderLoanTbl.PlacementDate;
+                    FirstDueAccumulator.Insert();
+                end else begin
+                    FirstDueAccumulator.Reset();
+                    FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
+                    FirstDueAccumulator.SetRange(Reviewed, false);
+                    FirstDueAccumulator.CalcSums(Interest);
+                    FirstDueAccumulator.CalcSums(NetInterest);
+                    FirstDueAccumulator.CalcSums(WithHldTaxAmt);
 
+                    if FirstDueAccumulator.Count > 0 then begin
+                        _sumInterest := FirstDueAccumulator.Interest;
+                        _sumNetInterest := FirstDueAccumulator.NetInterest;
+                        _sumWtholding := FirstDueAccumulator.WithHldTaxAmt;
+                        FirstDueAccumulator.Reviewed := true;
+                        FirstDueAccumulator.Modify();
+                    end else begin
+                        _sumInterest := 0;
+                        _sumNetInterest := 0;
+                        _sumWtholding := 0;
+                    end;
+
+                    Loan.Init();
+                    Loan.DueDate := _currentBiannInLoop;
+                    Loan.Interest := monthlyInterest;
+                    Loan.CalculationDate := _currentBiannInLoop;
+                    Loan.LoanNo := _fNo;
+                    Loan.WithHldTaxAmt := _withHoldingTax_Amnt;
+                    Loan.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
+                    Loan.LoopCount := BiannCounter;
+                    // Loan.NumberofDays := DaysInBiann;
+                    if (dueDate <> 0D) and (dueDate > _currentBiannInLoop) then begin
+                        Loan.NumberofDays := _currentBiannInLoop - FunderLoanTbl.PlacementDate;
+
+                    end else begin
+                        Loan.NumberofDays := DaysInBiann;
+                    end;
+                    Loan.Insert();
+                    FirstDueAccumulator.Reset();
+                    if FirstDueAccumulator.Count > 0 then
+                        FirstDueAccumulator.DeleteAll();
+                end;
             end;
         end;
 
@@ -484,16 +579,59 @@ report 50230 "Interest Amortization"
                     _withHoldingTax_Amnt := (monthlyInterest * _withHoldingTax_Percent / 100)
                 end;
 
-                Loan.Init();
-                Loan.DueDate := _currentAnnualInLoop;
-                Loan.Interest := monthlyInterest;
-                Loan.CalculationDate := _currentAnnualInLoop;
-                Loan.LoanNo := _fNo;
-                Loan.WithHldTaxAmt := _withHoldingTax_Amnt;
-                Loan.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
-                Loan.LoopCount := BiannCounter;
-                Loan.Insert();
+                if (dueDate <> 0D) and (dueDate > _currentQuarterInLoop) then begin
+                    //FirstDueAccumulator.Init();
+                    FirstDueAccumulator.Line := QuarterCounter + 1;
+                    FirstDueAccumulator.DueDate := _currentQuarterInLoop;
+                    FirstDueAccumulator.Interest := monthlyInterest;
+                    FirstDueAccumulator.CalculationDate := _currentQuarterInLoop;
+                    FirstDueAccumulator.LoanNo := _fNo;
+                    FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
+                    FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
+                    FirstDueAccumulator.LoopCount := BiannCounter;
+                    FirstDueAccumulator.NumberofDays := _currentQuarterInLoop - FunderLoanTbl.PlacementDate;
+                    FirstDueAccumulator.Insert();
+                end else begin
+                    FirstDueAccumulator.Reset();
+                    FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
+                    FirstDueAccumulator.SetRange(Reviewed, false);
+                    FirstDueAccumulator.CalcSums(Interest);
+                    FirstDueAccumulator.CalcSums(NetInterest);
+                    FirstDueAccumulator.CalcSums(WithHldTaxAmt);
 
+                    if FirstDueAccumulator.Count > 0 then begin
+                        _sumInterest := FirstDueAccumulator.Interest;
+                        _sumNetInterest := FirstDueAccumulator.NetInterest;
+                        _sumWtholding := FirstDueAccumulator.WithHldTaxAmt;
+                        FirstDueAccumulator.Reviewed := true;
+                        FirstDueAccumulator.Modify();
+                    end else begin
+                        _sumInterest := 0;
+                        _sumNetInterest := 0;
+                        _sumWtholding := 0;
+                    end;
+
+
+                    Loan.Init();
+                    Loan.DueDate := _currentAnnualInLoop;
+                    Loan.Interest := monthlyInterest;
+                    Loan.CalculationDate := _currentAnnualInLoop;
+                    Loan.LoanNo := _fNo;
+                    Loan.WithHldTaxAmt := _withHoldingTax_Amnt;
+                    Loan.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
+                    Loan.LoopCount := BiannCounter;
+                    // Loan.NumberofDays := DaysInAnnual;
+                    if (dueDate <> 0D) and (dueDate > _currentAnnualInLoop) then begin
+                        Loan.NumberofDays := _currentAnnualInLoop - FunderLoanTbl.PlacementDate;
+
+                    end else begin
+                        Loan.NumberofDays := DaysInAnnual;
+                    end;
+                    Loan.Insert();
+                    FirstDueAccumulator.Reset();
+                    if FirstDueAccumulator.Count > 0 then
+                        FirstDueAccumulator.DeleteAll();
+                end;
             end;
         end;
 
@@ -516,6 +654,48 @@ report 50230 "Interest Amortization"
     begin
         Month := DATE2DMY(CheckDate, 2);  // Extract month
         exit(Month = 12);
+    end;
+
+    procedure AddQuartersToQuarterEnd(QuarterNumber: Integer; QuarterEndDate: Date): Date
+    var
+        CurrentMonth, CurrentYear : Integer;
+        TargetQuarter, TargetYear : Integer;
+        NewQuarterEndDate: Date;
+    begin
+        // 1. Extract current quarter and year from the input date
+        CurrentMonth := DATE2DMY(QuarterEndDate, 2);
+        CurrentYear := DATE2DMY(QuarterEndDate, 3);
+
+        // 2. Calculate current quarter (1-4)
+        case CurrentMonth of
+            1 .. 3:
+                TargetQuarter := 1;   // Q1 (Jan-Mar)
+            4 .. 6:
+                TargetQuarter := 2;   // Q2 (Apr-Jun)
+            7 .. 9:
+                TargetQuarter := 3;   // Q3 (Jul-Sep)
+            else
+                TargetQuarter := 4;    // Q4 (Oct-Dec)
+        end;
+
+        // 3. Add the requested quarters (handling year overflow)
+        TargetQuarter := TargetQuarter + QuarterNumber;
+        TargetYear := CurrentYear + ((TargetQuarter - 1) div 4);
+        TargetQuarter := ((TargetQuarter - 1) mod 4) + 1;
+
+        // 4. Return the correct quarter-end date
+        case TargetQuarter of
+            1:
+                NewQuarterEndDate := DMY2Date(31, 3, TargetYear);   // Q1: Mar 31
+            2:
+                NewQuarterEndDate := DMY2Date(30, 6, TargetYear);   // Q2: Jun 30
+            3:
+                NewQuarterEndDate := DMY2Date(30, 9, TargetYear);   // Q3: Sep 30
+            4:
+                NewQuarterEndDate := DMY2Date(31, 12, TargetYear);  // Q4: Dec 31
+        end;
+
+        exit(NewQuarterEndDate);
     end;
 
     procedure GetDaysInQuarter(InputDate: Date): Integer

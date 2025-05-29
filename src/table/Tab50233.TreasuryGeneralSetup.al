@@ -147,6 +147,15 @@ table 50233 "Treasury General Setup"
 
         }
 
+        // Confirmations Letter 
+        field(400; "Signatory Name"; Text[150])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(410; "Signatory Position"; Text[150])
+        {
+            DataClassification = ToBeClassified;
+        }
 
     }
 

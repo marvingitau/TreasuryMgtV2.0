@@ -179,7 +179,7 @@ report 50239 "Interest Payment Amortization"
         _fNo := FunderLoanTbl."No.";
         placementDate := FunderLoanTbl.PlacementDate;
         maturityDate := FunderLoanTbl.MaturityDate;
-        dateDiff := (maturityDate - placementDate) + 1;
+        dateDiff := (maturityDate - placementDate);
         endYearDate := CALCDATE('CY', Today);
         remainingDays := endYearDate - FunderLoanTbl.PlacementDate;
 

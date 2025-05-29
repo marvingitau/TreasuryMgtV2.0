@@ -6,8 +6,8 @@ page 50281 "Funder Loan List"
     SourceTable = "Funder Loan";
     InsertAllowed = false;
     ModifyAllowed = false;
-    DeleteAllowed = false;
-    Editable = false;
+    DeleteAllowed = true;
+    // Editable = false;
     CardPageId = "Funder Loan Card";//Funder Loan Card
     // CardPageId = 50282;//Funder Loan Card
     layout

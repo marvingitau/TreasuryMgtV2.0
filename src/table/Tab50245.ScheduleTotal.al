@@ -54,6 +54,10 @@ table 50245 "Schedule Total"
         {
             DataClassification = ToBeClassified;
         }
+        field(200; NumberofDays; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
     }
 
     keys

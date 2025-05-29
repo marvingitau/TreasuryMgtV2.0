@@ -60,6 +60,11 @@ page 50280 "Related Party card"
                     ApplicationArea = All;
                     Caption = 'Maturity Date';
                 }
+                field(DiffPlacementMaturityDate; Rec.DiffPlacementMaturityDate)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Duration (Days)';
+                }
 
                 field(DisbursedCurrency; Rec.Currency)
                 {

@@ -13,11 +13,29 @@ page 50231 "Portfolio Card"
                 field(Code; Rec.Code)
                 {
                     ApplicationArea = All;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
+                }
+                field(Category; Rec.Category)
+                {
+                    ApplicationArea = All;
+                    ShowMandatory = true;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
+                    trigger OnValidate()
+                    begin
+                        CurrPage.Update(); // Triggers the visibility calculations
+                    end;
+
+                }
+                field("No."; Rec."No.")
+                {
+                    ApplicationArea = All;
+                    Editable = false;
                 }
                 field(ProgramSize; Rec.ProgramSize)
                 {
                     ApplicationArea = All;
                     Caption = 'Program Size';
+                    Editable = (not ShowOtherFields) or not (Rec.Status = Rec.Status::Approved);
                 }
                 // field(Value;Rec.Value)
                 // {
@@ -45,34 +63,39 @@ page 50231 "Portfolio Card"
                 {
                     ApplicationArea = All;
                     Caption = 'Outstanding Amount To Target';
+                    Editable = (not ShowOtherFields) or not (Rec.Status = Rec.Status::Approved);
                 }
                 field(BeginDate; Rec.BeginDate)
                 {
                     ApplicationArea = All;
                     Caption = 'Begin Date';
+                    Editable = (not ShowOtherFields) or not (Rec.Status = Rec.Status::Approved);
                 }
                 field(ProgramTerm; Rec.ProgramTerm)
                 {
                     ApplicationArea = All;
                     Caption = 'Program Term(Years)';
+                    Editable = (not ShowOtherFields) or not (Rec.Status = Rec.Status::Approved);
                 }
                 field(EndTerm; Rec.EndTerm)
                 {
                     ApplicationArea = All;
                     Caption = 'End Term';
                     Editable = false;
+                    Enabled = (not ShowOtherFields) or not (Rec.Status = Rec.Status::Approved);
                 }
-                field(ProgramCurrency; Rec.ProgramCurrency)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Program Currency';
-                }
-                field("Fee Applicable"; Rec."Fee Applicable")
-                {
-                    ApplicationArea = All;
-                    Caption = 'Fee Applicable (%)';
-                    Editable = false;
-                }
+                // field(ProgramCurrency; Rec.ProgramCurrency)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Program Currency';
+                //     Editable = ShowOtherFields;
+                // }
+                // field("Fee Applicable"; Rec."Fee Applicable")
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Fee Applicable (%)';
+                //     Editable = false;
+                // }
                 // field("Interest Rate Applicable"; Rec."Interest Rate Applicable")
                 // {
                 //     ApplicationArea = All;
@@ -80,6 +103,7 @@ page 50231 "Portfolio Card"
                 field("Physical Address"; Rec."Physical Address")
                 {
                     ApplicationArea = All;
+                    Editable = (not ShowOtherFields) or not (Rec.Status = Rec.Status::Approved);
                 }
 
 
@@ -88,42 +112,37 @@ page 50231 "Portfolio Card"
                 //     ApplicationArea = All;
                 //     Caption = 'Abbreviation';
                 // }
-                field(Category; Rec.Category)
-                {
-                    ApplicationArea = All;
-                    ShowMandatory = true;
 
-                }
-                field("Category Fee"; Rec."Category Fee")
-                {
-                    ApplicationArea = All;
-                    // ShowMandatory = true;
-                    DrillDownPageId = "Portfolio Fee Setup";
-                    trigger OnDrillDown()
-                    var
-                        FeePage: Page "Portfolio Fee Setup";
-                        PortfolioFeeSetup: Record "Portfolio Fee Setup";
-                    begin
-                        PortfolioFeeSetup.Reset();
-                        if Rec.Category = Rec.Category::"Bank Loan" then
-                            PortfolioFeeSetup.SetRange(Code, 'Bank Loan');
-                        if Rec.Category = Rec.Category::Individual then
-                            PortfolioFeeSetup.SetRange(Code, 'Individual');
-                        if Rec.Category = Rec.Category::Institutional then
-                            PortfolioFeeSetup.SetRange(Code, 'Institutional');
+                // field("Category Fee"; Rec."Category Fee")
+                // {
+                //     ApplicationArea = All;
+                //     // ShowMandatory = true;
+                //     DrillDownPageId = "Portfolio Fee Setup";
+                //     trigger OnDrillDown()
+                //     var
+                //         FeePage: Page "Portfolio Fee Setup";
+                //         PortfolioFeeSetup: Record "Portfolio Fee Setup";
+                //     begin
+                //         PortfolioFeeSetup.Reset();
+                //         if Rec.Category = Rec.Category::"Bank Loan" then
+                //             PortfolioFeeSetup.SetRange(Code, 'Bank Loan');
+                //         if Rec.Category = Rec.Category::Individual then
+                //             PortfolioFeeSetup.SetRange(Code, 'Individual');
+                //         if Rec.Category = Rec.Category::Institutional then
+                //             PortfolioFeeSetup.SetRange(Code, 'Institutional');
 
-                        if Page.RunModal(Page::"Portfolio Fee Setup", PortfolioFeeSetup) = Action::LookupOK then begin
-                            Rec."Fee Applicable" := PortfolioFeeSetup."Fee Applicable %";
-                            Rec.Category_Line_No := PortfolioFeeSetup.LineNo;
-                            CurrPage.Update();
-                        end;
-                    end;
-                }
+                //         if Page.RunModal(Page::"Portfolio Fee Setup", PortfolioFeeSetup) = Action::LookupOK then begin
+                //             // Rec."Fee Applicable" := PortfolioFeeSetup."Fee Applicable %";
+                //             Rec.Category_Line_No := PortfolioFeeSetup.LineNo;
+                //             CurrPage.Update();
+                //         end;
+                //     end;
+                // }
                 field(Status; Rec.Status)
                 {
                     ApplicationArea = All;
                     Caption = 'Status';
-                    // Editable = false;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
                 }
 
             }
@@ -133,22 +152,27 @@ page 50231 "Portfolio Card"
                 // {
                 //     ApplicationArea = All;
                 // }
+                Visible = not ShowOtherFields;
                 field("Contact Person Name"; Rec."Contact Person Name")
                 {
                     ApplicationArea = All;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
                 }
                 field("Contact Person Address"; Rec."Contact Person Address")
                 {
                     ApplicationArea = All;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
                 }
                 field("Contact Person Phone No."; Rec."Contact Person Phone No.")
                 {
                     ApplicationArea = All;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
                 }
                 field("Contact Person Email"; Rec."Contact Person Email")
                 {
                     ApplicationArea = All;
                     ExtendedDatatype = EMail;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
                 }
             }
         }
@@ -168,6 +192,26 @@ page 50231 "Portfolio Card"
     {
         area(Processing)
         {
+            action("Portfolio Fee Setup")
+            {
+                Caption = 'Applicable Fee';
+                Image = InsertStartingFee;
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                // RunObject = page "Portfolio Fee Setup";
+                trigger OnAction()
+                var
+                    _portfolio: page "Portfolio Fee Setup";
+                    GFilter: Codeunit GlobalFilters;
+                begin
+                    // Page.Run(Page::"Portfolio Fee Setup", Rec, Rec."No.");
+                    GFilter.SetGlobalPortfolioFilter(Rec."No.");
+                    _portfolio.Run();
+                    // _portfolio.SetTableView(Rec);
+                    // _portfolio.run()
+                end;
+            }
             group("Request Approval")
             {
                 Caption = 'Request Approval';
@@ -210,26 +254,7 @@ page 50231 "Portfolio Card"
                         CustomWorkflowMgmt.OnCancelWorkflowForApproval(RecRef);
                     end;
                 }
-                action(SendReopenApprovalRequest)
-                {
-                    ApplicationArea = Basic, Suite;
-                    Caption = 'Send Reopen A&pproval Request';
-                    Enabled = HasApprovedApprovalEntries;
-                    Image = SendApprovalRequest;
-                    ToolTip = 'Request approval to change the record.';
-                    Promoted = true;
-                    PromotedCategory = Process;
-                    trigger OnAction()
 
-                    var
-                        CustomWorkflowMgmt: Codeunit "Portfolio Renewal Approval Mgt";
-                        RecRef: RecordRef;
-                    begin
-                        RecRef.GetTable(Rec);
-                        if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
-                            CustomWorkflowMgmt.OnSendWorkflowForApproval(RecRef);
-                    end;
-                }
             }
 
         }
@@ -409,9 +434,23 @@ page 50231 "Portfolio Card"
 
     end;
 
+
+    trigger OnAfterGetRecord()
+    begin
+        UpdateFieldVisibility();
+    end;
+
+    local procedure UpdateFieldVisibility()
+    begin
+        ShowOtherFields := (Rec.Category = Rec.Category::"Bank Loan") or (Rec.Category = Rec.Category::Institutional);
+        // CurrPage.Editable := ShowOtherFields; // Optional: disable entire page
+    end;
+
     var
         OpenApprovalEntriesExistCurrUser, OpenApprovalEntriesExist, CanCancelApprovalForRecord
         , HasApprovalEntries, HasApprovedApprovalEntries : Boolean;
         ApprovalsMgmt: Codeunit "Approvals Mgmt.";
         "Region/Country": Record Country_Region;
+        ShowOtherFields: Boolean;
+
 }

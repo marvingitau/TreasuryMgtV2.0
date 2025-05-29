@@ -12,6 +12,11 @@ page 50246 "Portfolio List"
         {
             repeater(General)
             {
+                field("No."; Rec."No.")
+                {
+                    ApplicationArea = All;
+
+                }
                 field(Code; Rec.Code)
                 {
                     ApplicationArea = All;

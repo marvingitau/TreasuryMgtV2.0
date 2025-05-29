@@ -43,10 +43,32 @@ table 50248 "RelatedParty- Cust"
         field(21; PlacementDate; Date)
         {
             DataClassification = ToBeClassified;
+            trigger OnValidate()
+            begin
+                if (Rec.PlacementDate <> 0D) and (Rec.MaturityDate <> 0D) then begin
+                    PlacementAndMaturityDifference := (Rec.MaturityDate - Rec.PlacementDate);
+                    DiffPlacementMaturityDate := PlacementAndMaturityDifference;
+                    Message('Loan Duration is %1', Format(PlacementAndMaturityDifference));
+                end;
+            end;
         }
         field(25; MaturityDate; Date)
         {
             DataClassification = ToBeClassified;
+            trigger OnValidate()
+            begin
+                if (Rec.PlacementDate <> 0D) and (Rec.MaturityDate <> 0D) then begin
+
+                    PlacementAndMaturityDifference := (Rec.MaturityDate - Rec.PlacementDate);
+                    DiffPlacementMaturityDate := PlacementAndMaturityDifference;
+                    Message('Loan Duration is %1', Format(PlacementAndMaturityDifference));
+                end;
+            end;
+        }
+        field(28; DiffPlacementMaturityDate; Integer)
+        {
+            DataClassification = ToBeClassified;
+
         }
         field(35; Currency; Code[20])
         {
@@ -285,6 +307,7 @@ table 50248 "RelatedParty- Cust"
         NoSer: Codeunit "No. Series";
         GenSetup: Record "Treasury General Setup";
         DimensionValue: Record "Dimension Value";
+        PlacementAndMaturityDifference: Decimal;
 
     trigger OnInsert()
     begin

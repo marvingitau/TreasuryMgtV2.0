@@ -57,6 +57,8 @@ table 50232 "Funder Loan"
                         Category_line_No := Portfolio.Category_Line_No;
                         Rec.Validate(Category);
                     end;
+
+                    InvstPINNo := Funder.KRA;
                 end;
             end;
         }
@@ -89,7 +91,7 @@ table 50232 "Funder Loan"
             trigger OnValidate()
             begin
                 if (PlacementDate <> 0D) and (MaturityDate <> 0D) then begin
-                    LoanDurationDays := (MaturityDate - PlacementDate) + 1;
+                    LoanDurationDays := (MaturityDate - PlacementDate);
                 end
 
             end;
@@ -101,7 +103,7 @@ table 50232 "Funder Loan"
             trigger OnValidate()
             begin
                 if (PlacementDate <> 0D) and (MaturityDate <> 0D) then begin
-                    LoanDurationDays := (MaturityDate - PlacementDate) + 1;
+                    LoanDurationDays := (MaturityDate - PlacementDate);
                 end
 
             end;
@@ -131,7 +133,12 @@ table 50232 "Funder Loan"
         field(505; "InterestRate"; Decimal)
         {
             DataClassification = ToBeClassified;
-            Caption = 'Gross Interest rate (p.a)';
+            trigger OnValidate()
+            begin
+                if InterestRate <> 0 then
+                    NetInterestRate := 100 - (Withldtax * InterestRate)
+            end;
+
         }
         field(506; "InterestRateType"; Enum InterestRateType)
         {
@@ -185,11 +192,11 @@ table 50232 "Funder Loan"
             DataClassification = ToBeClassified;
             Caption = 'Investor PIN No (Revenue authority)';
         }
-        field(515; StartTenor; Date)
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Start Tenor';
-        }
+        // field(515; StartTenor; Date)
+        // {
+        //     DataClassification = ToBeClassified;
+        //     Caption = 'Start Tenor';
+        // }
 
         field(516; SecurityType; Enum SecurityType)
         {
@@ -225,11 +232,11 @@ table 50232 "Funder Loan"
         //     DataClassification = ToBeClassified;
         //     Caption = 'Treasury Vendor Type';
         // }
-        field(521; EndTenor; Date)
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'End Tenor';
-        }
+        // field(521; EndTenor; Date)
+        // {
+        //     DataClassification = ToBeClassified;
+        //     Caption = 'End Tenor';
+        // }
         field(522; EnableGLPosting; Boolean)
         {
             DataClassification = ToBeClassified;
@@ -327,9 +334,20 @@ table 50232 "Funder Loan"
                 _docNo: Code[20];
                 TrsyMgt: Codeunit "Treasury Mgt CU";
                 _ConvertedCurrency: Decimal;
+                _funder: Record Funders;
+                _portfolio: Record Portfolio;
             begin
                 if not (Status = Status::Approved) then
                     exit;
+                _funder.Reset();
+                _funder.SetRange("No.", "Funder No.");
+                if not _funder.Find('-') then
+                    Error('Funder %1 not found _fl', "Funder No.");
+                _portfolio.Reset();
+                _portfolio.SetRange("No.", _funder.Portfolio);
+                if not _portfolio.Find('-') then
+                    Error('Portfolio %1 not found _fl', _funder.Portfolio);
+
                 _docNo := TrsyMgt.GenerateDocumentNumber();
                 //Get Posting groups
                 /*if not venPostingGroup.Get("Posting Group") then
@@ -391,17 +409,19 @@ table 50232 "Funder Loan"
                     funderLegderEntry."Posting Date" := Today;
                     funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::"Original Amount";
                     funderLegderEntry."Document No." := _docNo;
+                    funderLegderEntry."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                     funderLegderEntry.Category := Category; // Funder Loan Category
                     funderLegderEntry.Category_Line := Category_line_No; // Funder Loan Category
                     // funderLegderEntry."Transaction Type" := funderLegderEntry."Transaction Type"::"Original Amount";
-                    funderLegderEntry.Description := Name + ' ' + "Bank Ref. No." + ' Original Amount ' + Format(Today);
+                    //  _funderLoan."No." + ' ' + _funderLoan."No." + '-' + _funderLoan."Bank Ref. No." + '-' + Format(_funderLoan.PlacementDate) + Format(_funderLoan.MaturityDate) +
+                    funderLegderEntry.Description := "No." + ' ' + Name + '-' + "Bank Ref. No." + '-' + Format(PlacementDate) + ' ' + Format(MaturityDate);
                     funderLegderEntry."Currency Code" := Currency;
                     funderLegderEntry.Amount := "Original Disbursed Amount";
                     funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
                     funderLegderEntry."Remaining Amount" := "Original Disbursed Amount";
                     funderLegderEntry.Insert();
                     // Commit();
-                    FunderMgt.DirectGLPosting('init', principleAcc, "Original Disbursed Amount", 'Original Amount', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.")
+                    FunderMgt.DirectGLPosting('init', principleAcc, "Original Disbursed Amount", 'Original Amount', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code")
                 end;
 
 
@@ -423,13 +443,13 @@ table 50232 "Funder Loan"
                     funderLegderEntry.Category := Category; // Funder Loan Category
                     funderLegderEntry."Document No." := _docNo;
                     funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
-                    funderLegderEntry.Description := Name + ' ' + "Bank Ref. No." + 'Interest calculation' + Format(Today);
+                    funderLegderEntry.Description := "No." + ' ' + Name + ' ' + _portfolio.Code + '-' + "Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>');
                     funderLegderEntry.Amount := "Rollovered Interest";
                     funderLegderEntry."Amount(LCY)" := "Rollovered Interest";
                     funderLegderEntry."Remaining Amount" := "Rollovered Interest";
                     funderLegderEntry.Insert();
                     if (EnableGLPosting = true) and ("Rollovered Interest" <> 0) then
-                        FunderMgt.DirectGLPosting('interest', principleAcc, "Rollovered Interest", 'Interest', "No.", interestAccPay, '', '', '', "Bank Ref. No.");//GROSS Interest
+                        FunderMgt.DirectGLPosting('interest', principleAcc, "Rollovered Interest", 'Interest', "No.", interestAccPay, '', '', '', "Bank Ref. No.", _funder."Shortcut Dimension 1 Code");//GROSS Interest
 
                     Rollovered := Rollovered::Normal;
                     // "Rollovered Interest" := 0;
@@ -517,11 +537,11 @@ table 50232 "Funder Loan"
         }
 
 
-        field(2609; InvestmentTenor; Integer)
-        {
-            // OptionMembers = "12","15","18","24";
-            DataClassification = ToBeClassified;
-        }
+        // field(2609; InvestmentTenor; Integer)
+        // {
+        //     // OptionMembers = "12","15","18","24";
+        //     DataClassification = ToBeClassified;
+        // }
         field(2610; PoliticalExposure; Boolean)
         {
             DataClassification = ToBeClassified;
@@ -590,7 +610,8 @@ table 50232 "Funder Loan"
             Caption = 'First Due Date';
             trigger OnValidate()
             begin
-                TreasuryCU.ValidateQuarterEndDate("FirstDueDate");
+                if PeriodicPaymentOfInterest = PeriodicPaymentOfInterest::Quarterly then
+                    TreasuryCU.ValidateQuarterEndDate("FirstDueDate");
             end;
         }
         field(2835; LoanDurationDays; Integer)
@@ -603,7 +624,15 @@ table 50232 "Funder Loan"
         field(2836; NetInterestRate; Decimal)
         {
             DataClassification = ToBeClassified;
-            Caption = 'Net Interest Rate';
+            trigger OnValidate()
+            begin
+                if NetInterestRate <> 0 then begin
+                    // Formula
+                    InterestRate := 100 + (Withldtax * NetInterestRate)
+                end;
+
+            end;
+
         }
         //Rollovered Record related
         field(3000; Rollovered; Option)

@@ -161,8 +161,8 @@ report 50238 "Reminder On Intr. Due"
                     _remainingDays := TrsryCU.GetDaysUntilYearEnd();
 
 
-                if _remainingDays = GeneralSetup."Intr. Pay. Rem. Waiting Time" then begin //(Today - "Funder Loan".MaturityDate) = GeneralSetup."Placemnt. Matur Rem. Time"
-                                                                                           // _remainingDays = GeneralSetup."Intr. Pay. Rem. Waiting Time"
+                if true then begin //(Today - "Funder Loan".MaturityDate) = GeneralSetup."Placemnt. Matur Rem. Time"
+                                   // _remainingDays = GeneralSetup."Intr. Pay. Rem. Waiting Time"
 
                     // FunderLoanTbl.Reset();
                     // FunderLoanTbl.SetRange("No.", FunderNo);
@@ -173,7 +173,7 @@ report 50238 "Reminder On Intr. Due"
                     _fNo := FunderLoanTbl."No.";
                     placementDate := FunderLoanTbl.PlacementDate;
                     maturityDate := FunderLoanTbl.MaturityDate;
-                    dateDiff := (maturityDate - placementDate) + 1;
+                    dateDiff := (maturityDate - placementDate);
                     endYearDate := CALCDATE('CY', Today);
                     remainingDays := endYearDate - FunderLoanTbl.PlacementDate;
 

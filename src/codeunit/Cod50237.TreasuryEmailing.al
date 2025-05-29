@@ -240,7 +240,7 @@ codeunit 50237 "Treasury Emailing"
 
         RecRef.GetTable(_remOnPlacementMature);
         TempBlob.CreateOutStream(FileOutStream);
-        Report.SaveAs(Report::ReminderAlertPerCategory, '', ReportFormat::Pdf, FileOutStream, RecRef);
+        Report.SaveAs(Report::ReminderAlertPerCategory, '', ReportFormat::Pdf, FileOutStream);
         TempBlob.CreateInStream(FileInStream);
         EmailMessage.AddAttachment('CategoryMaturity.pdf', 'PDF', FileInStream);
 
@@ -304,7 +304,7 @@ codeunit 50237 "Treasury Emailing"
 
         RecRef.GetTable(FunderLoan);
         TempBlob.CreateOutStream(FileOutStream);
-        Report.SaveAs(Report::"Reminder On Intr. Due", '', ReportFormat::Excel, FileOutStream, RecRef);
+        Report.SaveAs(Report::"Reminder On Intr. Due", '', ReportFormat::Excel, FileOutStream);
         TempBlob.CreateInStream(FileInStream);
 
         Body := '<p>Dear ' + GeneralSetup."Trsy Recipient Name" + '</p><p> You are receiving D365 Treasury reminders for interest due </p>';

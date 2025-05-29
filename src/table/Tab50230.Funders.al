@@ -15,8 +15,7 @@ table 50230 Funders
         field(20; Portfolio; Code[50])
         {
             DataClassification = ToBeClassified;
-            TableRelation = Portfolio;
-            //where(Status = const(Approved));
+            TableRelation = Portfolio where(Status = const(Approved));
         }
         field(30; Name; Text[100])
         {
@@ -54,6 +53,7 @@ table 50230 Funders
             var
                 _region: Code[20];
                 noLength: Integer;
+                _funders: Record Funders;
             begin
                 GenSetup.Get(0);
                 _region := GenSetup."Region/Country";
@@ -67,6 +67,51 @@ table 50230 Funders
                 end;
                 if not TrsyMgtCU.ValidateNumeric("Employer Identification Number") then
                     Error('Invalid Character(s)');
+
+                //If Individual Replicate the values
+                if FunderType = FunderType::Individual then begin
+                    _funders.Reset();
+                    _funders.SetRange(_funders."Employer Identification Number", "Employer Identification Number");
+                    if _funders.Find('-') then begin
+                        // Error('ID No. %1 not unique', "Employer Identification Number");
+                        // exit;
+                        Portfolio := _funders.Portfolio;
+                        Name := _funders.Name;
+                        FunderType := _funders.FunderType;
+                        // "Payables Account" := _funders."Payables Account";
+                        // "Interest Expense" := _funders."Interest Expense";
+                        // "Interest Payable" := _funders."Interest Payable";
+                        "Shortcut Dimension 1 Code" := _funders."Shortcut Dimension 1 Code";
+                        KRA := _funders.KRA;
+                        "Identification Doc." := _funders."Identification Doc.";
+                        "Employer Passport Number" := _funders."Employer Passport Number";
+                        IndNatureOfBusiness := _funders.IndNatureOfBusiness;
+                        IndOccupation := _funders.IndOccupation;
+                        IndEmployer := _funders.IndEmployer;
+                        IndEmployerPosition := _funders.IndEmployerPosition;
+                        IndEmployementOther := _funders.IndEmployementOther;
+                        "Physical Address" := _funders."Physical Address";
+                        "Phone Number" := _funders."Phone Number";
+                        "Postal Address" := _funders."Postal Address";
+                        "Postal Code" := _funders."Postal Code";
+                        "Mailing Address" := _funders."Mailing Address";
+                        ContactDetailName := _funders.ContactDetailName;
+                        ContactDetailRelation := _funders.ContactDetailRelation;
+                        "Contact Detail Id" := _funders."Contact Detail Id";
+                        "Contact Detail Passport" := _funders."Contact Detail Passport";
+                        ContactDetailPhone := _funders.ContactDetailPhone;
+
+                        "Bank Code" := _funders."Bank Code";
+                        "Bank Name" := _funders."Bank Name";
+                        "Bank Branch" := _funders."Bank Branch";
+                        "Bank Account Number" := _funders."Bank Account Number";
+                        "Bank Address" := _funders."Bank Address";
+                        "SWIFT/BIC Code" := _funders."SWIFT/BIC Code";
+                        "IBAN (Int Bank Acc No)" := _funders."IBAN (Int Bank Acc No)";
+
+                    end;
+
+                end;
             end;
 
         }
@@ -105,7 +150,7 @@ table 50230 Funders
         field(90; "Physical Address"; Text[50])
         {
             DataClassification = ToBeClassified;
-            ToolTip = 'Full address of the counterparty’s registered office or place of business.';
+            ToolTip = 'Full address of the registered office or place of business.';
         }
         field(100; "Billing Address"; Text[50])
         {
@@ -194,6 +239,10 @@ table 50230 Funders
         {
             DataClassification = ToBeClassified;
         }
+        field(212; "Bank Payee"; Text[100])
+        {
+            DataClassification = ToBeClassified;
+        }
         field(220; "Credit Limit"; Integer)
         {
             DataClassification = ToBeClassified;
@@ -258,6 +307,13 @@ table 50230 Funders
         }
 
         field(601; "Short. Dim 1 Code_Joint 2"; Code[50])
+        {
+            CaptionClass = '1,1,1';
+            DataClassification = ToBeClassified;
+            TableRelation = "Dimension Value".Code WHERE("Global Dimension No." = CONST(1), "Dimension Value Type" = CONST(Standard), Blocked = CONST(false));
+
+        }
+        field(603; "Short. Dim 1 Code_Joint 3"; Code[50])
         {
             CaptionClass = '1,1,1';
             DataClassification = ToBeClassified;
@@ -567,7 +623,15 @@ table 50230 Funders
 
 
         // Neext of Kin -> Contact Details
-
+        field(2400; "Contact Det. Id Doc."; Option)
+        {
+            DataClassification = ToBeClassified;
+            OptionMembers = ID,Passport;
+        }
+        field(2410; InstitutionalAdditionalDet; Text[2000])
+        {
+            DataClassification = ToBeClassified;
+        }
         field(2500; ContactDetailName; Text[250])
         {
             DataClassification = ToBeClassified;
@@ -575,12 +639,93 @@ table 50230 Funders
         field(2501; ContactDetailPhone; Text[250])
         {
             DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen(ContactDetailPhone);
+                    if (noLength < "Region/Country"."Minimum Phone Length") or (noLength > "Region/Country"."Maximum Phone Length") then begin
+                        Error('Phone No. size must be between %1 and %2', "Region/Country"."Minimum Phone Length", "Region/Country"."Maximum Phone Length");
+                    end;
+                end;
+                // if not TrsyMgtCU.ValidateNumeric(ContactDetailPhone) then
+                //     Error('Invalid Phone Character(s)');
+            end;
         }
-        field(2502; ContactDetailIdPassport; Text[250])
+        field(2502; "Contact Detail Id"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+                _funders: Record Funders;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Contact Detail Id");
+                    if (noLength < "Region/Country"."ID Min Length") or (noLength > "Region/Country"."ID Max Length") then begin
+                        Error('ID No. size must be between %1 and %2', "Region/Country"."ID Min Length", "Region/Country"."ID Max Length");
+                    end;
+                end;
+                if not TrsyMgtCU.ValidateNumeric("Contact Detail Id") then
+                    Error('Invalid Character(s)');
+
+            end;
+
+        }
+        field(2508; "Contact Detail Passport"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Contact Detail Passport");
+                    if (noLength < "Region/Country"."Passport Min Length") or (noLength > "Region/Country"."Passport Max Length") then begin
+                        Error('Passport No. size must be between %1 and %2', "Region/Country"."Passport Min Length", "Region/Country"."Passport Max Length");
+                    end;
+                end;
+                if TrsyMgtCU.ValidateAlphanumeric("Contact Detail Passport") then
+                    Error('Invalid Character(s)');
+            end;
+
+        }
+        field(2503; ContactDetailRelation; Text[250])
         {
             DataClassification = ToBeClassified;
         }
-        field(2503; ContactDetailRelation; Text[250])
+        field(1505; ContactDetailEmail; Text[250])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                MailManagement: Codeunit "Mail Management";
+            begin
+                if "Mailing Address" = '' then
+                    exit;
+                // MailManagement.CheckValidEmailAddresses("Mailing Address");
+                if not TrsyMgtCU.ValidateEmail(ContactDetailEmail) then
+                    FieldError("Mailing Address", 'Must be a valid email address');
+            end;
+
+        }
+        field(1507; ContactDetailDesignation; Text[250])
         {
             DataClassification = ToBeClassified;
         }
@@ -649,6 +794,10 @@ table 50230 Funders
         field(3000; FunderType; Option)
         {
             OptionMembers = Individual,"Joint Application",Corporate,Institutional,"Bank Loan";
+            DataClassification = ToBeClassified;
+        }
+        field(3009; "Coupa Ref No."; Text[250])
+        {
             DataClassification = ToBeClassified;
         }
         field(3010; CompanyNo; Text[250])
@@ -750,6 +899,8 @@ table 50230 Funders
         DimensionValue.SetRange(DimensionValue.Code, GenSetup."Shortcut Dimension 1 Code");
         if DimensionValue.FindFirst() then begin
             Rec."Shortcut Dimension 1 Code" := GenSetup."Shortcut Dimension 1 Code";
+            Rec."Short. Dim 1 Code_Joint 2" := GenSetup."Shortcut Dimension 1 Code";
+            Rec."Short. Dim 1 Code_Joint 3" := GenSetup."Shortcut Dimension 1 Code";
             // "Shortcut Dimension 1 Code" := DimensionValue.Name;
         end;
     end;

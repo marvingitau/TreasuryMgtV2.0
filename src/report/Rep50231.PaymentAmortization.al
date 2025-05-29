@@ -38,6 +38,7 @@ report 50231 "Payment Amortization"
             {
 
             }
+            column(NumberofDays; NumberofDays) { }
 
         }
     }
@@ -159,7 +160,7 @@ report 50231 "Payment Amortization"
         dueDate := FunderLoanTbl.FirstDueDate;
         placementDate := FunderLoanTbl.PlacementDate;
         maturityDate := FunderLoanTbl.MaturityDate;
-        dateDiff := (maturityDate - placementDate) + 1;
+        dateDiff := (maturityDate - placementDate);
         endYearDate := CALCDATE('CY', Today);
         remainingDays := endYearDate - FunderLoanTbl.PlacementDate;
 
@@ -184,6 +185,9 @@ report 50231 "Payment Amortization"
 
         FunderLoanTbl.CalcFields(OutstandingAmntDisbLCY);
         _principle := FunderLoanTbl.OutstandingAmntDisbLCY;
+        if (_principle = 0) then begin
+            _principle := FunderLoanTbl."Original Disbursed Amount";
+        end;
 
 
 
@@ -252,6 +256,7 @@ report 50231 "Payment Amortization"
                 Loan.InterestRate := _interestRate_Active;
                 Loan.TotalPayment := _totalPayment + monthlyInterest;
                 Loan.OutStandingAmt := _outstandingAmount;
+                Loan.NumberofDays := DaysInMonth;
                 Loan.Insert();
 
                 // monthCounter := monthCounter + 1;
@@ -283,13 +288,15 @@ report 50231 "Payment Amortization"
                     _currentQuarterInLoop := GetEndOfQuarter(maturityDate);
                 end
                 else begin
-                    _currentQuarterInLoop := CALCDATE('<+' + Format(QuarterCounter) + 'Q>', StatingQuarterEndDate);
+                    // _currentQuarterInLoop := CALCDATE('<+' + Format(QuarterCounter) + 'Q>', StatingQuarterEndDate);
+                    _currentQuarterInLoop := AddQuartersToQuarterEnd(QuarterCounter, StatingQuarterEndDate);
+
                     // QuarterCounterRem := QuarterCounter mod 4;
                     QuarterCounterRem := GetQuarter(_currentQuarterInLoop);
-                    if QuarterCounterRem = 4 then
-                        DaysInQuarter := GetDaysInQuarter(_currentQuarterInLoop) - 1
-                    else
-                        DaysInQuarter := GetDaysInQuarter(_currentQuarterInLoop);
+                    // if QuarterCounterRem = 4 then
+                    //     DaysInQuarter := GetDaysInQuarter(_currentQuarterInLoop) - 1
+                    // else
+                    DaysInQuarter := GetDaysInQuarter(_currentQuarterInLoop);
 
                     // if QuarterCounterRem = 0 then
                     //     QuarterCounterRem := 4;
@@ -336,6 +343,7 @@ report 50231 "Payment Amortization"
                     FirstDueAccumulator.InterestRate := _interestRate_Active;
                     FirstDueAccumulator.TotalPayment := _totalPayment + monthlyInterest;
                     FirstDueAccumulator.OutStandingAmt := _outstandingAmount;
+                    FirstDueAccumulator.NumberofDays := DaysInQuarter;
                     FirstDueAccumulator.Insert();
                 end else begin
                     FirstDueAccumulator.Reset();
@@ -376,6 +384,7 @@ report 50231 "Payment Amortization"
                     Loan.InterestRate := _interestRate_Active;
                     Loan.TotalPayment := (_totalPayment + monthlyInterest) + _sumTotalPayment;
                     Loan.OutStandingAmt := _outstandingAmount + _sumOutstanding;
+                    Loan.NumberofDays := DaysInQuarter;
                     Loan.Insert();
 
                     FirstDueAccumulator.Reset();
@@ -451,6 +460,7 @@ report 50231 "Payment Amortization"
                 Loan.InterestRate := _interestRate_Active;
                 Loan.TotalPayment := _totalPayment + monthlyInterest;
                 Loan.OutStandingAmt := _outstandingAmount;
+                Loan.NumberofDays := DaysInBiann;
                 Loan.Insert();
 
             end;
@@ -514,6 +524,7 @@ report 50231 "Payment Amortization"
                 Loan.InterestRate := _interestRate_Active;
                 Loan.TotalPayment := _totalPayment + monthlyInterest;
                 Loan.OutStandingAmt := _outstandingAmount;
+                Loan.NumberofDays := DaysInAnnual;
                 Loan.Insert();
 
             end;
@@ -547,6 +558,7 @@ report 50231 "Payment Amortization"
             Loan.InterestRate := _interestRate_Active;
             Loan.TotalPayment := _totalPayment + monthlyInterest;
             Loan.OutStandingAmt := _outstandingAmount;
+            Loan.NumberofDays := dateDiff;
             Loan.Insert();
 
 
@@ -556,6 +568,51 @@ report 50231 "Payment Amortization"
 
 
     end;
+
+
+    procedure AddQuartersToQuarterEnd(QuarterNumber: Integer; QuarterEndDate: Date): Date
+    var
+        CurrentMonth, CurrentYear : Integer;
+        TargetQuarter, TargetYear : Integer;
+        NewQuarterEndDate: Date;
+    begin
+        // 1. Extract current quarter and year from the input date
+        CurrentMonth := DATE2DMY(QuarterEndDate, 2);
+        CurrentYear := DATE2DMY(QuarterEndDate, 3);
+
+        // 2. Calculate current quarter (1-4)
+        case CurrentMonth of
+            1 .. 3:
+                TargetQuarter := 1;   // Q1 (Jan-Mar)
+            4 .. 6:
+                TargetQuarter := 2;   // Q2 (Apr-Jun)
+            7 .. 9:
+                TargetQuarter := 3;   // Q3 (Jul-Sep)
+            else
+                TargetQuarter := 4;    // Q4 (Oct-Dec)
+        end;
+
+        // 3. Add the requested quarters (handling year overflow)
+        TargetQuarter := TargetQuarter + QuarterNumber;
+        TargetYear := CurrentYear + ((TargetQuarter - 1) div 4);
+        TargetQuarter := ((TargetQuarter - 1) mod 4) + 1;
+
+        // 4. Return the correct quarter-end date
+        case TargetQuarter of
+            1:
+                NewQuarterEndDate := DMY2Date(31, 3, TargetYear);   // Q1: Mar 31
+            2:
+                NewQuarterEndDate := DMY2Date(30, 6, TargetYear);   // Q2: Jun 30
+            3:
+                NewQuarterEndDate := DMY2Date(30, 9, TargetYear);   // Q3: Sep 30
+            4:
+                NewQuarterEndDate := DMY2Date(31, 12, TargetYear);  // Q4: Dec 31
+        end;
+
+        exit(NewQuarterEndDate);
+    end;
+
+
 
     procedure IsFirstOfMonth(): Boolean
     var

@@ -33,6 +33,11 @@ page 50230 "Funder List"
                 {
                     ApplicationArea = All;
                 }
+                field(FunderType; Rec.FunderType)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Funder Type';
+                }
                 field(KRA; Rec.KRA)
                 {
                     ApplicationArea = All;
@@ -82,14 +87,43 @@ page 50230 "Funder List"
     {
         area(Processing)
         {
-            action(ActionName)
+            action("Open Records")
             {
-
+                Promoted = true;
+                PromotedIsBig = true;
+                Image = OpenJournal;
+                PromotedCategory = Process;
+                Caption = 'Open Funders';
                 trigger OnAction()
                 begin
-
+                    // if Rec.Status = Rec.Status::"Pending Approval" then
+                    Rec.SetRange(Status, Rec.Status::Open);
+                    CurrPage.Update(false); // Refresh the page
                 end;
             }
+
+            action("Approved Approval")
+            {
+                Promoted = true;
+                PromotedIsBig = true;
+                Image = Approval;
+                PromotedCategory = Process;
+                Caption = 'Approved Funders';
+                trigger OnAction()
+                begin
+                    // if Rec.Status = Rec.Status::Approved then
+                    Rec.SetRange(Status, Rec.Status::Approved);
+                    CurrPage.Update(false); // Refresh the page
+                end;
+            }
+            // action(ActionName)
+            // {
+
+            //     trigger OnAction()
+            //     begin
+
+            //     end;
+            // }
             action("Reminder On Placement Maturity")
             {
                 Image = Reminder;
@@ -149,4 +183,9 @@ page 50230 "Funder List"
             }
         }
     }
+
+    trigger OnOpenPage()
+    begin
+        Rec.SetRange(Status, Rec.Status::Open);
+    end;
 }

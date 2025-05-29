@@ -54,6 +54,10 @@ table 50239 "Intr- Amort"
         {
             DataClassification = ToBeClassified;
         }
+        field(200; NumberofDays; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
     }
 
     keys

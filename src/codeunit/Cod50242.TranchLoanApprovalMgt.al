@@ -1,4 +1,4 @@
-codeunit 50235 "Treasury Approval Mgt"
+codeunit 50242 "Tranch Loan Approval Mgt"
 {
     trigger OnRun()
     begin
@@ -36,21 +36,21 @@ codeunit 50235 "Treasury Approval Mgt"
         RecRef: RecordRef;
         WorkflowEventHandling: Codeunit "Workflow Event Handling";
     begin
-        RecRef.Open(Database::"Funder Loan");
-        WorkflowEventHandling.AddEventToLibrary(GetWorkflowCode(RUNWORKFLOWONSENDFORAPPROVALCODE, RecRef), Database::"Funder Loan",
+        RecRef.Open(Database::"Disbur. Tranched Loan");
+        WorkflowEventHandling.AddEventToLibrary(GetWorkflowCode(RUNWORKFLOWONSENDFORAPPROVALCODE, RecRef), Database::"Disbur. Tranched Loan",
           GetWorkflowEventDesc(WorkflowSendForApprovalEventDescTxt, RecRef), 0, false);
-        WorkflowEventHandling.AddEventToLibrary(GetWorkflowCode(RUNWORKFLOWONCANCELFORAPPROVALCODE, RecRef), DATABASE::"Funder Loan",
+        WorkflowEventHandling.AddEventToLibrary(GetWorkflowCode(RUNWORKFLOWONCANCELFORAPPROVALCODE, RecRef), DATABASE::"Disbur. Tranched Loan",
           GetWorkflowEventDesc(WorkflowCancelForApprovalEventDescTxt, RecRef), 0, false);
     end;
     // subscribe
 
-    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Treasury Approval Mgt", 'OnSendWorkflowForApproval', '', false, false)]
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Portfolio Renewal Approval Mgt", 'OnSendWorkflowForApproval', '', false, false)]
     local procedure RunWorkflowOnSendWorkflowForApproval(var RecRef: RecordRef)
     begin
         WorkflowMgt.HandleEvent(GetWorkflowCode(RUNWORKFLOWONSENDFORAPPROVALCODE, RecRef), RecRef);
     end;
 
-    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Treasury Approval Mgt", 'OnCancelWorkflowForApproval', '', false, false)]
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Portfolio Renewal Approval Mgt", 'OnCancelWorkflowForApproval', '', false, false)]
     local procedure RunWorkflowOnCancelWorkflowForApproval(var RecRef: RecordRef)
     begin
         WorkflowMgt.HandleEvent(GetWorkflowCode(RUNWORKFLOWONCANCELFORAPPROVALCODE, RecRef), RecRef);
@@ -66,10 +66,10 @@ codeunit 50235 "Treasury Approval Mgt"
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Workflow Response Handling", 'OnOpenDocument', '', false, false)]
     local procedure OnOpenDocument(RecRef: RecordRef; var Handled: Boolean)
     var
-        CustomWorkflowHdr: Record "Funder Loan";
+        CustomWorkflowHdr: Record "Disbur. Tranched Loan";
     begin
         case RecRef.Number of
-            Database::"Funder Loan":
+            Database::"Disbur. Tranched Loan":
                 begin
                     RecRef.SetTable(CustomWorkflowHdr);
                     CustomWorkflowHdr.Validate(Status, CustomWorkflowHdr.Status::Open);
@@ -82,10 +82,10 @@ codeunit 50235 "Treasury Approval Mgt"
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Approvals Mgmt.", 'OnSetStatusToPendingApproval', '', false, false)]
     local procedure OnSetStatusToPendingApproval(RecRef: RecordRef; var Variant: Variant; var IsHandled: Boolean)
     var
-        CustomWorkflowHdr: Record "Funder Loan";
+        CustomWorkflowHdr: Record "Disbur. Tranched Loan";
     begin
         case RecRef.Number of
-            Database::"Funder Loan":
+            Database::"Disbur. Tranched Loan":
                 begin
                     RecRef.SetTable(CustomWorkflowHdr);
                     CustomWorkflowHdr.Validate(Status, CustomWorkflowHdr.Status::"Pending Approval");
@@ -99,15 +99,15 @@ codeunit 50235 "Treasury Approval Mgt"
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Approvals Mgmt.", 'OnPopulateApprovalEntryArgument', '', false, false)]
     local procedure OnPopulateApprovalEntryArgument(var RecRef: RecordRef; var ApprovalEntryArgument: Record "Approval Entry"; WorkflowStepInstance: Record "Workflow Step Instance")
     var
-        CustomWorkflowHdr: Record "Funder Loan";
+        CustomWorkflowHdr: Record "Disbur. Tranched Loan";
     begin
         case RecRef.Number of
-            DataBase::"Funder Loan":
+            DataBase::"Disbur. Tranched Loan":
                 begin
                     RecRef.SetTable(CustomWorkflowHdr);
                     ApprovalEntryArgument."Document No." := CustomWorkflowHdr."No.";
-                    ApprovalEntryArgument.Amount := CustomWorkflowHdr."Original Disbursed Amount";
-                    ApprovalEntryArgument."Amount (LCY)" := CustomWorkflowHdr."Original Disbursed Amount";
+                    // ApprovalEntryArgument.Amount := CustomWorkflowHdr."Original Disbursed Amount";
+                    // ApprovalEntryArgument."Amount (LCY)" := CustomWorkflowHdr."Original Disbursed Amount";
                 end;
         end;
     end;
@@ -115,17 +115,14 @@ codeunit 50235 "Treasury Approval Mgt"
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Workflow Response Handling", 'OnReleaseDocument', '', false, false)]
     local procedure OnReleaseDocument(RecRef: RecordRef; var Handled: Boolean)
     var
-        CustomWorkflowHdr: Record "Funder Loan";
-        EmailCU: Codeunit "Treasury Emailing";
+        CustomWorkflowHdr: Record "Disbur. Tranched Loan";
     begin
         case RecRef.Number of
-            DataBase::"Funder Loan":
+            DataBase::"Disbur. Tranched Loan":
                 begin
                     RecRef.SetTable(CustomWorkflowHdr);
                     CustomWorkflowHdr.Validate(Status, CustomWorkflowHdr.Status::Approved);
                     CustomWorkflowHdr.Modify(true);
-                    //MAil Confirmation
-                    EmailCU.SendConfirmationEmailWithAttachment(CustomWorkflowHdr."No.");
                     Handled := true;
                 end;
         end;
@@ -135,11 +132,11 @@ codeunit 50235 "Treasury Approval Mgt"
     local procedure OnRejectApprovalRequest(var ApprovalEntry: Record "Approval Entry")
     var
         RecRef: RecordRef;
-        CustomWorkflowHdr: Record "Funder Loan";
+        CustomWorkflowHdr: Record "Disbur. Tranched Loan";
         v: Codeunit "Record Restriction Mgt.";
     begin
         case ApprovalEntry."Table ID" of
-            DataBase::"Funder Loan":
+            DataBase::"Disbur. Tranched Loan":
                 begin
                     if CustomWorkflowHdr.Get(ApprovalEntry."Document No.") then begin
                         CustomWorkflowHdr.Validate(Status, CustomWorkflowHdr.Status::Rejected);
@@ -152,10 +149,8 @@ codeunit 50235 "Treasury Approval Mgt"
     var
 
         WorkflowMgt: Codeunit "Workflow Management";
-
         RUNWORKFLOWONSENDFORAPPROVALCODE: Label 'RUNWORKFLOWONSEND%1FORAPPROVAL';
         RUNWORKFLOWONCANCELFORAPPROVALCODE: Label 'RUNWORKFLOWONCANCEL%1FORAPPROVAL';
-        RUNWORKFLOWONOPENFORAPPROVALCODE: Label 'RUNWORKFLOWONOPEN%1FORAPPROVAL';
         NoWorkflowEnabledErr: Label 'No approval workflow for this record type is enabled.';
         WorkflowSendForApprovalEventDescTxt: Label 'Approval of %1 is requested.';
         WorkflowCancelForApprovalEventDescTxt: Label 'Approval of %1 is canceled.';

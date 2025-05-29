@@ -113,7 +113,7 @@ page 50295 "Portfolio Renewal Card"
                             PortfolioFeeSetup.SetRange(Code, 'Institutional');
 
                         if Page.RunModal(Page::"Portfolio Fee Setup", PortfolioFeeSetup) = Action::LookupOK then begin
-                            Rec."Fee Applicable" := PortfolioFeeSetup."Fee Applicable %";
+                            // Rec."Fee Applicable" := PortfolioFeeSetup."Fee Applicable %";
                             Rec.Category_Line_No := PortfolioFeeSetup.LineNo;
                             CurrPage.Update();
                         end;

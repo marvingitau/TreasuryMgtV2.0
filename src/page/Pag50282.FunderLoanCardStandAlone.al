@@ -258,11 +258,11 @@ page 50282 "Funder Loan Card StandAlone"
                 {
                     ApplicationArea = All;
                 }
-                field(InvestmentTenor; Rec.InvestmentTenor)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Investment Tenor (Months)';
-                }
+                // field(InvestmentTenor; Rec.InvestmentTenor)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Investment Tenor (Months)';
+                // }
                 field(InvstPINNo; Rec.InvstPINNo)
                 {
                     ApplicationArea = All;
