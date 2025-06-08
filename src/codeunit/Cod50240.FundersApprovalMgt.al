@@ -28,6 +28,11 @@ codeunit 50240 "Funders Approval Mgt"
     begin
     end;
 
+    [IntegrationEvent(false, false)]
+    procedure OnReopenWorkflowForApproval(var RecRef: RecordRef)
+    begin
+    end;
+
     // Add events to the library
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Workflow Event Handling", 'OnAddWorkflowEventsToLibrary', '', false, false)]
@@ -41,6 +46,8 @@ codeunit 50240 "Funders Approval Mgt"
           GetWorkflowEventDesc(WorkflowSendForApprovalEventDescTxt, RecRef), 0, false);
         WorkflowEventHandling.AddEventToLibrary(GetWorkflowCode(RUNWORKFLOWONCANCELFORAPPROVALCODE, RecRef), DATABASE::Funders,
           GetWorkflowEventDesc(WorkflowCancelForApprovalEventDescTxt, RecRef), 0, false);
+        WorkflowEventHandling.AddEventToLibrary(GetWorkflowCode(RUNWORKFLOWONREOPENFORAPPROVALCODE, RecRef), DATABASE::Funders,
+        GetWorkflowEventDesc(WorkflowReopenForApprovalEventDescTxt, RecRef), 0, false);
     end;
     // subscribe
 
@@ -50,16 +57,25 @@ codeunit 50240 "Funders Approval Mgt"
         WorkflowMgt.HandleEvent(GetWorkflowCode(RUNWORKFLOWONSENDFORAPPROVALCODE, RecRef), RecRef);
     end;
 
-    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Funders Approval Mgt", 'OnCancelWorkflowForApproval', '', false, false)]
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Funders Approval Mgt", OnCancelWorkflowForApproval, '', false, false)]
     local procedure RunWorkflowOnCancelWorkflowForApproval(var RecRef: RecordRef)
     begin
         WorkflowMgt.HandleEvent(GetWorkflowCode(RUNWORKFLOWONCANCELFORAPPROVALCODE, RecRef), RecRef);
+    end;
+
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Funders Approval Mgt", OnReopenWorkflowForApproval, '', false, false)]
+    local procedure RunWorkflowOnOpenWorkflowForApproval(var RecRef: RecordRef)
+    begin
+        WorkflowMgt.HandleEvent(GetWorkflowCode(RUNWORKFLOWONREOPENFORAPPROVALCODE, RecRef), RecRef);
     end;
 
     procedure GetWorkflowEventDesc(WorkflowEventDesc: Text; RecRef: RecordRef): Text
     begin
         exit(StrSubstNo(WorkflowEventDesc, RecRef.Name));
     end;
+
+    // Response
+
 
     // handle the document;
 
@@ -151,7 +167,9 @@ codeunit 50240 "Funders Approval Mgt"
         WorkflowMgt: Codeunit "Workflow Management";
         RUNWORKFLOWONSENDFORAPPROVALCODE: Label 'RUNWORKFLOWONSEND%1FORAPPROVAL';
         RUNWORKFLOWONCANCELFORAPPROVALCODE: Label 'RUNWORKFLOWONCANCEL%1FORAPPROVAL';
+        RUNWORKFLOWONREOPENFORAPPROVALCODE: Label 'RUNWORKFLOWONREOPEN%1FORAPPROVAL';
         NoWorkflowEnabledErr: Label 'No approval workflow for this record type is enabled.';
         WorkflowSendForApprovalEventDescTxt: Label 'Approval of %1 is requested.';
         WorkflowCancelForApprovalEventDescTxt: Label 'Approval of %1 is canceled.';
+        WorkflowReopenForApprovalEventDescTxt: Label 'Reopen of %1 is requested.';
 }

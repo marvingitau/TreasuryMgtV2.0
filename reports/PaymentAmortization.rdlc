@@ -300,7 +300,7 @@
                                 <TextRun>
                                   <Value>=Fields!DueDate.Value</Value>
                                   <Style>
-                                    <Format>MM/dd/yyyy</Format>
+                                    <Format>dd/MM/yyyy</Format>
                                   </Style>
                                 </TextRun>
                               </TextRuns>

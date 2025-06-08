@@ -32,6 +32,14 @@ table 50233 "Treasury General Setup"
             TableRelation = "G/L Account";
 
         }
+
+        field(7; "Opening  Balance Acc"; Code[100])
+        {
+            Caption = 'Opening  Balance Account';
+            DataClassification = ToBeClassified;
+            TableRelation = "G/L Account";
+
+        }
         field(20; "Funder No."; Code[20])
         {
             Caption = 'Funder No';

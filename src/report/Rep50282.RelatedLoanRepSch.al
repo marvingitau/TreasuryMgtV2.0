@@ -1,4 +1,4 @@
-report 50249 "Loan Repayment Schedule"
+report 50282 "Related Loan Rep. Sch."
 {
     UsageCategory = ReportsAndAnalysis;
     ApplicationArea = All;
@@ -6,7 +6,10 @@ report 50249 "Loan Repayment Schedule"
 
     dataset
     {
-
+        dataitem("RelatedParty Loan"; "RelatedParty Loan")
+        {
+            // column(No_; "No.") { }
+        }
         dataitem(Repayment; "Repayment Schedule")
         {
             // RequestFilterFields = "No.";
@@ -21,44 +24,44 @@ report 50249 "Loan Repayment Schedule"
         }
     }
 
-    requestpage
-    {
-        // AboutTitle = 'Teaching tip title';
-        // AboutText = 'Teaching tip content';
-        layout
-        {
-            area(Content)
-            {
-                group(GroupName)
-                {
-                    field(No; FunderNo)
-                    {
-                        TableRelation = "Funder Loan"."No.";
-                        ApplicationArea = All;
+    // requestpage
+    // {
+    //     // AboutTitle = 'Teaching tip title';
+    //     // AboutText = 'Teaching tip content';
+    //     layout
+    //     {
+    //         area(Content)
+    //         {
+    //             group(GroupName)
+    //             {
+    //                 field(No; FunderNo)
+    //                 {
+    //                     TableRelation = "RelatedParty Loan"."No.";
+    //                     ApplicationArea = All;
 
-                    }
-                }
-            }
-        }
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
+    //     actions
+    //     {
+    //         area(processing)
+    //         {
+    //             action(LayoutName)
+    //             {
 
-                }
-            }
-        }
-    }
+    //             }
+    //         }
+    //     }
+    // }
 
     rendering
     {
         layout(LayoutName)
         {
             Type = RDLC;
-            LayoutFile = './reports/LoanRepaymentSchedule.rdlc';
+            LayoutFile = './reports/RelatedLoanRepaymentSchedule.rdlc';
         }
     }
     trigger OnPreReport()
@@ -130,25 +133,20 @@ report 50249 "Loan Repayment Schedule"
 
         _disbursTrachesTbl: Record "Disbur. Tranched Loan";
     begin
-        ReportFlag.Reset();
-        ReportFlag.SetFilter("Line No.", '<>%1', 0);
-        ReportFlag.SetFilter("Utilizing User", '=%1', UserId);
-        if not ReportFlag.FindFirst() then
-            Error('No Report Flag Added');
 
-        FunderNo := ReportFlag."Funder Loan No.";
-        // Filters := FunderLoanTbl.GetFilter("No.");
-        FunderLoanTbl.Reset();
-        FunderLoanTbl.SetRange("No.", FunderNo);
-        if not FunderLoanTbl.Find('-') then
-            Error('Funder Loan not %1 found', FunderNo);
-        _fNo := FunderLoanTbl."No.";
-        dueDate := FunderLoanTbl.FirstDueDate;
-        placementDate := FunderLoanTbl.PlacementDate;
-        maturityDate := FunderLoanTbl.MaturityDate;
+        RelatedPartyLoanNo := "RelatedParty Loan".GetFilter("No.");
+        // Filters := RelatedPartyLoanTbl.GetFilter("No.");
+        RelatedPartyLoanTbl.Reset();
+        RelatedPartyLoanTbl.SetRange("No.", RelatedPartyLoanNo);
+        if not RelatedPartyLoanTbl.Find('-') then
+            Error('RelatedParty  Loan not %1 found', RelatedPartyLoanNo);
+        _fNo := RelatedPartyLoanTbl."No.";
+        dueDate := RelatedPartyLoanTbl.FirstDueDate;
+        placementDate := RelatedPartyLoanTbl.PlacementDate;
+        maturityDate := RelatedPartyLoanTbl.MaturityDate;
         dateDiff := (maturityDate - placementDate);
         endYearDate := CALCDATE('CY', Today);
-        remainingDays := endYearDate - FunderLoanTbl.PlacementDate;
+        remainingDays := endYearDate - RelatedPartyLoanTbl.PlacementDate;
 
 
         _principle := 0;
@@ -159,11 +157,11 @@ report 50249 "Loan Repayment Schedule"
         _interestRate_Active := 0;
 
 
-        _withHoldingTax_Percent := FunderLoanTbl.Withldtax;
+        _withHoldingTax_Percent := RelatedPartyLoanTbl.Withldtax;
         _withHoldingTax_Amnt := 0;
 
-        FunderLoanTbl.CalcFields(OutstandingAmntDisbLCY);
-        _principle := FunderLoanTbl.OutstandingAmntDisbLCY;
+        RelatedPartyLoanTbl.CalcFields(OutstandingAmntDisbLCY);
+        _principle := RelatedPartyLoanTbl.OutstandingAmntDisbLCY;
 
 
 
@@ -175,7 +173,7 @@ report 50249 "Loan Repayment Schedule"
 
 
             // NoOfMonths := MonthsBetween(placementDate, maturityDate);
-            for monthCounter := 1 to FunderLoanTbl."Repayment Frequency" do begin
+            for monthCounter := 1 to RelatedPartyLoanTbl."Repayment Frequency" do begin
                 _currentMonthInLoop := 0D;
                 if (monthCounter = 0) then begin
                     _currentMonthInLoop := CalcDate('<CM>', placementDate);
@@ -211,7 +209,7 @@ report 50249 "Loan Repayment Schedule"
 
                 end;
                 // Get interest in logic of existing Tranches
-                _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentMonthInLoop, 'FUNDER_REPORT');
+                _interestRate_Active := TrsyMgt.GetInterestRateSchedule(RelatedPartyLoanTbl."No.", _currentMonthInLoop, 'RELATEDPARTY_REPORT');
                 _finalReducing := false;
 
                 if monthCounter = 1 then begin
@@ -223,7 +221,7 @@ report 50249 "Loan Repayment Schedule"
 
                     end;
                 end;
-                _repaymentAmount := FunderLoanTbl."Repayment Amount";
+                _repaymentAmount := RelatedPartyLoanTbl."Repayment Amount";
                 if _reducingPrincipal < 0 then begin
                     _reducingPrincipal := Repayment."Outstanding Balance";
                     _repaymentAmount := Repayment."Outstanding Balance";
@@ -234,7 +232,7 @@ report 50249 "Loan Repayment Schedule"
                 _Principalamortization := _repaymentAmount - monthlyInterest;
 
                 Repayment.Init();
-                Repayment."Loan No." := FunderLoanTbl."No.";
+                Repayment."Loan No." := RelatedPartyLoanTbl."No.";
                 Repayment."Line No." := monthCounter;
                 Repayment."Installment No" := monthCounter;
                 Repayment."Installment Date" := _currentMonthInLoop;
@@ -254,303 +252,6 @@ report 50249 "Loan Repayment Schedule"
 
             end;
         end;
-        /*
-        // DateRange := CalcDate('<1M>', StartDate);
-        if FunderLoanTbl.PeriodicPaymentOfPrincipal = FunderLoanTbl.PeriodicPaymentOfPrincipal::Quarterly then begin
-            //12
-            //No of days in that month
-            NoOfQuarter := QuartersBetween(placementDate, maturityDate); // No of Quarters
-            // StatingQuarterEndDate := GetClosestQuarterEndDate(placementDate);
-            StatingQuarterStartDate := GetClosestQuarterStartDate(placementDate);
-            StatingQuarterEndDate := GetEndOfQuarter(placementDate);
-
-            for QuarterCounter := 0 to NoOfQuarter do begin
-                _currentQuarterInLoop := 0D;
-                DaysInQuarter := 0;
-                if QuarterCounter = 0 then begin
-                    _currentQuarterInLoop := GetEndOfQuarter(placementDate);
-                    DaysInQuarter := _currentQuarterInLoop - placementDate + 1;
-                    _outstandingAmount := _principle;
-                end
-                else if QuarterCounter = NoOfQuarter then begin
-                    _currentQuarterInLoop := GetstartOfQuarter(maturityDate);
-                    DaysInQuarter := maturityDate - _currentQuarterInLoop + 1;
-                    _amortization := _principle;
-                    _outstandingAmount := 0;
-                    _totalPayment := _principle;
-                    _currentQuarterInLoop := GetEndOfQuarter(maturityDate);
-                end
-                else begin
-                    _currentQuarterInLoop := CALCDATE('<+' + Format(QuarterCounter) + 'Q>', StatingQuarterEndDate);
-                    // QuarterCounterRem := QuarterCounter mod 4;
-                    QuarterCounterRem := GetQuarter(_currentQuarterInLoop);
-                    if QuarterCounterRem = 4 then
-                        DaysInQuarter := GetDaysInQuarter(_currentQuarterInLoop) - 1
-                    else
-                        DaysInQuarter := GetDaysInQuarter(_currentQuarterInLoop);
-
-                    // if QuarterCounterRem = 0 then
-                    //     QuarterCounterRem := 4;
-                    // DaysInQuarter := GetDaysInQuarter(QuarterCounterRem, DATE2DMY(_currentQuarterInLoop, 3));
-                    _outstandingAmount := _principle;
-                end;
-                //Get quarter date. - sub the current date for days.
-                //Add to the next quarter
-                _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentQuarterInLoop, 'FUNDER_REPORT');
-
-                if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"30/360" then begin
-                    monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 360);
-                end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/360" then begin
-                    monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInQuarter / 360);
-                end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/364" then begin
-                    monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInQuarter / 364);
-                end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/365" then begin
-                    monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInQuarter / 365);
-                end;
-
-                // Loan.Init();
-                // Loan.DueDate := _currentQuarterInLoop;
-                // Loan.Interest := monthlyInterest;
-                // Loan.CalculationDate := _currentQuarterInLoop;
-                // Loan.LoanNo := _fNo;
-                // Loan.LoopCount := QuarterCounter;
-                // Loan.Amortization := _amortization;
-                // Loan.InterestRate := _interestRate_Active;
-                // Loan.TotalPayment := _totalPayment + monthlyInterest;
-                // Loan.OutStandingAmt := _outstandingAmount;
-                // Loan.Insert();
-
-                if (dueDate <> 0D) and (dueDate > _currentQuarterInLoop) then begin
-                    //FirstDueAccumulator.Init();
-                    FirstDueAccumulator.Line := QuarterCounter + 1;
-                    FirstDueAccumulator.DueDate := _currentQuarterInLoop;
-                    FirstDueAccumulator.Interest := monthlyInterest;
-                    FirstDueAccumulator.CalculationDate := _currentQuarterInLoop;
-                    FirstDueAccumulator.LoanNo := _fNo;
-                    FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
-                    FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
-                    FirstDueAccumulator.LoopCount := monthCounter;
-                    FirstDueAccumulator.Amortization := _amortization;
-                    FirstDueAccumulator.InterestRate := _interestRate_Active;
-                    FirstDueAccumulator.TotalPayment := _totalPayment + monthlyInterest;
-                    FirstDueAccumulator.OutStandingAmt := _outstandingAmount;
-                    FirstDueAccumulator.Insert();
-                end else begin
-                    FirstDueAccumulator.Reset();
-                    FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
-                    FirstDueAccumulator.SetRange(Reviewed, false);
-                    FirstDueAccumulator.CalcSums(Interest);
-                    FirstDueAccumulator.CalcSums(NetInterest);
-                    FirstDueAccumulator.CalcSums(WithHldTaxAmt);
-                    FirstDueAccumulator.CalcSums(TotalPayment);
-                    FirstDueAccumulator.CalcSums(OutStandingAmt);
-
-                    if FirstDueAccumulator.Count > 0 then begin
-                        _sumInterest := FirstDueAccumulator.Interest;
-                        _sumNetInterest := FirstDueAccumulator.NetInterest;
-                        _sumWtholding := FirstDueAccumulator.WithHldTaxAmt;
-                        _sumTotalPayment := FirstDueAccumulator.TotalPayment;
-                        _sumOutstanding := FirstDueAccumulator.OutStandingAmt;
-                        FirstDueAccumulator.Reviewed := true;
-                        FirstDueAccumulator.Modify();
-                    end else begin
-                        _sumInterest := 0;
-                        _sumNetInterest := 0;
-                        _sumWtholding := 0;
-                        _sumTotalPayment := 0;
-                        _sumOutstanding := 0;
-                    end;
-
-
-                    Loan.Init();
-                    Loan.DueDate := _currentQuarterInLoop;
-                    Loan.Interest := monthlyInterest + _sumInterest;
-                    Loan.CalculationDate := _currentQuarterInLoop;
-                    Loan.LoanNo := _fNo;
-                    Loan.WithHldTaxAmt := _withHoldingTax_Amnt + _sumWtholding;
-                    Loan.NetInterest := (monthlyInterest - _withHoldingTax_Amnt) + _sumNetInterest;
-                    Loan.LoopCount := QuarterCounter;
-                    Loan.Amortization := _amortization;
-                    Loan.InterestRate := _interestRate_Active;
-                    Loan.TotalPayment := (_totalPayment + monthlyInterest) + _sumTotalPayment;
-                    Loan.OutStandingAmt := _outstandingAmount + _sumOutstanding;
-                    Loan.Insert();
-
-                    FirstDueAccumulator.Reset();
-                    if FirstDueAccumulator.Count > 0 then
-                        FirstDueAccumulator.DeleteAll();
-                end;
-            end;
-        end;
-
-        if FunderLoanTbl.PeriodicPaymentOfPrincipal = FunderLoanTbl.PeriodicPaymentOfPrincipal::Biannually then begin
-            //12
-            //No of days in that month
-            NoOfBiann := BiannualPeriodsBetween(placementDate, maturityDate) + 1; // No of Quarters
-            StatingBiannEndDate := GetClosestBiannualEndDate(placementDate);
-            StatingBiannStartDate := GetClosestBiannualStartDate(placementDate);
-
-            for BiannCounter := 1 to NoOfBiann do begin
-                _currentBiannInLoop := 0D;
-                DaysInBiann := 0;
-                // if BiannCounter = 0 then begin
-                //     _currentBiannInLoop := GetStartOfBiannual(placementDate);
-                //     DaysInBiann := _currentBiannInLoop - placementDate;
-                //     _outstandingAmount := _principle;
-                // end else
-                if BiannCounter = 1 then begin
-                    _currentBiannInLoop := GetEndOfBiannual(placementDate);
-                    DaysInBiann := _currentBiannInLoop - placementDate + 1;
-                    _outstandingAmount := _principle;
-                end
-                else if BiannCounter = NoOfBiann then begin
-                    _currentBiannInLoop := GetStartOfBiannual(maturityDate);
-                    DaysInBiann := maturityDate - _currentBiannInLoop + 1;
-                    _amortization := _principle;
-                    _outstandingAmount := 0;
-                    _totalPayment := _principle;
-                    // _currentBiannInLoop := maturityDate;
-                    _currentBiannInLoop := GetEndOfBiannual(maturityDate);
-
-                end
-                else begin
-                    _currentBiannInLoop := CALCDATE('<+' + Format(BiannCounter * 6) + 'M>', StatingBiannEndDate);
-                    BiannCounterRem := BiannCounter mod 2;
-                    if BiannCounterRem = 0 then
-                        BiannCounterRem := 2;
-                    if BiannCounterRem = 2 then
-                        DaysInBiann := GetDaysInBiannual(BiannCounterRem, DATE2DMY(_currentBiannInLoop, 3)) - 1
-                    else
-                        DaysInBiann := GetDaysInBiannual(BiannCounterRem, DATE2DMY(_currentBiannInLoop, 3));
-                end;
-                //Get quarter date. - sub the current date for days.
-                //Add to the next quarter
-
-                _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentBiannInLoop, 'FUNDER_REPORT');
-
-
-                if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"30/360" then begin
-                    monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 360);
-                end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/360" then begin
-                    monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInBiann / 360);
-                end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/364" then begin
-                    monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInBiann / 364);
-                end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/365" then begin
-                    monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInBiann / 365);
-                end;
-
-                Loan.Init();
-                Loan.DueDate := _currentBiannInLoop;
-                Loan.Interest := monthlyInterest;
-                Loan.CalculationDate := _currentBiannInLoop;
-                Loan.LoanNo := _fNo;
-                Loan.LoopCount := BiannCounter;
-                Loan.Amortization := _amortization;
-                Loan.InterestRate := _interestRate_Active;
-                Loan.TotalPayment := _totalPayment + monthlyInterest;
-                Loan.OutStandingAmt := _outstandingAmount;
-                Loan.Insert();
-
-            end;
-        end;
-
-        if FunderLoanTbl.PeriodicPaymentOfPrincipal = FunderLoanTbl.PeriodicPaymentOfPrincipal::Annually then begin
-            //12
-            //No of days in that month
-            NoOfAnnual := AnnualPeriodsBetween(placementDate, maturityDate) + 1; // No of Quarters
-            StatingAnnualEndDate := GetClosestAnnualEndDate(placementDate);
-            for AnnualCounter := 1 to NoOfAnnual do begin
-                _currentAnnualInLoop := 0D;
-                DaysInAnnual := 0;
-                // if AnnualCounter = 0 then begin
-                //     _currentAnnualInLoop := GetStartOfYear(placementDate);
-                //     DaysInAnnual := _currentAnnualInLoop - placementDate + 1;
-                //     _outstandingAmount := _principle;
-                // end
-                // else
-                if AnnualCounter = 1 then begin
-                    _currentAnnualInLoop := GetEndOfYear(placementDate);
-                    DaysInAnnual := _currentAnnualInLoop - placementDate;
-                    _outstandingAmount := _principle;
-                end
-                else if AnnualCounter = NoOfAnnual then begin
-                    _currentAnnualInLoop := GetStartOfYear(maturityDate);
-                    DaysInAnnual := maturityDate - _currentAnnualInLoop + 1;
-                    _amortization := _principle;
-                    _outstandingAmount := 0;
-                    _totalPayment := _principle;
-                    // _currentAnnualInLoop := maturityDate;
-                    _currentAnnualInLoop := GetEndOfYear(maturityDate);
-
-                end
-                else begin
-                    _currentAnnualInLoop := CALCDATE('<+' + Format(AnnualCounter) + 'Y>', StatingAnnualEndDate);
-                    DaysInAnnual := GetDaysInYear(DATE2DMY(_currentAnnualInLoop, 3))
-                end;
-                //Get quarter date. - sub the current date for days.
-                //Add to the next quarter
-                _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentAnnualInLoop, 'FUNDER_REPORT');
-
-
-                if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"30/360" then begin
-                    monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 360);
-                end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/360" then begin
-                    monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInAnnual / 360);
-                end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/364" then begin
-                    monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInAnnual / 364);
-                end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/365" then begin
-                    monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInAnnual / 365);
-                end;
-
-                Loan.Init();
-                Loan.DueDate := _currentAnnualInLoop;
-                Loan.Interest := monthlyInterest;
-                Loan.CalculationDate := _currentAnnualInLoop;
-                Loan.LoanNo := _fNo;
-                Loan.LoopCount := AnnualCounter;
-                Loan.Amortization := _amortization;
-                Loan.InterestRate := _interestRate_Active;
-                Loan.TotalPayment := _totalPayment + monthlyInterest;
-                Loan.OutStandingAmt := _outstandingAmount;
-                Loan.Insert();
-
-            end;
-        end;
-
-        if FunderLoanTbl.PeriodicPaymentOfPrincipal = FunderLoanTbl.PeriodicPaymentOfPrincipal::"Total at Due Date" then begin
-            _outstandingAmount := _principle;
-            _amortization := _principle;
-            _totalPayment := _principle;
-            _currentAnnualInLoop := maturityDate;
-
-            _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentAnnualInLoop, 'FUNDER_REPORT');
-
-            if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"30/360" then begin
-                monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 360);
-            end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/360" then begin
-                monthlyInterest := ((_interestRate_Active / 100) * _principle) * (dateDiff / 360);
-            end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/364" then begin
-                monthlyInterest := ((_interestRate_Active / 100) * _principle) * (dateDiff / 364);
-            end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/365" then begin
-                monthlyInterest := ((_interestRate_Active / 100) * _principle) * (dateDiff / 365);
-            end;
-
-            Loan.Init();
-            Loan.DueDate := _currentAnnualInLoop;
-            Loan.Interest := monthlyInterest;
-            Loan.CalculationDate := _currentAnnualInLoop;
-            Loan.LoanNo := _fNo;
-            Loan.LoopCount := AnnualCounter;
-            Loan.Amortization := _amortization;
-            Loan.InterestRate := _interestRate_Active;
-            Loan.TotalPayment := _totalPayment + monthlyInterest;
-            Loan.OutStandingAmt := _outstandingAmount;
-            Loan.Insert();
-
-
-        end;
-        */
-
 
 
     end;
@@ -1069,8 +770,8 @@ report 50249 "Loan Repayment Schedule"
     end;
 
     var
-        FunderNo: Code[20];
-        FunderLoanTbl: Record "Funder Loan";
+        RelatedPartyLoanNo: Code[20];
+        RelatedPartyLoanTbl: Record "RelatedParty Loan";
         ReportFlag: Record "Report Flags";
         FirstDueAccumulator: Record "Intr- Amort Partial";
         TrsyMgt: Codeunit "Treasury Mgt CU";

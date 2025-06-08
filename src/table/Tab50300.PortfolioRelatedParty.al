@@ -1,8 +1,8 @@
-table 50231 Portfolio
+table 50300 "Portfolio RelatedParty"
 {
     DataClassification = ToBeClassified;
-    LookupPageId = 50231;
-    DrillDownPageId = 50231;
+    LookupPageId = "Portfolio Card RelatedParty";
+    DrillDownPageId = "Portfolio Card RelatedParty";
 
     fields
     {

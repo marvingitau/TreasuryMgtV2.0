@@ -1,7 +1,7 @@
 table 50234 FunderLedgerEntry
 {
     DataClassification = ToBeClassified;
-    Caption = 'Funder Ledger Entry';
+    Caption = 'Treasury Ledger Entry';
     fields
     {
         field(1; "Entry No."; Integer)
@@ -109,6 +109,19 @@ table 50234 FunderLedgerEntry
         {
             DataClassification = ToBeClassified;
         }
+        field(23; "Opening  Balance Acc"; Code[100])
+        {
+            Caption = 'Opening  Balance Account';
+            DataClassification = ToBeClassified;
+            TableRelation = "G/L Account";
+
+        }
+        field(25; "Origin Entry"; Option)
+        {
+
+            DataClassification = ToBeClassified;
+            OptionMembers = Funder,RelatedParty;
+        }
         field(30; "External Document No."; Text[250])
         {
             DataClassification = ToBeClassified;
@@ -118,6 +131,11 @@ table 50234 FunderLedgerEntry
             DataClassification = ToBeClassified;
         }
         field(38; Category_Line; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(39; "Bank Ref. No."; Code[200])
         {
             DataClassification = ToBeClassified;
         }

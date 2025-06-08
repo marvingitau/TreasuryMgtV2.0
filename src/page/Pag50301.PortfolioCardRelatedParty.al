@@ -1,8 +1,8 @@
-page 50231 "Portfolio Card"
+page 50301 "Portfolio Card RelatedParty"
 {
     PageType = Card;
     ApplicationArea = All;
-    SourceTable = Portfolio;
+    SourceTable = "Portfolio RelatedParty";
     DataCaptionFields = "No.", Code;
     layout
     {
@@ -232,7 +232,7 @@ page 50231 "Portfolio Card"
                     // GFilter.SetGlobalPortfolioFilter(Rec."No.");
                     // _portfolio.Run();
                     _portfolioFeeTbl.Reset();
-                    _portfolioFeeTbl.SetRange(_portfolioFeeTbl.PortfolioNo, Rec."No.");
+                    _portfolioFeeTbl.SetRange(_portfolioFeeTbl.RelatedPartyPortfolioNo, Rec."No.");
                     Page.Run(Page::"Portfolio Fee Setup", _portfolioFeeTbl);
 
                     // _portfolio.SetTableView(Rec);
@@ -390,63 +390,19 @@ page 50231 "Portfolio Card"
             }
         }
     }
-    trigger OnAfterGetCurrRecord()
-    var
-        _funder: Record Funders;
-    begin
-        OpenApprovalEntriesExistCurrUser := ApprovalsMgmt.HasOpenApprovalEntriesForCurrentUser(Rec.RecordId);
-        OpenApprovalEntriesExist := ApprovalsMgmt.HasOpenApprovalEntries(Rec.RecordId);
-        CanCancelApprovalForRecord := ApprovalsMgmt.CanCancelApprovalForRecord(Rec.RecordId);
-        HasApprovalEntries := ApprovalsMgmt.HasApprovalEntries(Rec.RecordId);
-        HasApprovedApprovalEntries := ApprovalsMgmt.HasApprovedApprovalEntries(Rec.RecordId);
-
-
-        // if Rec.Category = Rec.Category::"Bank Loan" then
-        //     FunderLoan.SetRange(Category, UpperCase('Bank Loan'));
-        // if Rec.Category = Rec.Category::Individual then
-        //     FunderLoan.SetRange(Category, UpperCase('Individual'));
-        // if Rec.Category = Rec.Category::Institutional then
-        //     FunderLoan.SetRange(Category, UpperCase('Institutional'));
-        // if Rec.Category = Rec.Category::"Asset Term Manager" then
-        //     FunderLoan.SetRange(Category, UpperCase('Asset Term Manager'));
-        // if Rec.Category = Rec.Category::"Medium Term Notes" then
-        //     FunderLoan.SetRange(Category, UpperCase('Medium Term Notes'));
-
-
-        ActualProgramSize := 0;
-
-        _funder.Reset();
-        _funder.SetRange(_funder.Portfolio, Rec."No.");
-        _funder.SetRange(_funder.Status, _funder.Status::Approved);
-        if _funder.Find('-') then begin
-            repeat
-                FunderLoan.SetRange(FunderLoan."Funder No.", _funder."No.");
-                FunderLoan.SetRange(FunderLoan.Status, FunderLoan.Status::Approved);
-                if FunderLoan.Find('-') then begin
-                    repeat
-                        FunderLoan.CalcFields(OutstandingAmntDisbLCY);
-                        ActualProgramSize := ActualProgramSize + FunderLoan.OutstandingAmntDisbLCY;
-
-                    until FunderLoan.Next() = 0;
-                end;
-
-            until _funder.Next() = 0;
-        end;
-
-
-
-
-        if Rec."No." <> '' then begin
-            Rec."Actual Program Size" := ActualProgramSize;
-            Rec.OutstandingAmountToTarget := Rec.ProgramSize - ActualProgramSize;
-            Rec.Modify()
-        end;
-    end;
 
     trigger OnQueryClosePage(CloseAction: Action): Boolean
     begin
         // if Rec.Category = '' then
         //     Error('Category field is mandatory');
+
+    end;
+
+    trigger OnInit()
+    var
+        _funderLoans: Record "Funder Loan";
+        _acculOutstanding: Decimal;
+    begin
 
     end;
 
@@ -460,7 +416,8 @@ page 50231 "Portfolio Card"
             Error('Region/Country must have atleast one entry');
             exit;
         end;
-        IsEditable := not (Rec.Status = Rec.Status::Approved)
+        IsEditable := not (Rec.Status = Rec.Status::Approved);
+
 
         // if Rec."Actual Program Size" = 0 then begin
         //     _funderLoans.Reset();
@@ -483,30 +440,10 @@ page 50231 "Portfolio Card"
 
     end;
 
-    trigger OnInit()
-    var
-        _funderLoans: Record "Funder Loan";
-        _acculOutstanding: Decimal;
-    begin
-        // if Rec."Actual Program Size" = 0 then begin
-        //     _funderLoans.Reset();
-        //     _funderLoans.SetRange(Category, Rec.Category);
-        //     _funderLoans.SetRange(_funderLoans.Status, _funderLoans.Status::Approved);
-        //     if _funderLoans.Find('-') then begin
-        //         repeat
-        //             _funderLoans.CalcFields(OutstandingAmntDisbLCY);
-        //             _acculOutstanding := _acculOutstanding + _funderLoans.OutstandingAmntDisbLCY;
-        //         until _funderLoans.Next() = 0;
-        //     end;
-        //     Rec."Actual Program Size" := _acculOutstanding;
-        //     //  Rec.Modify()
-        // end;
-
-    end;
 
     trigger OnNewRecord(BelowxRec: Boolean)
     begin
-        Rec."Origin Entry" := Rec."Origin Entry"::Funder;
+        Rec."Origin Entry" := Rec."Origin Entry"::RelatedParty;
     end;
 
     trigger OnInsertRecord(BelowxRec: Boolean): Boolean
@@ -515,12 +452,65 @@ page 50231 "Portfolio Card"
     end;
 
 
-
     trigger OnAfterGetRecord()
     begin
         UpdateFieldVisibility();
         // IsEditable := not (Rec.Status = Rec.Status::Approved)
     end;
+
+    trigger OnAfterGetCurrRecord()
+    var
+        _relatedParty: Record RelatedParty;
+    begin
+        OpenApprovalEntriesExistCurrUser := ApprovalsMgmt.HasOpenApprovalEntriesForCurrentUser(Rec.RecordId);
+        OpenApprovalEntriesExist := ApprovalsMgmt.HasOpenApprovalEntries(Rec.RecordId);
+        CanCancelApprovalForRecord := ApprovalsMgmt.CanCancelApprovalForRecord(Rec.RecordId);
+        HasApprovalEntries := ApprovalsMgmt.HasApprovalEntries(Rec.RecordId);
+        HasApprovedApprovalEntries := ApprovalsMgmt.HasApprovedApprovalEntries(Rec.RecordId);
+
+
+        // if Rec.Category = Rec.Category::"Bank Loan" then
+        //     FunderLoan.SetRange(Category, UpperCase('Bank Loan'));
+        // if Rec.Category = Rec.Category::Individual then
+        //     FunderLoan.SetRange(Category, UpperCase('Individual'));
+        // if Rec.Category = Rec.Category::Institutional then
+        //     FunderLoan.SetRange(Category, UpperCase('Institutional'));
+        // if Rec.Category = Rec.Category::"Asset Term Manager" then
+        //     FunderLoan.SetRange(Category, UpperCase('Asset Term Manager'));
+        // if Rec.Category = Rec.Category::"Medium Term Notes" then
+        //     FunderLoan.SetRange(Category, UpperCase('Medium Term Notes'));
+
+
+        ActualProgramSize := 0;
+
+        _relatedParty.Reset();
+        _relatedParty.SetRange(_relatedParty.Portfolio, Rec."No.");
+        _relatedParty.SetRange(_relatedParty.Status, _relatedParty.Status::Approved);
+        if _relatedParty.Find('-') then begin
+            repeat
+                FunderLoan.SetRange(FunderLoan."Funder No.", _relatedParty."No.");
+                FunderLoan.SetRange(FunderLoan.Status, FunderLoan.Status::Approved);
+                if FunderLoan.Find('-') then begin
+                    repeat
+                        FunderLoan.CalcFields(OutstandingAmntDisbLCY);
+                        ActualProgramSize := ActualProgramSize + FunderLoan.OutstandingAmntDisbLCY;
+
+                    until FunderLoan.Next() = 0;
+                end;
+
+            until _relatedParty.Next() = 0;
+        end;
+
+
+
+
+        if Rec."No." <> '' then begin
+            Rec."Actual Program Size" := ActualProgramSize;
+            Rec.OutstandingAmountToTarget := Rec.ProgramSize - ActualProgramSize;
+            Rec.Modify()
+        end;
+    end;
+
 
     local procedure UpdateFieldVisibility()
     begin

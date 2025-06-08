@@ -135,6 +135,11 @@ report 50234 "Investment Confirmation"
 
 
         }
+        dataitem("Confirmation Signatories"; "Confirmation Signatories")
+        {
+            column(Name; Name) { }
+            column(Position; Position) { }
+        }
         dataitem(Integer; Integer)
         {
             // Set the number of iterations

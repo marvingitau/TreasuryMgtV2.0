@@ -141,5 +141,16 @@ permissionset 50230 Treasury
         page "Intr. Rate Change" = X,
         page "Portfolio Fee Setup" = X,
         page Redemption = X,
-        page "Redemption Log" = X;
+        page "Redemption Log" = X,
+        tabledata "Confirmation Signatories" = RIMD,
+        tabledata "Disbur. Tranched Entry" = RIMD,
+        tabledata "Portfolio Renewal" = RIMD,
+        table "Confirmation Signatories" = X,
+        table "Disbur. Tranched Entry" = X,
+        table "Portfolio Renewal" = X,
+        codeunit "Portfolio Renewal Approval Mgt" = X,
+        codeunit "Tranch Loan Approval Mgt" = X,
+        page "Disbur. Tranched Entry" = X,
+        page "Portfolio Renewal Card" = X,
+        page "Portfolio Renewal List" = X;
 }

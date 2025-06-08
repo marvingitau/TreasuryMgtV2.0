@@ -1,10 +1,10 @@
-page 50233 "Funder Card"
+page 50304 "RelatedParty Card"
 {
     PageType = Card;
     ApplicationArea = All;
     UsageCategory = Administration;
-    SourceTable = Funders;
-    Caption = 'Funder/Supplier Card';
+    SourceTable = "RelatedParty";
+    Caption = 'RelatedParty/Customer Card';
 
     // DataCaptionExpression = '';
     layout
@@ -33,7 +33,7 @@ page 50233 "Funder Card"
                 field(FunderType; Rec.FunderType)
                 {
                     ApplicationArea = all;
-                    Caption = 'Funder Type';
+                    Caption = 'RelatedParty Type';
                     Editable = EditStatus;
                     trigger OnValidate()
                     begin
@@ -44,7 +44,7 @@ page 50233 "Funder Card"
                 {
                     ApplicationArea = all;
                 }
-                // field("Funder Type"; Rec."Funder Type")
+                // field("RelatedParty Type"; Rec."RelatedParty Type")
                 // {
                 //     ApplicationArea = all;
                 // }
@@ -1110,14 +1110,14 @@ page 50233 "Funder Card"
         area(Processing)
         {
 
-            action("Funder Ledger Entry")
+            action("RelatedParty Ledger Entry")
             {
                 ApplicationArea = Basic, Suite;
-                Caption = 'Funder Ledger';
+                Caption = 'RelatedParty Ledger';
                 Image = LedgerEntries;
                 PromotedCategory = Process;
                 Promoted = true;
-                // RunObject = Page "Funder Loans List";
+                // RunObject = Page "RelatedParty Loans List";
                 //RunPageLink = "Funder No." = FIELD("No.");
                 trigger OnAction()
                 var
@@ -1137,7 +1137,7 @@ page 50233 "Funder Card"
                 PromotedCategory = Process;
                 Caption = 'Beneficiary & Trustees';
                 ToolTip = 'Beneficiary & Trustees ';
-                // RunObject = page "Funder Loan Ben. Trus.";
+                // RunObject = page "RelatedParty Loan Ben. Trus.";
                 trigger OnAction()
                 var
                     btTbl: Record "Funder Ben/Trus";
@@ -1151,61 +1151,61 @@ page 50233 "Funder Card"
             }
 
 
-            action("Funder Loan Open")
+            action("RelatedParty Loan Open")
             {
                 ApplicationArea = Basic, Suite;
-                Caption = 'Funder Loan (Open)';
+                Caption = 'RelatedParty Loan (Open)';
                 Image = CashReceiptJournal;
                 PromotedCategory = Process;
                 Promoted = true;
-                // RunObject = Page "Funder Loans List";
+                // RunObject = Page "RelatedParty Loans List";
                 //RunPageLink = "Funder No." = FIELD("No.");
 
                 trigger OnAction()
                 var
-                    funderLoan: Record "Funder Loan";
+                    relatedPartyLoan: Record "RelatedParty Loan";
                 begin
-                    funderLoan.SETRANGE(funderLoan."Funder No.", Rec."No.");
-                    funderLoan.SETRANGE(funderLoan.Status, funderLoan.Status::Open);
-                    PAGE.RUN(PAGE::"Funder Loans List", funderLoan);
-
-                end;
-            }
-            action("Funder Loan Pending")
-            {
-                ApplicationArea = Basic, Suite;
-                Caption = 'Funder Loan (Pending)';
-                Image = CashReceiptJournal;
-                PromotedCategory = Process;
-                Promoted = true;
-                // RunObject = Page "Funder Loans List";
-                //RunPageLink = "Funder No." = FIELD("No.");
-                trigger OnAction()
-                var
-                    funderLoan: Record "Funder Loan";
-                begin
-                    funderLoan.SETRANGE(funderLoan."Funder No.", Rec."No.");
-                    funderLoan.SETRANGE(funderLoan.Status, funderLoan.Status::"Pending Approval");
-                    PAGE.RUN(PAGE::"Funder Loans List", funderLoan);
+                    relatedPartyLoan.SETRANGE(relatedPartyLoan."Funder No.", Rec."No.");
+                    relatedPartyLoan.SETRANGE(relatedPartyLoan.Status, relatedPartyLoan.Status::Open);
+                    PAGE.RUN(PAGE::"RelatedParty Loans List", relatedPartyLoan);
 
                 end;
             }
-            action("Funder Loan Approved")
+            action("RelatedParty Loan Pending")
             {
                 ApplicationArea = Basic, Suite;
-                Caption = 'Funder Loan (Approved)';
+                Caption = 'RelatedParty Loan (Pending)';
                 Image = CashReceiptJournal;
                 PromotedCategory = Process;
                 Promoted = true;
-                // RunObject = Page "Funder Loans List";
+                // RunObject = Page "RelatedParty Loans List";
                 //RunPageLink = "Funder No." = FIELD("No.");
                 trigger OnAction()
                 var
-                    funderLoan: Record "Funder Loan";
+                    relatedPartyLoan: Record "RelatedParty Loan";
                 begin
-                    funderLoan.SETRANGE(funderLoan."Funder No.", Rec."No.");
-                    funderLoan.SETRANGE(funderLoan.Status, funderLoan.Status::Approved);
-                    PAGE.RUN(PAGE::"Funder Loans List", funderLoan);
+                    relatedPartyLoan.SETRANGE(relatedPartyLoan."Funder No.", Rec."No.");
+                    relatedPartyLoan.SETRANGE(relatedPartyLoan.Status, relatedPartyLoan.Status::"Pending Approval");
+                    PAGE.RUN(PAGE::"RelatedParty Loans List", relatedPartyLoan);
+
+                end;
+            }
+            action("RelatedParty Loan Approved")
+            {
+                ApplicationArea = Basic, Suite;
+                Caption = 'RelatedParty Loan (Approved)';
+                Image = CashReceiptJournal;
+                PromotedCategory = Process;
+                Promoted = true;
+                // RunObject = Page "RelatedParty Loans List";
+                //RunPageLink = "Funder No." = FIELD("No.");
+                trigger OnAction()
+                var
+                    relatedPartyLoan: Record "RelatedParty Loan";
+                begin
+                    relatedPartyLoan.SETRANGE(relatedPartyLoan."Funder No.", Rec."No.");
+                    relatedPartyLoan.SETRANGE(relatedPartyLoan.Status, relatedPartyLoan.Status::Approved);
+                    PAGE.RUN(PAGE::"RelatedParty Loans List", relatedPartyLoan);
 
                 end;
             }
@@ -1305,7 +1305,7 @@ page 50233 "Funder Card"
                     // _portfolio.run()
 
                     _portfolioFeeTbl.Reset();
-                    _portfolioFeeTbl.SetRange(_portfolioFeeTbl.FunderNo, Rec."No.");
+                    _portfolioFeeTbl.SetRange(_portfolioFeeTbl.RelatedPartyNo, Rec."No.");
                     Page.Run(Page::"Portfolio Fee Setup", _portfolioFeeTbl);
                 end;
             }
@@ -1453,7 +1453,7 @@ page 50233 "Funder Card"
 
     trigger OnNewRecord(BelowxRec: Boolean)
     begin
-        Rec."Origin Entry" := Rec."Origin Entry"::Funder;
+        Rec."Origin Entry" := Rec."Origin Entry"::RelatedParty;
     end;
 
     trigger OnAfterGetRecord()

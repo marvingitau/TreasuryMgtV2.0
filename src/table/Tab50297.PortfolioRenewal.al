@@ -17,9 +17,25 @@ table 50297 "Portfolio Renewal"
             TableRelation = Portfolio."No." where(Status = const(Approved));
             trigger OnValidate()
             var
-                portfolio: Record Portfolio;
+                _portfolio: Record Portfolio;
             begin
                 // Portfolio_Name :=
+                _portfolio.Reset();
+                _portfolio.SetRange("No.", Code);
+                if _portfolio.Find('-') then begin
+                    ProgramSize := _portfolio.ProgramSize;
+                    BeginDate := _portfolio.BeginDate;
+                    ProgramTerm := _portfolio.ProgramSize;
+                    EndTerm := _portfolio.EndTerm;
+                    ProgramCurrency := _portfolio.ProgramCurrency;
+                    "Physical Address" := _portfolio."Physical Address";
+                    Category := _portfolio.Category;
+                    "Category Fee" := _portfolio."Category Fee";
+                    "Contact Person Address" := _portfolio."Contact Person Address";
+                    "Contact Person Name" := _portfolio."Contact Person Name";
+                    "Contact Person Email" := _portfolio."Contact Person Email";
+                    "Contact Person Phone No." := _portfolio."Contact Person Phone No.";
+                end;
             end;
         }
 

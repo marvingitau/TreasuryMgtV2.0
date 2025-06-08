@@ -58,11 +58,47 @@ table 50294 "Portfolio Fee Setup"
         {
             DataClassification = ToBeClassified;
         }
+        field(251; RelatedPartyNo; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(252; RelatedPartyPortfolioNo; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(253; RelatedPartyLoanNo; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
 
         field(350; Applicable; Boolean)
         {
             DataClassification = ToBeClassified;
             InitValue = true;
+        }
+
+        field(550; "G/L"; Code[20])
+        {
+            DataClassification = ToBeClassified;
+            TableRelation = "G/L Account";
+        }
+
+        field(650; "Is G/L Enabled"; Boolean)
+        {
+            DataClassification = ToBeClassified;
+            InitValue = false;
+        }
+
+        field(700; "Disbur. Tranched No."; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
+
+        field(5000; "Origin Entry"; Option)
+        {
+
+            DataClassification = ToBeClassified;
+            OptionMembers = Funder,RelatedParty;
         }
 
     }
@@ -81,7 +117,7 @@ table 50294 "Portfolio Fee Setup"
     }
 
     var
-        myInt: Integer;
+        "Disbur Tranched Entry": Record "Disbur. Tranched Entry";
 
     trigger OnInsert()
     begin

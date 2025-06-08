@@ -110,6 +110,7 @@ report 50233 "Capitalize Interest"
         LastLineNo: Integer;
     begin
         LoanNo := FunderLoanFilter."No.";
+        GenSetup.Get(0);
 
         j := 1;
         LastLineNo := 1;

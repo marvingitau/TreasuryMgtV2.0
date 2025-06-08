@@ -4,7 +4,7 @@ page 50237 FunderLedgerEntry
     ApplicationArea = All;
     UsageCategory = Lists;
     SourceTable = FunderLedgerEntry;
-    Caption = 'Funder Ledger Entry';
+    Caption = 'Treasury Ledger Entry';
     // Editable = false;
     // DeleteAllowed = false;
     // InsertAllowed = false;
@@ -13,7 +13,7 @@ page 50237 FunderLedgerEntry
     {
         area(Content)
         {
-            repeater(GroupName)
+            repeater(General)
             {
                 field("Entry No."; Rec."Entry No.")
                 {
@@ -23,12 +23,12 @@ page 50237 FunderLedgerEntry
                 field("Funder No."; Rec."Funder No.")
                 {
                     ApplicationArea = All;
-                    Caption = 'Funder No.';
+                    Caption = 'Record No.';
                 }
                 field("Funder Name"; Rec."Funder Name")
                 {
                     ApplicationArea = All;
-                    Caption = 'Funder Name';
+                    Caption = 'Record Name';
                 }
                 field("Loan No."; Rec."Loan No.")
                 {
@@ -85,6 +85,10 @@ page 50237 FunderLedgerEntry
                 {
                     ApplicationArea = All;
                 }
+                field("Opening  Balance Acc"; Rec."Opening  Balance Acc")
+                {
+                    ApplicationArea = All;
+                }
                 field(GloabalDimCode1; Rec."Shortcut Dimension 1 Code")
                 {
                     ApplicationArea = Dimensions;
@@ -97,6 +101,7 @@ page 50237 FunderLedgerEntry
                     CaptionClass = '1,2,2';
 
                 }
+
             }
         }
         area(Factboxes)

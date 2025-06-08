@@ -27,38 +27,46 @@ page 50294 "Disbur. Tranched"
                 {
                     ApplicationArea = All;
                     ShowMandatory = true;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
                 }
                 field("Tranche Amount"; Rec."Tranche Amount")
                 {
                     ApplicationArea = All;
                     ShowMandatory = true;
 
+                    Editable = not (Rec.Status = Rec.Status::Approved);
                 }
                 field("New Repayment Amount"; Rec."New Repayment Amount")
                 {
                     ApplicationArea = All;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
 
 
                 }
                 field("Bank Reference No"; Rec."Bank Reference No")
                 {
                     ApplicationArea = All;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
 
 
                 }
                 field("Interest Rate"; Rec."Interest Rate")
                 {
                     ApplicationArea = All;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
 
                 }
 
                 field("Disbursement Date"; Rec."Disbursement Date")
                 {
                     ApplicationArea = All;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
                 }
                 field("Maturity Date"; Rec."Maturity Date")
                 {
                     ApplicationArea = All;
+                    ShowMandatory = true;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
                 }
                 field("Cumulative Disbursed"; Rec."Cumulative Disbursed")
                 {
@@ -76,6 +84,7 @@ page 50294 "Disbur. Tranched"
                 field(Status; Rec.Status)
                 {
                     ApplicationArea = All;
+                    Editable = not (Rec.Status = Rec.Status::Approved);
                 }
             }
         }
@@ -85,6 +94,26 @@ page 50294 "Disbur. Tranched"
     {
         area(Processing)
         {
+            action("Portfolio Fee Setup")
+            {
+                Caption = 'Applicable Fee';
+                Image = InsertStartingFee;
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+
+                trigger OnAction()
+                var
+                    _portfolio: page "Portfolio Fee Setup";
+                    GFilter: Codeunit GlobalFilters;
+                    _portfolioFeeTbl: Record "Portfolio Fee Setup";
+                begin
+                    _portfolioFeeTbl.Reset();
+                    _portfolioFeeTbl.SetRange(_portfolioFeeTbl.FunderLoanNo, Rec."Loan No.");
+                    _portfolioFeeTbl.SetRange(_portfolioFeeTbl."Disbur. Tranched No.", Rec.LineNo);
+                    Page.Run(Page::"Portfolio Fee Setup", _portfolioFeeTbl);
+                end;
+            }
             action("Disburse Tranch")
             {
                 Image = TransferToLines;

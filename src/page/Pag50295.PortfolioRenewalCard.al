@@ -62,17 +62,17 @@ page 50295 "Portfolio Renewal Card"
                     Caption = 'End Term';
                     Editable = false;
                 }
-                field(ProgramCurrency; Rec.ProgramCurrency)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Program Currency';
-                }
-                field("Fee Applicable"; Rec."Fee Applicable")
-                {
-                    ApplicationArea = All;
-                    Caption = 'Fee Applicable (%)';
-                    Editable = false;
-                }
+                // field(ProgramCurrency; Rec.ProgramCurrency)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Program Currency';
+                // }
+                // field("Fee Applicable"; Rec."Fee Applicable")
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Fee Applicable (%)';
+                //     Editable = false;
+                // }
                 // field("Interest Rate Applicable"; Rec."Interest Rate Applicable")
                 // {
                 //     ApplicationArea = All;
@@ -94,31 +94,31 @@ page 50295 "Portfolio Renewal Card"
                     ShowMandatory = true;
 
                 }
-                field("Category Fee"; Rec."Category Fee")
-                {
-                    ApplicationArea = All;
-                    // ShowMandatory = true;
-                    DrillDownPageId = "Portfolio Fee Setup";
-                    trigger OnDrillDown()
-                    var
-                        FeePage: Page "Portfolio Fee Setup";
-                        PortfolioFeeSetup: Record "Portfolio Fee Setup";
-                    begin
-                        PortfolioFeeSetup.Reset();
-                        if Rec.Category = Rec.Category::"Bank Loan" then
-                            PortfolioFeeSetup.SetRange(Code, 'Bank Loan');
-                        if Rec.Category = Rec.Category::Individual then
-                            PortfolioFeeSetup.SetRange(Code, 'Individual');
-                        if Rec.Category = Rec.Category::Institutional then
-                            PortfolioFeeSetup.SetRange(Code, 'Institutional');
+                // field("Category Fee"; Rec."Category Fee")
+                // {
+                //     ApplicationArea = All;
+                //     // ShowMandatory = true;
+                //     DrillDownPageId = "Portfolio Fee Setup";
+                //     trigger OnDrillDown()
+                //     var
+                //         FeePage: Page "Portfolio Fee Setup";
+                //         PortfolioFeeSetup: Record "Portfolio Fee Setup";
+                //     begin
+                //         PortfolioFeeSetup.Reset();
+                //         if Rec.Category = Rec.Category::"Bank Loan" then
+                //             PortfolioFeeSetup.SetRange(Code, 'Bank Loan');
+                //         if Rec.Category = Rec.Category::Individual then
+                //             PortfolioFeeSetup.SetRange(Code, 'Individual');
+                //         if Rec.Category = Rec.Category::Institutional then
+                //             PortfolioFeeSetup.SetRange(Code, 'Institutional');
 
-                        if Page.RunModal(Page::"Portfolio Fee Setup", PortfolioFeeSetup) = Action::LookupOK then begin
-                            // Rec."Fee Applicable" := PortfolioFeeSetup."Fee Applicable %";
-                            Rec.Category_Line_No := PortfolioFeeSetup.LineNo;
-                            CurrPage.Update();
-                        end;
-                    end;
-                }
+                //         if Page.RunModal(Page::"Portfolio Fee Setup", PortfolioFeeSetup) = Action::LookupOK then begin
+                //             // Rec."Fee Applicable" := PortfolioFeeSetup."Fee Applicable %";
+                //             Rec.Category_Line_No := PortfolioFeeSetup.LineNo;
+                //             CurrPage.Update();
+                //         end;
+                //     end;
+                // }
                 field(Status; Rec.Status)
                 {
                     ApplicationArea = All;

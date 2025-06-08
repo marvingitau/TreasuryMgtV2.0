@@ -1,10 +1,10 @@
-page 50246 "Portfolio List"
+page 50302 "Portfolio List RelalatedParty"
 {
     PageType = List;
     ApplicationArea = All;
     UsageCategory = Lists;
-    SourceTable = Portfolio;
-    CardPageId = 50231;
+    SourceTable = "Portfolio RelatedParty";
+    CardPageId = "Portfolio Card RelatedParty";
 
     layout
     {
@@ -117,9 +117,13 @@ page 50246 "Portfolio List"
             }
         }
     }
-
     trigger OnOpenPage()
     begin
-        Rec.SetRange(Rec."Origin Entry", Rec."Origin Entry"::Funder);
+        Rec.SetRange(Rec."Origin Entry", Rec."Origin Entry"::RelatedParty);
+    end;
+
+    trigger OnAfterGetRecord()
+    begin
+
     end;
 }

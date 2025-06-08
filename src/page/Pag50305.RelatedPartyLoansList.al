@@ -1,16 +1,17 @@
-page 50235 "Funder Loans List"
+page 50305 "RelatedParty Loans List"
 {
     PageType = List;
     ApplicationArea = All;
     UsageCategory = Lists;
-    CardPageId = "Funder Loan Card";
-    SourceTable = "Funder Loan";
+    CardPageId = "RelatedParty Loan Card";
+    SourceTable = "RelatedParty Loan";
     Editable = false;
+    InsertAllowed = false;
     layout
     {
         area(Content)
         {
-            repeater(GroupName)
+            repeater(General)
             {
                 field("No."; Rec."No.")
                 {
@@ -24,11 +25,12 @@ page 50235 "Funder Loans List"
                 field("Funder No."; Rec."Funder No.")
                 {
                     ApplicationArea = All;
+                    Caption = 'Record No';
                 }
                 field(Name; Rec.Name)
                 {
                     ApplicationArea = All;
-                    Caption = 'Funder Name';
+                    Caption = 'Record Name';
                 }
 
                 field("PlacementDate"; Rec."PlacementDate")
@@ -87,7 +89,7 @@ page 50235 "Funder Loans List"
     }
     var
         SelectedFilterValue: Text;
-        NewRec: Record "Funder Loan";
+        NewRec: Record "RelatedParty Loan";
 
     trigger OnOpenPage()
     var
@@ -96,11 +98,7 @@ page 50235 "Funder Loans List"
     begin
         SelectedFilterValue := Rec.GETFILTER("Funder No.");
         GlobalFilters.SetGlobalFilter(SelectedFilterValue);
-        Rec.SetRange(Rec."Origin Entry", Rec."Origin Entry"::Funder);
+        Rec.SetRange(Rec."Origin Entry", Rec."Origin Entry"::RelatedParty);
     end;
 
-    // trigger OnNewRecord(BelowxRec: Boolean)
-    // begin
-    //     Error('f');
-    // end;
 }

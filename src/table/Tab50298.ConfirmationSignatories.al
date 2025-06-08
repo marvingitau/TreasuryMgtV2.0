@@ -10,6 +10,14 @@ table 50298 "Confirmation Signatories"
             AutoIncrement = true;
 
         }
+        field(20; Name; Text[150])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(25; Position; Text[150])
+        {
+            DataClassification = ToBeClassified;
+        }
     }
 
     keys

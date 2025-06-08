@@ -1,9 +1,9 @@
-table 50230 Funders
+table 50301 "RelatedParty"
 {
     DataClassification = ToBeClassified;
-    Caption = 'Funders';
-    LookupPageId = "Funder Card";
-    DrillDownPageId = "Funder Card";
+    Caption = 'RelatedParty';
+    LookupPageId = "RelatedParty Card";
+    DrillDownPageId = "RelatedParty Card";
     DataCaptionFields = "No.", Name;
     fields
     {
@@ -15,7 +15,7 @@ table 50230 Funders
         field(20; Portfolio; Code[50])
         {
             DataClassification = ToBeClassified;
-            TableRelation = Portfolio where(Status = const(Approved));
+            TableRelation = "Portfolio RelatedParty" where(Status = const(Approved));
         }
         field(30; Name; Text[100])
         {
@@ -33,10 +33,10 @@ table 50230 Funders
         //     DataClassification = ToBeClassified;
         //     ToolTip = 'This could specify whether the counterparty is a customer, supplier, financial institution, or any other classification based on your systems design.';
         // }
-        field(45; "Funder Type"; Enum "Funder Type")
-        {
-            DataClassification = ToBeClassified;
-        }
+        // field(45; "Funder Type"; Enum "Funder Type")
+        // {
+        //     DataClassification = ToBeClassified;
+        // }
         field(50; "Tax Identification Number"; Text[100])
         {
             DataClassification = ToBeClassified;

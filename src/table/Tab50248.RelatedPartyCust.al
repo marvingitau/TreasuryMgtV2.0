@@ -4,6 +4,7 @@ table 50248 "RelatedParty- Cust"
     Caption = 'Customer/Related Party';
     LookupPageId = 50249;
     DrillDownPageId = 50249;
+    //DEPRECATED
     fields
     {
         field(1; "No."; Code[20])
@@ -148,7 +149,8 @@ table 50248 "RelatedParty- Cust"
                     relatedLegderEntry."Remaining Amount" := Amount;
                     relatedLegderEntry.Insert();
                     Commit();
-                    RelatedMGTCU.DirectGLPosting('init-relatedcust', principleAcc, Amount, 'Original Amount', "No.", BankAcc, Currency, '', _docNo)
+                    if (EnableGLPosting = true) then
+                        RelatedMGTCU.DirectGLPosting('init-relatedcust', principleAcc, Amount, 'Original Amount', "No.", BankAcc, Currency, '', _docNo)
                 end;
             end;
         }

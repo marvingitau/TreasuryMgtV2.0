@@ -9,6 +9,7 @@ page 50273 RelatedLedgerEntry
     // DeleteAllowed = false;
     // InsertAllowed = false;
 
+    //DEPRECATED
     layout
     {
         area(Content)

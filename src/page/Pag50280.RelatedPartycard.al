@@ -7,6 +7,7 @@ page 50280 "Related Party card"
     Caption = 'Related Party/Customer';
     DataCaptionFields = "No.", RelatedPName;
 
+    //DEPRECATED
     layout
     {
         area(Content)

@@ -1,11 +1,11 @@
-page 50230 "Funder List"
+page 50303 "RelatedParty List"
 {
     PageType = List;
     ApplicationArea = All;
     UsageCategory = Lists;
-    SourceTable = Funders;
-    CardPageId = "Funder Card";
-    Caption = 'Funder/Supplier List';
+    SourceTable = "RelatedParty";
+    CardPageId = "RelatedParty Card";
+    Caption = 'RelatedParty List';
 
     layout
     {
@@ -36,7 +36,7 @@ page 50230 "Funder List"
                 field(FunderType; Rec.FunderType)
                 {
                     ApplicationArea = All;
-                    Caption = 'Funder Type';
+                    Caption = 'RelatedParty Type';
                 }
                 field(KRA; Rec.KRA)
                 {
@@ -93,7 +93,7 @@ page 50230 "Funder List"
                 PromotedIsBig = true;
                 Image = OpenJournal;
                 PromotedCategory = Process;
-                Caption = 'Open Funders';
+                Caption = 'Open Related Party';
                 trigger OnAction()
                 begin
                     // if Rec.Status = Rec.Status::"Pending Approval" then
@@ -108,7 +108,7 @@ page 50230 "Funder List"
                 PromotedIsBig = true;
                 Image = Approval;
                 PromotedCategory = Process;
-                Caption = 'Approved Funders';
+                Caption = 'Approved RelatedParty';
                 trigger OnAction()
                 begin
                     // if Rec.Status = Rec.Status::Approved then
@@ -187,6 +187,6 @@ page 50230 "Funder List"
     trigger OnOpenPage()
     begin
         Rec.SetRange(Status, Rec.Status::Open);
-        Rec.SetRange(Rec."Origin Entry", Rec."Origin Entry"::Funder);
+        Rec.SetRange(Rec."Origin Entry", Rec."Origin Entry"::RelatedParty);
     end;
 }

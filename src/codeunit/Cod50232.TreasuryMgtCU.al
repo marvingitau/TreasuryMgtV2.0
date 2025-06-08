@@ -103,6 +103,7 @@ codeunit 50232 "Treasury Mgt CU"
                     JournalEntry."Document No." := TrsyJnl."Document No.";
                     JournalEntry.Description := TrsyJnl.Description;
                     JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                    JournalEntry.Validate("Shortcut Dimension 1 Code");
                     if (TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Funder) OR (TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"G/L Account") then begin
 
                         if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Funder then begin
@@ -312,6 +313,7 @@ codeunit 50232 "Treasury Mgt CU"
                                 JournalEntry."Document No." := TrsyJnl."Document No.";
                                 JournalEntry.Description := TrsyJnl.Description;
                                 JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                                JournalEntry.Validate("Shortcut Dimension 1 Code");
                                 if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"Bank Account" then begin
                                     JournalEntry."Account Type" := TrsyJnl."Account Type"::"Bank Account"; //@@@@ Debit Bank
                                     JournalEntry."Account No." := TrsyJnl."Account No.";
@@ -677,6 +679,7 @@ codeunit 50232 "Treasury Mgt CU"
                 JournalEntry."Document No." := TrsyJnl."Document No.";
                 JournalEntry.Description := TrsyJnl.Description;
                 JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                JournalEntry.Validate("Shortcut Dimension 1 Code");
                 if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Funder then begin
                     JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
                     JournalEntry."Account No." := interestAccPay;
@@ -930,6 +933,7 @@ codeunit 50232 "Treasury Mgt CU"
                 JournalEntry."Document No." := TrsyJnl."Document No.";
                 JournalEntry.Description := TrsyJnl.Description;
                 JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                JournalEntry.Validate("Shortcut Dimension 1 Code");
                 if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Funder then begin
                     JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
                     JournalEntry."Account No." := interestAccPay;
@@ -1162,6 +1166,8 @@ codeunit 50232 "Treasury Mgt CU"
                 JournalEntry."Document No." := TrsyJnl."Document No.";
                 JournalEntry.Description := TrsyJnl.Description;
                 JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                JournalEntry.Validate("Shortcut Dimension 1 Code");
+
                 if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Funder then begin
                     JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
                     JournalEntry."Account No." := interestAccPay;
@@ -1461,6 +1467,7 @@ codeunit 50232 "Treasury Mgt CU"
                 JournalEntry."Document No." := TrsyJnl."Document No.";
                 JournalEntry.Description := TrsyJnl.Description;
                 JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                JournalEntry.Validate("Shortcut Dimension 1 Code");
                 if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Funder then begin
                     JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
                     JournalEntry."Account No." := interestAccPay;
@@ -1883,6 +1890,11 @@ codeunit 50232 "Treasury Mgt CU"
         if not funderLoan3.Find('-') then
             Error('Funder Loan %1 Not Found', LoanNo);
 
+        funder.Reset();
+        funder.SetRange("No.", funderLoan3."Funder No.");
+        if not funder.Find('-') then
+            Error('Funder %1 Not Found', funderLoan3."Funder No.");
+
         funderLegderEntry_2.Init();
         funderLegderEntry_2."Entry No." := NextEntryNo + 6;
         funderLegderEntry_2."Funder No." := funder."No.";
@@ -1996,6 +2008,11 @@ codeunit 50232 "Treasury Mgt CU"
             if not funderLoan3.Find('-') then
                 Error('Funder Loan %1 Not Found', LoanNo);
 
+            funder.Reset();
+            funder.SetRange("No.", funderLoan3."Funder No.");
+            if not funder.Find('-') then
+                Error('Funder %1 Not Found', funderLoan3."Funder No.");
+
             funderLegderEntry_2.Init();
             funderLegderEntry_2."Entry No." := NextEntryNo + 6;
             funderLegderEntry_2."Funder No." := funder."No.";
@@ -2031,6 +2048,11 @@ codeunit 50232 "Treasury Mgt CU"
             if not funderLoan3.Find('-') then
                 Error('Funder Loan %1 Not Found', LoanNo);
 
+            funder.Reset();
+            funder.SetRange("No.", funderLoan3."Funder No.");
+            if not funder.Find('-') then
+                Error('Funder %1 Not Found', funderLoan3."Funder No.");
+
             funderLegderEntry_2.Init();
             funderLegderEntry_2."Entry No." := NextEntryNo + 6;
             funderLegderEntry_2."Funder No." := funder."No.";
@@ -2065,7 +2087,7 @@ codeunit 50232 "Treasury Mgt CU"
             // funderLegderEntry_3."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
             funderLegderEntry_3.Insert();
             if (funderLoan3.EnableGLPosting = true) and ((PartialAmount - FloatingInter) <> 0) then
-                FunderMGTCU.DirectGLPosting('redemption', funderLoan3."Interest Payable", (PartialAmount - FloatingInter), 'Partial Redemption Repayment', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//
+                FunderMGTCU.DirectGLPosting('partial-redemption', funderLoan3."Interest Payable", (PartialAmount - FloatingInter), 'Partial Redemption Repayment', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//
 
             RedemptionLogs.Reset();
             RedemptionLogs.SetRange("Loan No.", LoanNo);
@@ -2153,7 +2175,7 @@ codeunit 50232 "Treasury Mgt CU"
 
                     _interestRate_Active := 0;
                     if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
-                        _interestRate_Active := RelatedParty.InterestRatePA;
+                        _interestRate_Active := RelatedParty.InterestRate;
                     if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
                         _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
                     if _interestRate_Active = 0 then
@@ -2177,7 +2199,7 @@ codeunit 50232 "Treasury Mgt CU"
 
                     _interestRate_Active := 0;
                     if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
-                        _interestRate_Active := RelatedParty.InterestRatePA;
+                        _interestRate_Active := RelatedParty.InterestRate;
                     if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
                         _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
                     if _interestRate_Active = 0 then
@@ -2227,7 +2249,7 @@ codeunit 50232 "Treasury Mgt CU"
                     Error('Get Interest RelatedParty  %1 Dont Exist', OriginNo);
                 _interestRate_Active := 0;
                 if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
-                    _interestRate_Active := RelatedParty.InterestRatePA;
+                    _interestRate_Active := RelatedParty.InterestRate;
                 if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
                     _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
                 if _interestRate_Active = 0 then
@@ -2244,7 +2266,7 @@ codeunit 50232 "Treasury Mgt CU"
                     Error('Get Interest RelatedParty  %1 Dont Exist', OriginNo);
                 _interestRate_Active := 0;
                 if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
-                    _interestRate_Active := RelatedParty.InterestRatePA;
+                    _interestRate_Active := RelatedParty.InterestRate;
                 if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
                     _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
                 if _interestRate_Active = 0 then
@@ -2333,7 +2355,7 @@ codeunit 50232 "Treasury Mgt CU"
 
                     _interestRate_Active := 0;
                     if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
-                        _interestRate_Active := RelatedParty.InterestRatePA;
+                        _interestRate_Active := RelatedParty.InterestRate;
                     if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
                         _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
                     if _interestRate_Active = 0 then
@@ -2359,7 +2381,7 @@ codeunit 50232 "Treasury Mgt CU"
 
                     _interestRate_Active := 0;
                     if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
-                        _interestRate_Active := RelatedParty.InterestRatePA;
+                        _interestRate_Active := RelatedParty.InterestRate;
                     if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
                         _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
                     if _interestRate_Active = 0 then
@@ -2409,7 +2431,7 @@ codeunit 50232 "Treasury Mgt CU"
                     Error('Get Interest RelatedParty  %1 Dont Exist', OriginNo);
                 _interestRate_Active := 0;
                 if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
-                    _interestRate_Active := RelatedParty.InterestRatePA;
+                    _interestRate_Active := RelatedParty.InterestRate;
                 if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
                     _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
                 if _interestRate_Active = 0 then
@@ -2426,7 +2448,7 @@ codeunit 50232 "Treasury Mgt CU"
                     Error('Get Interest RelatedParty  %1 Dont Exist', OriginNo);
                 _interestRate_Active := 0;
                 if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Fixed Rate") then
-                    _interestRate_Active := RelatedParty.InterestRatePA;
+                    _interestRate_Active := RelatedParty.InterestRate;
                 if (RelatedParty.InterestRateType = RelatedParty.InterestRateType::"Floating Rate") then
                     _interestRate_Active := (RelatedParty."Reference Rate" + RelatedParty.Margin);
                 if _interestRate_Active = 0 then
@@ -2503,5 +2525,5 @@ codeunit 50232 "Treasury Mgt CU"
         funderLoan3: Record "Funder Loan";
         EmailingCU: Codeunit "Treasury Emailing";
         FunderMGTCU: Codeunit FunderMgtCU;
-        RelatedParty: Record "RelatedParty- Cust";
+        RelatedParty: Record "RelatedParty Loan";
 }

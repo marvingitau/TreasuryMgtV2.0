@@ -41,14 +41,42 @@ pageextension 50230 AccountantRoleCenter extends 9027
                     RunObject = Page "Funder List";
                     ToolTip = 'Funder';
                 }
-                action(RElatedParty)
+                group("Relatedparty/Customer")
                 {
-                    ApplicationArea = Basic, Suite;
-                    Caption = 'Relatedparty/Customer';
-                    Image = ResourceJournal;
-                    RunObject = page "Related Party List";
-                    ToolTip = 'Relatedparty/Customer';
+                    // action(RElatedParty)
+                    // {
+                    //     ApplicationArea = Basic, Suite;
+                    //     Caption = 'Relatedparty/Customer';
+                    //     Image = ResourceJournal;
+                    //     RunObject = page "Related Party List";
+                    //     ToolTip = 'Relatedparty/Customer';
+                    // }
+                    action("Relatedparty Portfolio")
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Caption = 'Portfolio';
+                        Image = ResourceJournal;
+                        RunObject = page "Portfolio List RelalatedParty";
+                        ToolTip = 'Portfolio';
+                    }
+                    action("RelatedParty List")
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Caption = 'RelatedParty/Customer';
+                        Image = ResourceJournal;
+                        RunObject = page "RelatedParty List";
+                        ToolTip = 'RelatedParty/Customer';
+                    }
+                    action("RelatedParty Loans")
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Caption = 'RelatedParty/Customer Loan';
+                        Image = ResourceJournal;
+                        RunObject = page "RelatedParty Loans List";
+                        ToolTip = 'RelatedParty/Customer';
+                    }
                 }
+
                 action("Funder Loans")
                 {
                     ApplicationArea = Basic, Suite;

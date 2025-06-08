@@ -38,7 +38,12 @@ page 50234 "General Setup"
                 }
                 field(WithholdingAcc; Rec.FunderWithholdingAcc)
                 {
-                    Caption = 'Funder Withholding Tax A/c';
+                    Caption = 'Funder Withholding A/c';
+                    ApplicationArea = All;
+                }
+                field(RelatedWithholdingAcc; Rec.RelatedWithholdingAcc)
+                {
+                    Caption = 'RelatedParty Withholding A/c';
                     ApplicationArea = All;
                 }
                 // field(DebtorWithholdingAcc; Rec.DebtorWithholdingAcc)
@@ -121,20 +126,29 @@ page 50234 "General Setup"
             }
             group("GL Accounts")
             {
+                field("Opening  Balance Acc"; Rec."Opening  Balance Acc")
+                {
+                    ApplicationArea = All;
+                }
                 field("Total Asset G/L"; Rec."Total Asset G/L")
                 {
                     ApplicationArea = All;
                 }
             }
-            group("Loan Confirmation Document")
+            group("Loan Confirmation")
             {
-                field("Signatory Name"; Rec."Signatory Name")
+                // field("Signatory Name"; Rec."Signatory Name")
+                // {
+                //     ApplicationArea = All;
+                // }
+                // field("Signatory Position"; Rec."Signatory Position")
+                // {
+                //     ApplicationArea = All;
+                // }
+
+                part("Confirmation Signatories"; "Confirmation Signatories")
                 {
-                    ApplicationArea = All;
-                }
-                field("Signatory Position"; Rec."Signatory Position")
-                {
-                    ApplicationArea = All;
+                    // SubPageLink = "YY." = FIELD("No.");
                 }
             }
 

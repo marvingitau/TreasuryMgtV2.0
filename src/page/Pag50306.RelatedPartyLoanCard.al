@@ -1,12 +1,10 @@
-page 50282 "Funder Loan Card StandAlone"
+page 50306 "RelatedParty Loan Card"
 {
     PageType = Card;
     ApplicationArea = All;
     UsageCategory = Administration;
-    SourceTable = "Funder Loan";
-    InsertAllowed = false;
-    Caption = 'Funder Loan Card';
-    //DEPRECATED
+    SourceTable = "RelatedParty Loan";
+
     layout
     {
         area(Content)
@@ -16,18 +14,19 @@ page 50282 "Funder Loan Card StandAlone"
                 field("No."; Rec."No.")
                 {
                     ApplicationArea = All;
-                    Editable = false;
+                    // Editable = false;
                 }
                 field("Funder No."; Rec."Funder No.")
                 {
                     ApplicationArea = All;
-                    Editable = false;
+                    // Editable = false;
+                    Caption = 'RelatedParty No.';
                 }
                 field(Name; Rec.Name)
                 {
                     ApplicationArea = All;
-                    Editable = false;
-                    Caption = 'Funder Name';
+                    // Editable = false;
+                    Caption = 'RelatedParty Name';
                 }
                 // field("Loan Name"; Rec."Loan Name")
                 // {
@@ -42,7 +41,7 @@ page 50282 "Funder Loan Card StandAlone"
                     trigger OnValidate()
                     begin
                         if (Rec.PlacementDate <> 0D) and (Rec.MaturityDate <> 0D) then begin
-                            PlacementAndMaturityDifference := (Rec.MaturityDate - Rec.PlacementDate) + 1;
+                            PlacementAndMaturityDifference := (Rec.MaturityDate - Rec.PlacementDate);
                             Message('Loan Duration is %1', Format(PlacementAndMaturityDifference));
                         end;
                     end;
@@ -54,7 +53,7 @@ page 50282 "Funder Loan Card StandAlone"
                     begin
                         if (Rec.PlacementDate <> 0D) and (Rec.MaturityDate <> 0D) then begin
 
-                            PlacementAndMaturityDifference := (Rec.MaturityDate - Rec.PlacementDate) + 1;
+                            PlacementAndMaturityDifference := (Rec.MaturityDate - Rec.PlacementDate);
                             Message('Loan Duration is %1', Format(PlacementAndMaturityDifference));
                         end;
                     end;
@@ -106,22 +105,31 @@ page 50282 "Funder Loan Card StandAlone"
                     {
 
                         ApplicationArea = All;
-                        ShowMandatory = true;
+                        Editable = false;
+                        Caption = 'Principal Account';
                     }
                     field("Interest Expense"; Rec."Interest Expense")
                     {
 
                         ApplicationArea = All;
-                        ShowMandatory = true;
+                        Editable = false;
                     }
                     field("Interest Payable"; Rec."Interest Payable")
                     {
 
                         ApplicationArea = All;
-                        ShowMandatory = true;
+                        Editable = false;
                     }
                 }
+                field("Total Payed"; Rec."Total Payed")
+                {
+                    ApplicationArea = All;
+                    Enabled = Rec."Tranche Loan";
+                    Editable = not (Rec.Status = Rec.Status::Approved);
+                    ToolTip = 'This indicates the Total to Be Payed under Tranches Loan';
+                    Caption = 'Total Expected Amount';
 
+                }
                 field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
                 {
                     ApplicationArea = All;
@@ -177,6 +185,12 @@ page 50282 "Funder Loan Card StandAlone"
                     ApplicationArea = All;
                     ShowMandatory = true;
                     Editable = not isFloatRate;
+                    Caption = 'Gross Interest rate (p.a)';
+                }
+                field(NetInterestRate; Rec.NetInterestRate)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Net Interest Rate';
                 }
                 group(FloatInterestFields)
                 {
@@ -271,6 +285,12 @@ page 50282 "Funder Loan Card StandAlone"
                 {
                     ApplicationArea = All;
                 }
+                // field("Tranche Loan"; Rec."Tranche Loan")
+                // {
+                //     ApplicationArea = All;
+                //     ToolTip = 'Is this loan a Tranched Loan';
+                //     Editable = TranchesView;
+                // }
 
                 field(Category; Rec.Category)
                 {
@@ -336,6 +356,14 @@ page 50282 "Funder Loan Card StandAlone"
                     ApplicationArea = All;
                     // Editable = false;
                 }
+                field(State; Rec.State)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Operational State';
+                    Editable = false;
+                    // Visible = Rec.Status = Rec.Status::Approved;
+                    ToolTip = 'This shows the Loan is in Operation';
+                }
                 group("Rollover Details")
                 {
                     Visible = IsRollovered;
@@ -343,34 +371,81 @@ page 50282 "Funder Loan Card StandAlone"
                     {
                         ApplicationArea = All;
                         Caption = 'Record Origin';
+                        Editable = false;
                     }
                     field("Original Record No."; Rec."Original Record No.")
                     {
                         ApplicationArea = All;
+                        Editable = false;
                     }
                     field("Rollovered Interest"; Rec."Rollovered Interest")
                     {
                         ApplicationArea = All;
                         Caption = '* Rollovered Interest';
                         ToolTip = 'Applicable only for the case of Rollovered Interest';
+                        Editable = false;
                     }
                 }
 
+
             }
-            group("Quartery Interest Payment Advanced Settings")
+            group("Amortized Interest Advanced Settings")
             {
-                Visible = EnableInterestPaymentVisibility;
+                //     // Visible = EnableInterestPaymentVisibility;
                 field(FirstDueDate; Rec.FirstDueDate)
                 {
-                    Caption = 'First Due Date ';
+                    Caption = 'Interest Due Date';
+                    ApplicationArea = All;
+
+                }
+                field(SecondDueDate; Rec.SecondDueDate)
+                {
+                    Caption = 'Payment Due Date';
                     ApplicationArea = All;
 
                 }
             }
+            group(Encumbrance)
+            {
+                Visible = EncumberanceView;
+
+                field("Encumbrance Input"; Rec."Encumbrance Input")
+                {
+                    ApplicationArea = All;
+                }
+                field("Total Asset Value"; Rec."Total Asset Value")
+                {
+                    ApplicationArea = All;
+                    Editable = false;
+                }
+                field("Encumbrance Percentage"; Rec."Encumbrance Percentage")
+                {
+                    ApplicationArea = All;
+                    Editable = false;
+                }
+            }
+            group("Loan Repayment")
+            {
+                Visible = LoanRepaymentView;
+
+                field("Repayment Frequency"; Rec."Repayment Frequency")
+                {
+                    ApplicationArea = All;
+                }
+                field("Repayment Amount"; Rec."Repayment Amount")
+                {
+                    ApplicationArea = All;
+                }
+                // field("Repayment interest"; Rec."Repayment interest")
+                // {
+                //     ApplicationArea = All;
+                // }
+            }
+
         }
         area(FactBoxes)
         {
-            part("Attached Documents"; "Document Attachment Factbox")
+            part("Attached Documents"; "Doc. Attachment List Factbox")
             {
                 ApplicationArea = All;
                 Caption = 'Attachments';
@@ -425,26 +500,11 @@ page 50282 "Funder Loan Card StandAlone"
                     ToolTip = 'Compute Interest ';
                     trigger OnAction()
                     var
-                        funderMgt: Codeunit FunderMgtCU;
+                        funderMgt: Codeunit RelatepartyMgtCU;
                     begin
                         funderMgt.CalculateInterest(Rec."No.");
                     end;
                 }
-                // action("Rollover Record")
-                // {
-                //     ApplicationArea = Basic, Suite;
-                //     Image = Interaction;
-                //     Promoted = true;
-                //     PromotedCategory = Process;
-                //     Caption = 'Rollover Record';
-                //     ToolTip = 'Rollover Record';
-                //     trigger OnAction()
-                //     var
-                //         funderMgt: Codeunit FunderMgtCU;
-                //     begin
-                //         funderMgt.DuplicateRecord(Rec."No.");
-                //     end;
-                // }
                 action("Rollover Record")
                 {
                     ApplicationArea = Basic, Suite;
@@ -455,8 +515,8 @@ page 50282 "Funder Loan Card StandAlone"
                     ToolTip = 'Rollover Record';
                     trigger OnAction()
                     var
-                        // funderMgt: Codeunit FunderMgtCU;
-                        RO: Page "Roll over";
+                        funderMgt: Codeunit FunderMgtCU;
+                        RO: Page "RelatedParty Roll over";
                         GFilter: Codeunit GlobalFilters;
                         ROTbl: Record "Roll over Tbl";
                     begin
@@ -478,18 +538,60 @@ page 50282 "Funder Loan Card StandAlone"
                     ToolTip = 'Redemption Record';
                     trigger OnAction()
                     var
-                        funderMgt: Codeunit FunderMgtCU;
-                        RD: Page Redemption;
+                        RD: Page "Relatedparty Redemption";
                         GFilter: Codeunit GlobalFilters;
                         RDTbl: Record "Redemption Tbl";
                     begin
-                        // funderMgt.DuplicateRecord(Rec."No.");
-                        //Page.Run(Page::"Roll over", Rec);
                         RDTbl.Reset();
                         RDTbl.DeleteAll();
 
                         GFilter.SetGlobalLoanFilter(Rec."No.");
                         RD.Run();
+                    end;
+                }
+
+                // action("Loan Tranche")
+                // {
+                //     ApplicationArea = Basic, Suite;
+                //     Image = Trace;
+                //     PromotedIsBig = true;
+                //     Promoted = true;
+                //     PromotedCategory = Process;
+                //     Caption = 'Loan Tranche';
+                //     ToolTip = 'Loan Tranche';
+                //     Enabled = Rec."Tranche Loan" = true;
+                //     Visible = TranchesView;
+
+                //     trigger OnAction()
+                //     var
+                //         tranchLoan: Record "Disbur. Tranched Loan";
+                //         GFilter: Codeunit GlobalFilters;
+                //     begin
+                //         GFilter.SetGlobalLoanFilter(Rec."No.");
+                //         tranchLoan.SETRANGE(tranchLoan."Loan No.", Rec."No.");
+                //         // tranchLoan.SetFilter(tranchLoan."Document Type", '<>%1', tranchLoan."Document Type"::"Remaining Amount");
+                //         PAGE.RUN(PAGE::"Disbur. Tranched Loan", tranchLoan);
+
+                //     end;
+                // }
+
+                action("Portfolio Fee Setup")
+                {
+                    Caption = 'Applicable Fee';
+                    Image = InsertStartingFee;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    PromotedIsBig = true;
+                    // RunObject = page "Portfolio Fee Setup";
+                    trigger OnAction()
+                    var
+                        _portfolio: page "Portfolio Fee Setup";
+                        GFilter: Codeunit GlobalFilters;
+                        _portfolioFeeTbl: Record "Portfolio Fee Setup";
+                    begin
+                        _portfolioFeeTbl.Reset();
+                        _portfolioFeeTbl.SetRange(_portfolioFeeTbl.RelatedPartyLoanNo, Rec."No.");
+                        Page.Run(Page::"Portfolio Fee Setup", _portfolioFeeTbl);
                     end;
                 }
             }
@@ -513,6 +615,13 @@ page 50282 "Funder Loan Card StandAlone"
                         CustomWorkflowMgmt: Codeunit "Treasury Approval Mgt";
                         RecRef: RecordRef;
                     begin
+                        //Validate Key Fields
+                        // Interest Value, Method and Principal
+                        if Rec."Original Disbursed Amount" = 0 then
+                            Error('Original Disbursed Amount Required');
+                        if Rec.InterestRate = 0 then
+                            Error('Gross Interest rate (p.a) Required');
+
                         RecRef.GetTable(Rec);
                         if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
                             CustomWorkflowMgmt.OnSendWorkflowForApproval(RecRef);
@@ -542,7 +651,7 @@ page 50282 "Funder Loan Card StandAlone"
             {
                 Caption = 'Communications';
                 Image = MapSetup;
-                action("Send Confirmation")
+                action("Email Send Confirmation")
                 {
                     Image = Confirm;
                     Promoted = true;
@@ -552,7 +661,56 @@ page 50282 "Funder Loan Card StandAlone"
                     var
                         EmailingCU: Codeunit "Treasury Emailing";
                     begin
-                        EmailingCU.SendConfirmationEmailWithAttachment(Rec."No.")
+                        EmailingCU.SendConfirmationEmailWithAttachmentRelatedParty(Rec."No.")
+                    end;
+                }
+                action("Reminder On Placement Maturity")
+                {
+                    Image = Reminder;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    // PromotedIsBig = true;
+                    trigger OnAction()
+                    var
+                        PlacementReminder: Report "Related Rem. on Plac. Mature";
+                        _relatedPartyLoan: Record "RelatedParty Loan";
+                    // EmailingCU: Codeunit "Treasury Emailing";
+                    begin
+                        CurrPage.SetSelectionFilter(Rec);
+                        Report.Run(Report::"Related Rem. on Plac. Mature", true, false, Rec);
+                        // PlacementReminder.SetTableView(Rec);
+                        // PlacementReminder.Run();
+                        // EmailingCU.SendReminderOnPlacementMaturity(Rec."No.")
+                    end;
+                }
+                action("Reminder On Instrest Due")
+                {
+                    Image = Intercompany;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    // PromotedIsBig = true;
+                    trigger OnAction()
+                    var
+                        EmailingCU: Codeunit "Treasury Emailing";
+                    begin
+                        EmailingCU.SendReminderOnInterestDueRelatedParty(Rec."No.")
+                    end;
+                }
+                action("Reminder On Instrest Due Doc")
+                {
+                    Image = Document;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    // PromotedIsBig = true;
+                    trigger OnAction()
+                    var
+                        EmailingCU: Codeunit "Treasury Emailing";
+                        PlacementReminder: Report "Related Rem. On Intr. Due";
+                    begin
+                        // CurrPage.SetSelectionFilter(Rec);
+                        // Report.Run(Report::"Related Rem. On Intr. Due", true, false, Rec);
+                        PlacementReminder.SetTableView(Rec);
+                        PlacementReminder.Run();
                     end;
                 }
             }
@@ -641,94 +799,105 @@ page 50282 "Funder Loan Card StandAlone"
 
             group(Reports)
             {
-                action("Amortized Interest")
+                // action("Amortized Interest")
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Amortized Interest';
+                //     Image = Report2;
+                //     // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                //     Promoted = true;
+                //     PromotedCategory = Report;
+                //     PromotedIsBig = true;
+                //     // RunObject = report "Interest Amortization";
+                //     trigger OnAction()
+                //     var
+                //         _funderLoan: Record "Funder Loan";
+                //     begin
+                //         _funderLoan.Reset();
+                //         _funderLoan.SetRange("No.", Rec."No.");
+                //         Report.Run(Report::"Interest Amortization", true, false, _funderLoan);
+                //     end;
+
+
+
+                // }
+                // action("Amortized Payment")
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Amortized Payment';
+                //     Image = Report;
+                //     // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                //     Promoted = true;
+                //     PromotedCategory = Report;
+                //     PromotedIsBig = true;
+                //     RunObject = report "Payment Amortization";
+                //     trigger OnAction()
+                //     var
+                //         _funderLoan: Record "Funder Loan";
+                //     begin
+                //         _funderLoan.Reset();
+                //         _funderLoan.SetRange("No.", Rec."No.");
+                //         // Report.Run(50230, true, false, _funderLoan);
+                //     end;
+                // }
+                action("Loan Repayment Schedule")
                 {
                     ApplicationArea = All;
-                    Caption = 'Amortized Interest';
-                    Image = Report2;
+                    Caption = 'Loan Repayment';
+                    Image = Replan;
                     // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
                     Promoted = true;
                     PromotedCategory = Report;
                     PromotedIsBig = true;
-                    RunObject = report "Interest Amortization";
                     trigger OnAction()
                     var
-                        _funderLoan: Record "Funder Loan";
+
                     begin
-                        _funderLoan.Reset();
-                        _funderLoan.SetRange("No.", Rec."No.");
-                        // Report.Run(50230, true, false, _funderLoan);
+                        CurrPage.SetSelectionFilter(Rec);
+                        Report.Run(Report::"Related Loan Rep. Sch.", true, false, Rec);
                     end;
-
-
-
                 }
-                action("Amortized Payment")
-                {
-                    ApplicationArea = All;
-                    Caption = 'Amortized Payment';
-                    Image = Report;
-                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
-                    Promoted = true;
-                    PromotedCategory = Report;
-                    PromotedIsBig = true;
-                    RunObject = report "Payment Amortization";
-                    trigger OnAction()
-                    var
-                        _funderLoan: Record "Funder Loan";
-                    begin
-                        _funderLoan.Reset();
-                        _funderLoan.SetRange("No.", Rec."No.");
-                        // Report.Run(50230, true, false, _funderLoan);
-                    end;
+                // action("Capitalize Interest")
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Capitalize Interest';
+                //     Image = Report;
+                //     // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                //     Promoted = true;
+                //     PromotedCategory = Report;
+                //     PromotedIsBig = true;
+                //     // RunObject = report "Capitalize Interest";
+                //     trigger OnAction()
+                //     var
+                //         LoanRec: Record "Funder Loan";
+                //         Capitalizarp: Report "Capitalize Interest";
+                //     begin
+                //         LoanRec.SetRange("No.", Rec."No.");
+                //         Capitalizarp.SetTableView(LoanRec);
+                //         Capitalizarp.Run();
+                //     end;
+                // }
+                // action("ReEvaluateFX")
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'ReEvaluateFX';
+                //     Image = Report;
+                //     // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                //     Promoted = true;
+                //     PromotedCategory = Report;
+                //     PromotedIsBig = true;
+                //     // RunObject = report ReEvaluateFX;
+                //     trigger OnAction()
+                //     var
+                //         // Report:Report ReEvaluateFX;
+                //         _funderLoan: Record "Funder Loan";
+                //     begin
+                //         _funderLoan.Reset();
+                //         _funderLoan.SetRange("No.", Rec."No.");
+                //         Report.Run(Report::ReEvaluateFX, true, false, _funderLoan);
 
-
-
-                }
-                action("Capitalize Interest")
-                {
-                    ApplicationArea = All;
-                    Caption = 'Capitalize Interest';
-                    Image = Report;
-                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
-                    Promoted = true;
-                    PromotedCategory = Report;
-                    PromotedIsBig = true;
-                    // RunObject = report "Capitalize Interest";
-                    trigger OnAction()
-                    var
-                        LoanRec: Record "Funder Loan";
-                        Capitalizarp: Report "Capitalize Interest";
-                    begin
-                        LoanRec.SetRange("No.", Rec."No.");
-                        Capitalizarp.SetTableView(LoanRec);
-                        Capitalizarp.Run();
-                    end;
-
-                }
-                action("ReEvaluateFX")
-                {
-                    ApplicationArea = All;
-                    Caption = 'ReEvaluateFX';
-                    Image = Report;
-                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
-                    Promoted = true;
-                    PromotedCategory = Report;
-                    PromotedIsBig = true;
-                    // RunObject = report ReEvaluateFX;
-                    trigger OnAction()
-                    var
-                        LoanRec: Record "Funder Loan";
-                        ReEvalFX: Report ReEvaluateFX;
-                    begin
-                        LoanRec.SetRange("No.", Rec."No.");
-                        ReEvalFX.SetTableView(LoanRec);
-                        ReEvalFX.Run();
-                    end;
-
-
-                }
-
+                //     end;
+                // }
             }
             group(Documents)
             {
@@ -754,22 +923,22 @@ page 50282 "Funder Loan Card StandAlone"
                 action(Confirmation)
                 {
                     ApplicationArea = All;
-                    Caption = 'Confirmation';
+                    Caption = 'Loan Confirmation Document';
                     Image = Attach;
                     Promoted = true;
                     PromotedCategory = Report;
-                    // RunObject = report "Investment Confirmation";
                     PromotedIsBig = true;
                     trigger OnAction()
                     var
                         InvestConfRp: Report "Investment Confirmation";
                         ReportFlag: Record "Report Flags";
                     begin
-                        // InvestConfRp.SetFunderNoFilter(Rec."No.");
-
-
-                        Report.Run(Report::"Investment Confirmation");
+                        // Get the current record
+                        CurrPage.SetSelectionFilter(Rec);
+                        // Pass the record directly to the report
+                        Report.Run(Report::"RelatedParty Invest. Conf.", true, false, Rec);
                     end;
+
                 }
                 action(Redemption)
                 {
@@ -805,6 +974,18 @@ page 50282 "Funder Loan Card StandAlone"
         isSecureLoanActive := false;
         isUnsecureLoanActive := true;
         isFloatRate := false;
+
+        _funderNo := GlobalFilters.GetGlobalFilter();
+        if _funderNo <> '' then begin
+            if RelatedPartyTbl.Get(_funderNo) then begin
+                if RelatedPartyTbl.FunderType = RelatedPartyTbl.FunderType::Individual then begin
+                    if RelatedPartyTbl."Mailing Address" = '' then begin
+                        Error('Email Required');
+                        exit;
+                    end;
+                end;
+            end;
+        end;
     end;
 
     trigger OnOpenPage()
@@ -817,9 +998,12 @@ page 50282 "Funder Loan Card StandAlone"
             exit;
         end;
         _funderNo := GlobalFilters.GetGlobalFilter();
+        if not RelatedPartyTbl.Get(_funderNo) then
+            exit;
+        // Error('Relatedparty not found');
         // if _funderNo <> '' then begin
-        //     if FunderTbl.Get(_funderNo) then begin
-        //         if FunderTbl."Funder Type" = FunderTbl."Funder Type"::Local then
+        //     if RelatedPartyTbl.Get(_funderNo) then begin
+        //         if RelatedPartyTbl.FunderType = RelatedPartyTbl.FunderType::Local then
         //             isCurrencyVisible := false;
         //     end;
         // end;
@@ -854,15 +1038,23 @@ page 50282 "Funder Loan Card StandAlone"
         ReportFlag."Funder Loan No." := Rec."No.";
         ReportFlag."Utilizing User" := UserId;
         ReportFlag.Insert();
+
+        // if Rec."Payables Account" = '' then
+        //     Rec."Payables Account" := RelatedPartyTbl."Payables Account";
+        // if Rec."Interest Expense" = '' then
+        //     Rec."Interest Expense" := RelatedPartyTbl."Interest Expense";
+        // if Rec."Interest Payable" = '' then
+        //     Rec."Interest Payable" := RelatedPartyTbl."Interest Payable";
+
         UpdateInterestPaymentVisibility();
+        FieldEditProp();
         RolloveredChecker();
+
+        EncumberanceView := false;
+        LoanRepaymentView := false;
+        TranchesView := false;
     end;
 
-    local procedure UpdateInterestPaymentVisibility()
-    begin
-        EnableInterestPaymentVisibility := Rec.PeriodicPaymentOfInterest = Rec.PeriodicPaymentOfInterest::Quarterly;
-
-    end;
 
     trigger OnNextRecord(Steps: Integer): Integer
     begin
@@ -873,6 +1065,53 @@ page 50282 "Funder Loan Card StandAlone"
         end
         else
             isFloatRate := false;
+    end;
+
+    trigger OnNewRecord(BelowxRec: Boolean)
+    var
+        Relatedportfolio: Record "Portfolio RelatedParty";
+    begin
+        Relatedportfolio.Reset();
+        Relatedportfolio.SetRange("No.", RelatedPartyTbl.Portfolio);
+        if not Relatedportfolio.FindFirst() then
+            Error('Relatedportfolio not found %1', RelatedPartyTbl.Portfolio);
+
+        if Relatedportfolio.Category = Relatedportfolio.Category::"Bank Loan" then
+            Rec.Category := UpperCase('Bank Loan');
+        if Relatedportfolio.Category = Relatedportfolio.Category::Individual then
+            Rec.Category := UpperCase('Individual');
+        if Relatedportfolio.Category = Relatedportfolio.Category::Institutional then
+            Rec.Category := UpperCase('Institutional');
+        if Relatedportfolio.Category = Relatedportfolio.Category::"Asset Term Manager" then
+            Rec.Category := UpperCase('Asset Term Manager');
+        if Relatedportfolio.Category = Relatedportfolio.Category::"Medium Term Notes" then
+            Rec.Category := UpperCase('Medium Term Notes');
+
+        Rec."Origin Entry" := Rec."Origin Entry"::RelatedParty;
+
+        if RelatedPartyTbl."Payables Account" = '' then begin
+            Error('Principal Account missing');
+            exit;
+        end;
+        if RelatedPartyTbl."Interest Expense" = '' then begin
+            Error('Interest Expense Account missing');
+            exit;
+        end;
+        if RelatedPartyTbl."Interest Payable" = '' then begin
+            Error('Interest Payable Account missing');
+            exit;
+        end;
+
+        if Rec."Payables Account" = '' then
+            Rec."Payables Account" := RelatedPartyTbl."Payables Account";
+        if Rec."Interest Expense" = '' then
+            Rec."Interest Expense" := RelatedPartyTbl."Interest Expense";
+        if Rec."Interest Payable" = '' then
+            Rec."Interest Payable" := RelatedPartyTbl."Interest Payable";
+
+
+
+
     end;
 
     trigger OnInsertRecord(BelowxRec: Boolean): Boolean
@@ -896,10 +1135,48 @@ page 50282 "Funder Loan Card StandAlone"
     begin
         OpenApprovalEntriesExistCurrUser := ApprovalsMgmt.HasOpenApprovalEntriesForCurrentUser(Rec.RecordId);
         OpenApprovalEntriesExist := ApprovalsMgmt.HasOpenApprovalEntries(Rec.RecordId);
+        // OpenApprovalEntriesExist := ApprovalsMgmt.HasApprovedApprovalEntries(Rec.RecordId);
         CanCancelApprovalForRecord := ApprovalsMgmt.CanCancelApprovalForRecord(Rec.RecordId);
         HasApprovalEntries := ApprovalsMgmt.HasApprovalEntries(Rec.RecordId);
         UpdateInterestPaymentVisibility();
+        FieldEditProp();
         RolloveredChecker();
+
+        EncumberanceView := Rec.Category = UpperCase('Bank Loan');
+        LoanRepaymentView := Rec.Category = UpperCase('Bank Loan');
+        TranchesView := (Rec.Category = UpperCase('Institutional')) or (Rec.Category = UpperCase('Bank Loan'));
+
+    end;
+
+    trigger OnAfterGetRecord()
+    begin
+
+    end;
+
+    trigger OnQueryClosePage(CloseAction: Action): Boolean
+    var
+        ReportFlag: Record "Report Flags";
+    begin
+        ReportFlag.Reset();
+        ReportFlag.SetFilter("Line No.", '<>%1', 0);
+        ReportFlag.SetFilter("Utilizing User", '=%1', UserId);
+        if ReportFlag.Find('-') then begin
+            repeat
+                ReportFlag.Delete();
+            until ReportFlag.Next() = 0;
+        end;
+    end;
+
+    local procedure UpdateInterestPaymentVisibility()
+    begin
+        EnableInterestPaymentVisibility := Rec.PeriodicPaymentOfInterest = Rec.PeriodicPaymentOfInterest::Quarterly;
+
+    end;
+
+    local procedure FieldEditProp()
+    var
+    begin
+        EditStatus := not (Rec.Status = Rec.Status::Approved);
     end;
 
     local procedure RolloveredChecker()
@@ -915,17 +1192,16 @@ page 50282 "Funder Loan Card StandAlone"
         GlobalFilters: Codeunit GlobalFilters;
         isCurrencyVisible, isSecureLoanActive, isUnsecureLoanActive, isFloatRate : Boolean;
         _funderNo: Text[30];
-        FunderTbl: Record Funders;
+        RelatedPartyTbl: Record RelatedParty;
 
         OpenApprovalEntriesExistCurrUser, OpenApprovalEntriesExist, CanCancelApprovalForRecord
         , HasApprovalEntries : Boolean;
         ApprovalsMgmt: Codeunit "Approvals Mgmt.";
         PlacementAndMaturityDifference: Integer;
-        EnableInterestPaymentVisibility: Boolean;
+        EnableInterestPaymentVisibility, EncumberanceView, LoanRepaymentView, TranchesView : Boolean;
         "Region/Country": Record Country_Region;
         EditStatus: Boolean;
         IsRollovered: Boolean;
-
 
     protected var
 

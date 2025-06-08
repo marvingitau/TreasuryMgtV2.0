@@ -143,6 +143,15 @@ report 50231 "Payment Amortization"
         _sumNetInterest: Decimal;
         _sumTotalPayment: Decimal;
         _sumOutstanding: Decimal;
+
+        _secondStep: Boolean;
+
+        _dueDateNoOfMonths: Integer;
+        _dueDateNoOfQuarter: Integer;
+        _dueDateNoOfBiannual: Integer;
+        _dueDateNoOfAnnual: Integer;
+
+        _dueDateAmortizedValue: Decimal;
     begin
         ReportFlag.Reset();
         ReportFlag.SetFilter("Line No.", '<>%1', 0);
@@ -157,7 +166,9 @@ report 50231 "Payment Amortization"
         if not FunderLoanTbl.Find('-') then
             Error('Funder Loan not %1 found', FunderNo);
         _fNo := FunderLoanTbl."No.";
-        dueDate := FunderLoanTbl.FirstDueDate;
+
+        dueDate := FunderLoanTbl.SecondDueDate;
+
         placementDate := FunderLoanTbl.PlacementDate;
         maturityDate := FunderLoanTbl.MaturityDate;
         dateDiff := (maturityDate - placementDate);
@@ -246,18 +257,105 @@ report 50231 "Payment Amortization"
                     monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInMonth / 365);
                 end;
 
-                Loan.Init();
-                Loan.DueDate := _currentMonthInLoop;
-                Loan.Interest := monthlyInterest;
-                Loan.CalculationDate := _currentMonthInLoop;
-                Loan.LoanNo := _fNo;
-                Loan.LoopCount := monthCounter;
-                Loan.Amortization := _amortization;
-                Loan.InterestRate := _interestRate_Active;
-                Loan.TotalPayment := _totalPayment + monthlyInterest;
-                Loan.OutStandingAmt := _outstandingAmount;
-                Loan.NumberofDays := DaysInMonth;
-                Loan.Insert();
+                // Loan.Init();
+                // Loan.DueDate := _currentMonthInLoop;
+                // Loan.Interest := monthlyInterest;
+                // Loan.CalculationDate := _currentMonthInLoop;
+                // Loan.LoanNo := _fNo;
+                // Loan.LoopCount := monthCounter;
+                // Loan.Amortization := _amortization;
+                // Loan.InterestRate := _interestRate_Active;
+                // Loan.TotalPayment := _totalPayment + monthlyInterest;
+                // Loan.OutStandingAmt := _outstandingAmount;
+                // Loan.NumberofDays := DaysInMonth;
+                // Loan.Insert();
+
+                if (dueDate <> 0D) and (dueDate > _currentMonthInLoop) then begin
+                    //FirstDueAccumulator.Init();
+
+                    _secondStep := true;
+                    FirstDueAccumulator.Line := monthCounter + 1;
+                    FirstDueAccumulator.DueDate := _currentMonthInLoop;
+                    FirstDueAccumulator.Interest := monthlyInterest;
+                    FirstDueAccumulator.CalculationDate := _currentMonthInLoop;
+                    FirstDueAccumulator.LoanNo := _fNo;
+                    FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
+                    FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
+                    FirstDueAccumulator.LoopCount := monthCounter + 1;
+                    FirstDueAccumulator.Amortization := _amortization;
+                    FirstDueAccumulator.InterestRate := _interestRate_Active;
+                    FirstDueAccumulator.TotalPayment := _totalPayment + monthlyInterest;
+                    FirstDueAccumulator.OutStandingAmt := _outstandingAmount;
+                    FirstDueAccumulator.NumberofDays := DaysInMonth;
+                    FirstDueAccumulator.Insert();
+                end else begin
+                    FirstDueAccumulator.Reset();
+                    FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
+                    FirstDueAccumulator.SetRange(Reviewed, false);
+                    FirstDueAccumulator.CalcSums(Interest);
+                    FirstDueAccumulator.CalcSums(NetInterest);
+                    FirstDueAccumulator.CalcSums(WithHldTaxAmt);
+                    FirstDueAccumulator.CalcSums(TotalPayment);
+                    FirstDueAccumulator.CalcSums(OutStandingAmt);
+
+                    if FirstDueAccumulator.Count > 0 then begin
+                        _sumInterest := FirstDueAccumulator.Interest;
+                        _sumNetInterest := FirstDueAccumulator.NetInterest;
+                        _sumWtholding := FirstDueAccumulator.WithHldTaxAmt;
+                        _sumTotalPayment := FirstDueAccumulator.TotalPayment;
+                        _sumOutstanding := FirstDueAccumulator.OutStandingAmt;
+                        FirstDueAccumulator.Reviewed := true;
+                        FirstDueAccumulator.Modify();
+                    end else begin
+                        _sumInterest := 0;
+                        _sumNetInterest := 0;
+                        _sumWtholding := 0;
+                        _sumTotalPayment := 0;
+                        _sumOutstanding := 0;
+                    end;
+                    if (dueDate <> 0D) then begin
+                        _dueDateNoOfMonths := MonthsBetween(dueDate, maturityDate);
+                        if _outstandingAmount <> 0 then
+                            _dueDateAmortizedValue := _outstandingAmount / _dueDateNoOfMonths
+                        else
+                            _dueDateAmortizedValue := _principle / _dueDateNoOfMonths;
+                    end;
+
+                    Loan.Init();
+                    Loan.Interest := monthlyInterest + _sumInterest;
+                    Loan.LoanNo := _fNo;
+                    Loan.WithHldTaxAmt := _withHoldingTax_Amnt + _sumWtholding;
+                    Loan.NetInterest := (monthlyInterest - _withHoldingTax_Amnt) + _sumNetInterest;
+                    Loan.LoopCount := monthCounter;
+                    if _dueDateAmortizedValue <> 0 then
+                        Loan.Amortization := _dueDateAmortizedValue
+                    else
+                        Loan.Amortization := _amortization;
+                    Loan.InterestRate := _interestRate_Active;
+
+                    if _dueDateAmortizedValue <> 0 then
+                        Loan.TotalPayment := ((_totalPayment + monthlyInterest) + _sumTotalPayment) + _dueDateAmortizedValue
+                    else
+                        Loan.TotalPayment := (_totalPayment + monthlyInterest) + _sumTotalPayment;
+                    Loan.OutStandingAmt := _outstandingAmount;
+
+                    if _secondStep = true then begin
+                        Loan.NumberofDays := dueDate - FunderLoanTbl.PlacementDate;
+                        Loan.DueDate := dueDate;
+                        Loan.CalculationDate := dueDate;
+                        _secondStep := false;
+                    end else begin
+                        Loan.NumberofDays := DaysInMonth;
+                        Loan.DueDate := _currentMonthInLoop;
+                        Loan.CalculationDate := _currentMonthInLoop;
+                    end;
+                    Loan.Insert();
+
+                    FirstDueAccumulator.Reset();
+                    if FirstDueAccumulator.Count > 0 then
+                        FirstDueAccumulator.DeleteAll();
+                end;
+
 
                 // monthCounter := monthCounter + 1;
             end;
@@ -331,6 +429,7 @@ report 50231 "Payment Amortization"
 
                 if (dueDate <> 0D) and (dueDate > _currentQuarterInLoop) then begin
                     //FirstDueAccumulator.Init();
+                    _secondStep := true;
                     FirstDueAccumulator.Line := QuarterCounter + 1;
                     FirstDueAccumulator.DueDate := _currentQuarterInLoop;
                     FirstDueAccumulator.Interest := monthlyInterest;
@@ -338,7 +437,7 @@ report 50231 "Payment Amortization"
                     FirstDueAccumulator.LoanNo := _fNo;
                     FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
                     FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
-                    FirstDueAccumulator.LoopCount := monthCounter;
+                    FirstDueAccumulator.LoopCount := QuarterCounter + 1;
                     FirstDueAccumulator.Amortization := _amortization;
                     FirstDueAccumulator.InterestRate := _interestRate_Active;
                     FirstDueAccumulator.TotalPayment := _totalPayment + monthlyInterest;
@@ -373,9 +472,9 @@ report 50231 "Payment Amortization"
 
 
                     Loan.Init();
-                    Loan.DueDate := _currentQuarterInLoop;
+                    // Loan.DueDate := _currentQuarterInLoop;
                     Loan.Interest := monthlyInterest + _sumInterest;
-                    Loan.CalculationDate := _currentQuarterInLoop;
+                    // Loan.CalculationDate := _currentQuarterInLoop;
                     Loan.LoanNo := _fNo;
                     Loan.WithHldTaxAmt := _withHoldingTax_Amnt + _sumWtholding;
                     Loan.NetInterest := (monthlyInterest - _withHoldingTax_Amnt) + _sumNetInterest;
@@ -383,8 +482,19 @@ report 50231 "Payment Amortization"
                     Loan.Amortization := _amortization;
                     Loan.InterestRate := _interestRate_Active;
                     Loan.TotalPayment := (_totalPayment + monthlyInterest) + _sumTotalPayment;
-                    Loan.OutStandingAmt := _outstandingAmount + _sumOutstanding;
-                    Loan.NumberofDays := DaysInQuarter;
+                    Loan.OutStandingAmt := _outstandingAmount;
+                    // Loan.NumberofDays := DaysInQuarter;
+                    if _secondStep = true then begin
+                        Loan.NumberofDays := dueDate - FunderLoanTbl.PlacementDate;
+                        Loan.DueDate := dueDate;
+                        Loan.CalculationDate := dueDate;
+                        _secondStep := false;
+                    end else begin
+                        Loan.NumberofDays := DaysInQuarter;
+                        Loan.DueDate := _currentQuarterInLoop;
+                        Loan.CalculationDate := _currentQuarterInLoop;
+                    end;
+
                     Loan.Insert();
 
                     FirstDueAccumulator.Reset();
@@ -450,18 +560,93 @@ report 50231 "Payment Amortization"
                     monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInBiann / 365);
                 end;
 
-                Loan.Init();
-                Loan.DueDate := _currentBiannInLoop;
-                Loan.Interest := monthlyInterest;
-                Loan.CalculationDate := _currentBiannInLoop;
-                Loan.LoanNo := _fNo;
-                Loan.LoopCount := BiannCounter;
-                Loan.Amortization := _amortization;
-                Loan.InterestRate := _interestRate_Active;
-                Loan.TotalPayment := _totalPayment + monthlyInterest;
-                Loan.OutStandingAmt := _outstandingAmount;
-                Loan.NumberofDays := DaysInBiann;
-                Loan.Insert();
+                // Loan.Init();
+                // Loan.DueDate := _currentBiannInLoop;
+                // Loan.Interest := monthlyInterest;
+                // Loan.CalculationDate := _currentBiannInLoop;
+                // Loan.LoanNo := _fNo;
+                // Loan.LoopCount := BiannCounter;
+                // Loan.Amortization := _amortization;
+                // Loan.InterestRate := _interestRate_Active;
+                // Loan.TotalPayment := _totalPayment + monthlyInterest;
+                // Loan.OutStandingAmt := _outstandingAmount;
+                // Loan.NumberofDays := DaysInBiann;
+                // Loan.Insert();
+
+                if (dueDate <> 0D) and (dueDate > _currentBiannInLoop) then begin
+                    //FirstDueAccumulator.Init();
+                    _secondStep := true;
+                    FirstDueAccumulator.Line := BiannCounter + 1;
+                    FirstDueAccumulator.DueDate := _currentBiannInLoop;
+                    FirstDueAccumulator.Interest := monthlyInterest;
+                    FirstDueAccumulator.CalculationDate := _currentBiannInLoop;
+                    FirstDueAccumulator.LoanNo := _fNo;
+                    FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
+                    FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
+                    FirstDueAccumulator.LoopCount := BiannCounter + 1;
+                    FirstDueAccumulator.Amortization := _amortization;
+                    FirstDueAccumulator.InterestRate := _interestRate_Active;
+                    FirstDueAccumulator.TotalPayment := _totalPayment + monthlyInterest;
+                    FirstDueAccumulator.OutStandingAmt := _outstandingAmount;
+                    FirstDueAccumulator.NumberofDays := DaysInBiann;
+                    FirstDueAccumulator.Insert();
+                end else begin
+                    FirstDueAccumulator.Reset();
+                    FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
+                    FirstDueAccumulator.SetRange(Reviewed, false);
+                    FirstDueAccumulator.CalcSums(Interest);
+                    FirstDueAccumulator.CalcSums(NetInterest);
+                    FirstDueAccumulator.CalcSums(WithHldTaxAmt);
+                    FirstDueAccumulator.CalcSums(TotalPayment);
+                    FirstDueAccumulator.CalcSums(OutStandingAmt);
+
+                    if FirstDueAccumulator.Count > 0 then begin
+                        _sumInterest := FirstDueAccumulator.Interest;
+                        _sumNetInterest := FirstDueAccumulator.NetInterest;
+                        _sumWtholding := FirstDueAccumulator.WithHldTaxAmt;
+                        _sumTotalPayment := FirstDueAccumulator.TotalPayment;
+                        _sumOutstanding := FirstDueAccumulator.OutStandingAmt;
+                        FirstDueAccumulator.Reviewed := true;
+                        FirstDueAccumulator.Modify();
+                    end else begin
+                        _sumInterest := 0;
+                        _sumNetInterest := 0;
+                        _sumWtholding := 0;
+                        _sumTotalPayment := 0;
+                        _sumOutstanding := 0;
+                    end;
+
+
+                    Loan.Init();
+                    // Loan.DueDate := _currentQuarterInLoop;
+                    Loan.Interest := monthlyInterest + _sumInterest;
+                    // Loan.CalculationDate := _currentQuarterInLoop;
+                    Loan.LoanNo := _fNo;
+                    Loan.WithHldTaxAmt := _withHoldingTax_Amnt + _sumWtholding;
+                    Loan.NetInterest := (monthlyInterest - _withHoldingTax_Amnt) + _sumNetInterest;
+                    Loan.LoopCount := BiannCounter;
+                    Loan.Amortization := _amortization;
+                    Loan.InterestRate := _interestRate_Active;
+                    Loan.TotalPayment := (_totalPayment + monthlyInterest) + _sumTotalPayment;
+                    Loan.OutStandingAmt := _outstandingAmount;
+                    // Loan.NumberofDays := DaysInQuarter;
+                    if _secondStep = true then begin
+                        Loan.NumberofDays := dueDate - FunderLoanTbl.PlacementDate;
+                        Loan.DueDate := dueDate;
+                        Loan.CalculationDate := dueDate;
+                        _secondStep := false;
+                    end else begin
+                        Loan.NumberofDays := DaysInBiann;
+                        Loan.DueDate := _currentBiannInLoop;
+                        Loan.CalculationDate := _currentBiannInLoop;
+                    end;
+
+                    Loan.Insert();
+
+                    FirstDueAccumulator.Reset();
+                    if FirstDueAccumulator.Count > 0 then
+                        FirstDueAccumulator.DeleteAll();
+                end;
 
             end;
         end;
@@ -514,18 +699,93 @@ report 50231 "Payment Amortization"
                     monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInAnnual / 365);
                 end;
 
-                Loan.Init();
-                Loan.DueDate := _currentAnnualInLoop;
-                Loan.Interest := monthlyInterest;
-                Loan.CalculationDate := _currentAnnualInLoop;
-                Loan.LoanNo := _fNo;
-                Loan.LoopCount := AnnualCounter;
-                Loan.Amortization := _amortization;
-                Loan.InterestRate := _interestRate_Active;
-                Loan.TotalPayment := _totalPayment + monthlyInterest;
-                Loan.OutStandingAmt := _outstandingAmount;
-                Loan.NumberofDays := DaysInAnnual;
-                Loan.Insert();
+                // Loan.Init();
+                // Loan.DueDate := _currentAnnualInLoop;
+                // Loan.Interest := monthlyInterest;
+                // Loan.CalculationDate := _currentAnnualInLoop;
+                // Loan.LoanNo := _fNo;
+                // Loan.LoopCount := AnnualCounter;
+                // Loan.Amortization := _amortization;
+                // Loan.InterestRate := _interestRate_Active;
+                // Loan.TotalPayment := _totalPayment + monthlyInterest;
+                // Loan.OutStandingAmt := _outstandingAmount;
+                // Loan.NumberofDays := DaysInAnnual;
+                // Loan.Insert();
+
+                if (dueDate <> 0D) and (dueDate > _currentAnnualInLoop) then begin
+                    //FirstDueAccumulator.Init();
+                    _secondStep := true;
+                    FirstDueAccumulator.Line := AnnualCounter + 1;
+                    FirstDueAccumulator.DueDate := _currentAnnualInLoop;
+                    FirstDueAccumulator.Interest := monthlyInterest;
+                    FirstDueAccumulator.CalculationDate := _currentAnnualInLoop;
+                    FirstDueAccumulator.LoanNo := _fNo;
+                    FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
+                    FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
+                    FirstDueAccumulator.LoopCount := AnnualCounter + 1;
+                    FirstDueAccumulator.Amortization := _amortization;
+                    FirstDueAccumulator.InterestRate := _interestRate_Active;
+                    FirstDueAccumulator.TotalPayment := _totalPayment + monthlyInterest;
+                    FirstDueAccumulator.OutStandingAmt := _outstandingAmount;
+                    FirstDueAccumulator.NumberofDays := DaysInAnnual;
+                    FirstDueAccumulator.Insert();
+                end else begin
+                    FirstDueAccumulator.Reset();
+                    FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
+                    FirstDueAccumulator.SetRange(Reviewed, false);
+                    FirstDueAccumulator.CalcSums(Interest);
+                    FirstDueAccumulator.CalcSums(NetInterest);
+                    FirstDueAccumulator.CalcSums(WithHldTaxAmt);
+                    FirstDueAccumulator.CalcSums(TotalPayment);
+                    FirstDueAccumulator.CalcSums(OutStandingAmt);
+
+                    if FirstDueAccumulator.Count > 0 then begin
+                        _sumInterest := FirstDueAccumulator.Interest;
+                        _sumNetInterest := FirstDueAccumulator.NetInterest;
+                        _sumWtholding := FirstDueAccumulator.WithHldTaxAmt;
+                        _sumTotalPayment := FirstDueAccumulator.TotalPayment;
+                        _sumOutstanding := FirstDueAccumulator.OutStandingAmt;
+                        FirstDueAccumulator.Reviewed := true;
+                        FirstDueAccumulator.Modify();
+                    end else begin
+                        _sumInterest := 0;
+                        _sumNetInterest := 0;
+                        _sumWtholding := 0;
+                        _sumTotalPayment := 0;
+                        _sumOutstanding := 0;
+                    end;
+
+
+                    Loan.Init();
+                    // Loan.DueDate := _currentQuarterInLoop;
+                    Loan.Interest := monthlyInterest + _sumInterest;
+                    // Loan.CalculationDate := _currentQuarterInLoop;
+                    Loan.LoanNo := _fNo;
+                    Loan.WithHldTaxAmt := _withHoldingTax_Amnt + _sumWtholding;
+                    Loan.NetInterest := (monthlyInterest - _withHoldingTax_Amnt) + _sumNetInterest;
+                    Loan.LoopCount := AnnualCounter;
+                    Loan.Amortization := _amortization;
+                    Loan.InterestRate := _interestRate_Active;
+                    Loan.TotalPayment := (_totalPayment + monthlyInterest) + _sumTotalPayment;
+                    Loan.OutStandingAmt := _outstandingAmount;
+                    // Loan.NumberofDays := DaysInQuarter;
+                    if _secondStep = true then begin
+                        Loan.NumberofDays := dueDate - FunderLoanTbl.PlacementDate;
+                        Loan.DueDate := dueDate;
+                        Loan.CalculationDate := dueDate;
+                        _secondStep := false;
+                    end else begin
+                        Loan.NumberofDays := DaysInAnnual;
+                        Loan.DueDate := _currentAnnualInLoop;
+                        Loan.CalculationDate := _currentAnnualInLoop;
+                    end;
+
+                    Loan.Insert();
+
+                    FirstDueAccumulator.Reset();
+                    if FirstDueAccumulator.Count > 0 then
+                        FirstDueAccumulator.DeleteAll();
+                end;
 
             end;
         end;

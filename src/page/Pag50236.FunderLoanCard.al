@@ -370,27 +370,36 @@ page 50236 "Funder Loan Card"
                     {
                         ApplicationArea = All;
                         Caption = 'Record Origin';
+                        Editable = false;
                     }
                     field("Original Record No."; Rec."Original Record No.")
                     {
                         ApplicationArea = All;
+                        Editable = false;
                     }
                     field("Rollovered Interest"; Rec."Rollovered Interest")
                     {
                         ApplicationArea = All;
                         Caption = '* Rollovered Interest';
                         ToolTip = 'Applicable only for the case of Rollovered Interest';
+                        Editable = false;
                     }
                 }
 
 
             }
-            group("Interest Calculation Advanced Settings")
+            group("Amortized Interest Advanced Settings")
             {
                 //     // Visible = EnableInterestPaymentVisibility;
                 field(FirstDueDate; Rec.FirstDueDate)
                 {
-                    Caption = 'First Due Date ';
+                    Caption = 'Interest Due Date';
+                    ApplicationArea = All;
+
+                }
+                field(SecondDueDate; Rec.SecondDueDate)
+                {
+                    Caption = 'Payment Due Date';
                     ApplicationArea = All;
 
                 }
@@ -580,12 +589,17 @@ page 50236 "Funder Loan Card"
                     var
                         _portfolio: page "Portfolio Fee Setup";
                         GFilter: Codeunit GlobalFilters;
+                        _portfolioFeeTbl: Record "Portfolio Fee Setup";
                     begin
-                        // Page.Run(Page::"Portfolio Fee Setup", Rec, Rec."No.");
-                        GFilter.SetGlobalLoanFilter(Rec."No.");
-                        _portfolio.Run();
-                        // _portfolio.SetTableView(Rec);
-                        // _portfolio.run()
+                        // // Page.Run(Page::"Portfolio Fee Setup", Rec, Rec."No.");
+                        // GFilter.SetGlobalLoanFilter(Rec."No.");
+                        // _portfolio.Run();
+                        // // _portfolio.SetTableView(Rec);
+                        // // _portfolio.run()
+
+                        _portfolioFeeTbl.Reset();
+                        _portfolioFeeTbl.SetRange(_portfolioFeeTbl.FunderLoanNo, Rec."No.");
+                        Page.Run(Page::"Portfolio Fee Setup", _portfolioFeeTbl);
                     end;
                 }
             }
@@ -609,6 +623,13 @@ page 50236 "Funder Loan Card"
                         CustomWorkflowMgmt: Codeunit "Treasury Approval Mgt";
                         RecRef: RecordRef;
                     begin
+                        //Validate Key Fields
+                        // Interest Value, Method and Principal
+                        if Rec."Original Disbursed Amount" = 0 then
+                            Error('Original Disbursed Amount Required');
+                        if Rec.InterestRate = 0 then
+                            Error('Gross Interest rate (p.a) Required');
+
                         RecRef.GetTable(Rec);
                         if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
                             CustomWorkflowMgmt.OnSendWorkflowForApproval(RecRef);
@@ -970,12 +991,12 @@ page 50236 "Funder Loan Card"
             exit;
         end;
         _funderNo := GlobalFilters.GetGlobalFilter();
-        if _funderNo <> '' then begin
-            if FunderTbl.Get(_funderNo) then begin
-                if FunderTbl."Funder Type" = FunderTbl."Funder Type"::Local then
-                    isCurrencyVisible := false;
-            end;
-        end;
+        // if _funderNo <> '' then begin
+        //     if FunderTbl.Get(_funderNo) then begin
+        //         if FunderTbl."Funder Type" = FunderTbl."Funder Type"::Local then
+        //             isCurrencyVisible := false;
+        //     end;
+        // end;
         if Rec.InterestRateType = Rec.InterestRateType::"Floating Rate" then begin
             Rec.InterestRate := Rec."Reference Rate" + Rec.Margin;
             Rec.Modify();
@@ -1013,7 +1034,7 @@ page 50236 "Funder Loan Card"
         if Rec."Interest Expense" = '' then
             Rec."Interest Expense" := FunderTbl."Interest Expense";
         if Rec."Interest Payable" = '' then
-            Rec."Interest Payable" := FunderTbl."Payables Account";
+            Rec."Interest Payable" := FunderTbl."Interest Payable";
 
         UpdateInterestPaymentVisibility();
         FieldEditProp();
@@ -1036,16 +1057,46 @@ page 50236 "Funder Loan Card"
             isFloatRate := false;
     end;
 
+    trigger OnNewRecord(BelowxRec: Boolean)
+    var
+        _pportfolio: Record Portfolio;
+    begin
+        _pportfolio.Reset();
+        _pportfolio.SetRange("No.", FunderTbl.Portfolio);
+        if not _pportfolio.FindFirst() then
+            Error('Portfolio not found %1', FunderTbl.Portfolio);
+
+        if _pportfolio.Category = _pportfolio.Category::"Bank Loan" then
+            Rec.Category := UpperCase('Bank Loan');
+        if _pportfolio.Category = _pportfolio.Category::Individual then
+            Rec.Category := UpperCase('Individual');
+        if _pportfolio.Category = _pportfolio.Category::Institutional then
+            Rec.Category := UpperCase('Institutional');
+        if _pportfolio.Category = _pportfolio.Category::"Asset Term Manager" then
+            Rec.Category := UpperCase('Asset Term Manager');
+        if _pportfolio.Category = _pportfolio.Category::"Medium Term Notes" then
+            Rec.Category := UpperCase('Medium Term Notes');
+
+        Rec."Origin Entry" := Rec."Origin Entry"::Funder;
+
+        // if Rec."Payables Account" = '' then
+        //     Rec."Payables Account" := FunderTbl."Payables Account";
+        // if Rec."Interest Expense" = '' then
+        //     Rec."Interest Expense" := FunderTbl."Interest Expense";
+        // if Rec."Interest Payable" = '' then
+        //     Rec."Interest Payable" := FunderTbl."Interest Payable";
+
+
+
+
+    end;
+
     trigger OnInsertRecord(BelowxRec: Boolean): Boolean
     var
         FilterVal: Text[30];
     begin
 
         if _funderNo <> '' then begin
-            // GenSetup.Get(1);
-            // GenSetup.TestField("Funder Loan No.");
-            // if Rec."No." = '' then
-            //     Rec."No." := NoSer.GetNextNo(GenSetup."Funder Loan No.", 0D, true);
             Rec."Funder No." := _funderNo;
             Rec.Validate("Funder No.");
             // Rec.Insert();
@@ -1066,7 +1117,7 @@ page 50236 "Funder Loan Card"
 
         EncumberanceView := Rec.Category = UpperCase('Bank Loan');
         LoanRepaymentView := Rec.Category = UpperCase('Bank Loan');
-        TranchesView := Rec.Category = UpperCase('Institutional');
+        TranchesView := (Rec.Category = UpperCase('Institutional')) or (Rec.Category = UpperCase('Bank Loan'));
 
     end;
 
