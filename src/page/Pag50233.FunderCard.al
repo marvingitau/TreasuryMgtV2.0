@@ -22,6 +22,18 @@ page 50233 "Funder Card"
                 {
                     ApplicationArea = All;
                     Editable = EditStatus;
+                    trigger OnValidate()
+                    var
+                        _portfolio: Record Portfolio;
+                    begin
+                        _portfolio.Reset();
+                        _portfolio.SetRange("No.", Rec.Portfolio);
+                        if not _portfolio.Find('-') then
+                            Error('Portfolio %1 not found.', Rec.Portfolio);
+
+                        if _portfolio.Category = _portfolio.Category::"Bank Overdraft" then
+                            Rec.FunderType := Rec.FunderType::"Bank Overdraft";
+                    end;
                 }
                 field(Name; Rec.Name)
                 {
@@ -40,9 +52,13 @@ page 50233 "Funder Card"
                         UpdateFastTabVisibility();
                     end;
                 }
-                field("Coupa Ref No."; Rec."Coupa Ref No.")
+
+                field(FundSource; Rec.FundSource)
                 {
+                    Caption = 'Receiving Bank Account';
+                    Editable = EditStatus;
                     ApplicationArea = all;
+                    // ShowMandatory = true;
                 }
                 // field("Funder Type"; Rec."Funder Type")
                 // {
@@ -117,6 +133,7 @@ page 50233 "Funder Card"
                     field("Identification Doc."; Rec."Identification Doc.")
                     {
                         ApplicationArea = All;
+                        Editable = EditStatus;
                     }
                     field("Employer Identification Number"; Rec."Employer Identification Number")
                     {
@@ -308,6 +325,13 @@ page 50233 "Funder Card"
                         ShowMandatory = true;
                         Editable = EditStatus;
                     }
+                    field(ContactDetailPhone_PersonalDet; Rec.ContactDetailPhone2)
+                    {
+                        Caption = 'Phone 2';
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
+                        Editable = EditStatus;
+                    }
                 }
 
             }
@@ -338,31 +362,35 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         Caption = 'ID/Passport';
                         ShowMandatory = true;
-
+                        Editable = EditStatus;
                     }
                     field(PersonalDetKRA; Rec.KRA)
                     {
                         ApplicationArea = All;
                         Caption = 'Tax Pin No.';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(PersonalDetOccupation; Rec.PersonalDetOccupation)
                     {
                         ApplicationArea = All;
                         Caption = 'Occupation';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(PersonalDetNatOfBus; Rec.PersonalDetNatOfBus)
                     {
                         ApplicationArea = All;
                         Caption = 'Nature of Business';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(PersonalDetEmployer; Rec.PersonalDetEmployer)
                     {
                         ApplicationArea = All;
                         Caption = 'Employer';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                 }
                 group("Joint Contact")
@@ -372,28 +400,33 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         Caption = 'Residential Address/Registered Office';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Joint Phone Number"; Rec."Phone Number")
                     {
                         ApplicationArea = All;
                         ExtendedDatatype = PhoneNo;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Joint Postal Address"; Rec."Postal Address")
                     {
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Joint Postal Code"; Rec."Postal Code")
                     {
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Joint Mailing Address"; Rec."Mailing Address")
                     {
                         ApplicationArea = All;
                         Caption = 'Email';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
 
                 }
@@ -404,17 +437,20 @@ page 50233 "Funder Card"
                         Caption = 'Name';
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(JointContactDetailRelation; Rec.ContactDetailRelation)
                     {
                         Caption = 'Relation';
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Cont Det. Id Doc. Joint"; Rec."Contact Det. Id Doc.")
                     {
                         Caption = 'Identification Doc.';
                         ApplicationArea = All;
+                        Editable = EditStatus;
 
                     }
                     field("Cont. Detail Id Joit"; Rec."Contact Detail Id")
@@ -422,18 +458,28 @@ page 50233 "Funder Card"
                         Caption = 'ID No.';
                         ApplicationArea = All;
                         Enabled = Rec."Identification Doc." = Rec."Identification Doc."::ID;
+                        Editable = EditStatus;
                     }
                     field("Cont. Detail Passport Joint"; Rec."Contact Detail Passport")
                     {
                         Caption = 'Passport No.';
                         ApplicationArea = All;
                         Enabled = Rec."Identification Doc." = Rec."Identification Doc."::Passport;
+                        Editable = EditStatus;
                     }
                     field(JointContactDetailPhone; Rec.ContactDetailPhone)
                     {
                         Caption = 'Phone';
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
+                    }
+                    field(ContactDetailPhone_Joint1; Rec.ContactDetailPhone2)
+                    {
+                        Caption = 'Phone 2';
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                 }
             }
@@ -464,31 +510,35 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         Caption = 'ID/Passport';
                         ShowMandatory = true;
-
+                        Editable = EditStatus;
                     }
                     field(PersonalDetKRA_Joint2; Rec.KRA_Joint2)
                     {
                         ApplicationArea = All;
                         Caption = 'Tax Pin No.';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(PersonalDetOccupation_Joint2; Rec.PersonalDetOccupation_Joint2)
                     {
                         ApplicationArea = All;
                         Caption = 'Occupation';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(PersonalDetNatOfBus_Joint2; Rec.PersonalDetNatOfBus_Joint2)
                     {
                         ApplicationArea = All;
                         Caption = 'Nature of Business';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(PersonalDetEmployer_Joint2; Rec.PersonalDetEmployer_Joint2)
                     {
                         ApplicationArea = All;
                         Caption = 'Employer';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                 }
                 group("Joint Contact 2")
@@ -509,17 +559,20 @@ page 50233 "Funder Card"
                     {
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Joint Postal Code J2"; Rec."Postal Code Joint2")
                     {
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Joint Mailing Address J2"; Rec."Mailing Address Joint2")
                     {
                         ApplicationArea = All;
                         Caption = 'Email';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
 
                 }
@@ -530,17 +583,20 @@ page 50233 "Funder Card"
                         Caption = 'Name';
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(JointContactDetailRelation_J2; Rec.ContactDetailRelation_Joint2)
                     {
                         Caption = 'Relation';
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(JointContactDetailIdPassport_J2; Rec.ContactDetailIdPassport_Joint2)
                     {
                         Caption = 'Passport/ID No.';
                         ApplicationArea = All;
+                        Editable = EditStatus;
                         ShowMandatory = true;
                     }
                     field(JointContactDetailPhone_J2; Rec.ContactDetailPhone_Joint2)
@@ -548,6 +604,14 @@ page 50233 "Funder Card"
                         Caption = 'Phone';
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
+                    }
+                    field(ContactDetailPhone_Joint2; Rec.ContactDetailPhone2)
+                    {
+                        Caption = 'Phone 2';
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                 }
             }
@@ -580,31 +644,35 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         Caption = 'ID/Passport';
                         // ShowMandatory = true;
-
+                        Editable = EditStatus;
                     }
                     field(PersonalDetKRA_Joint3; Rec.KRA_Joint3)
                     {
                         ApplicationArea = All;
                         Caption = 'Tax Pin No.';
                         // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(PersonalDetOccupation_Joint3; Rec.PersonalDetOccupation_Joint3)
                     {
                         ApplicationArea = All;
                         Caption = 'Occupation';
                         // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(PersonalDetNatOfBus_Joint3; Rec.PersonalDetNatOfBus_Joint3)
                     {
                         ApplicationArea = All;
                         Caption = 'Nature of Business';
                         // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(PersonalDetEmployer_Joint3; Rec.PersonalDetEmployer_Joint3)
                     {
                         ApplicationArea = All;
                         Caption = 'Employer';
                         // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                 }
                 group("Joint Contact 3")
@@ -614,6 +682,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         Caption = 'Residential Address/Registered Office';
                         // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Joint Phone Number Joint3"; Rec."Phone Number Joint3")
                     {
@@ -621,24 +690,28 @@ page 50233 "Funder Card"
                         ExtendedDatatype = PhoneNo;
                         Caption = 'Phone Number';
                         // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Joint Postal Address joint3"; Rec."Postal Address Joint3")
                     {
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Postal Address';
+                        Editable = EditStatus;
                     }
                     field("Joint Postal Code J3"; Rec."Postal Code Joint3")
                     {
                         ApplicationArea = All;
                         Caption = 'Postal Code ';
                         // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Joint Mailing Address J3"; Rec."Mailing Address Joint3")
                     {
                         ApplicationArea = All;
                         Caption = 'Email';
                         // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
 
                 }
@@ -649,24 +722,35 @@ page 50233 "Funder Card"
                         Caption = 'Name';
                         ApplicationArea = All;
                         // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(JointContactDetailRelation_J3; Rec.ContactDetailRelation_Joint3)
                     {
                         Caption = 'Relation';
                         ApplicationArea = All;
                         // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(JointContactDetailIdPassport_J3; Rec.ContactDetailIdPassport_Joint3)
                     {
                         Caption = 'Passport/ID No.';
                         ApplicationArea = All;
                         // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field(JointContactDetailPhone_J3; Rec.ContactDetailPhone_Joint3)
                     {
                         Caption = 'Phone';
                         ApplicationArea = All;
                         // ShowMandatory = true;
+                        Editable = EditStatus;
+                    }
+                    field(ContactDetailPhone_Joint3; Rec.ContactDetailPhone2)
+                    {
+                        Caption = 'Phone 2';
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                 }
             }
@@ -805,6 +889,7 @@ page 50233 "Funder Card"
                     ApplicationArea = All;
                     Caption = 'Tax PIN';
                     // ShowMandatory = true;
+                    Editable = EditStatus;
                 }
                 group("Institutional Contact Details")
                 {
@@ -815,29 +900,34 @@ page 50233 "Funder Card"
                             Caption = 'Name';
                             ApplicationArea = All;
                             // ShowMandatory = true;
+                            Editable = EditStatus;
                         }
                         field(InstDesignation; Rec.ContactDetailDesignation)
                         {
                             Caption = 'Designation';
                             ApplicationArea = All;
                             // ShowMandatory = true;
+                            Editable = EditStatus;
                         }
                         field(InstiEmail; Rec."Mailing Address")
                         {
                             Caption = 'Email';
                             ApplicationArea = All;
                             ShowMandatory = true;
+                            Editable = EditStatus;
                         }
                         field(InstiPhone; Rec.ContactDetailPhone)
                         {
                             Caption = 'Phone';
                             ApplicationArea = All;
                             ShowMandatory = true;
+                            Editable = EditStatus;
                         }
                         field(InstiPhysicalAddr; Rec."Physical Address")
                         {
                             Caption = 'Physical Address';
                             ApplicationArea = All;
+                            Editable = EditStatus;
 
                         }
                     }
@@ -848,31 +938,44 @@ page 50233 "Funder Card"
                             Caption = 'Name';
                             ApplicationArea = All;
                             // ShowMandatory = true;
+                            Editable = EditStatus;
                         }
                         field(InstDesignation_2; Rec.ContactDetailDesignation_2)
                         {
                             Caption = 'Designation';
                             ApplicationArea = All;
                             // ShowMandatory = true;
+                            Editable = EditStatus;
                         }
                         field(InstiEmail_2; Rec."Mailing Address 2")
                         {
                             Caption = 'Email';
                             ApplicationArea = All;
                             // ShowMandatory = true;
+                            Editable = EditStatus;
+                        }
+                        field(InstiPhysicalAddr_2; Rec."Physical Address 2")
+                        {
+                            Caption = 'Physical Address';
+                            ApplicationArea = All;
+                            Editable = EditStatus;
+
                         }
                         field(InstiPhone_2; Rec.ContactDetailPhone_2)
                         {
                             Caption = 'Phone';
                             ApplicationArea = All;
                             // ShowMandatory = true;
+                            Editable = EditStatus;
                         }
-                        field(InstiPhysicalAddr_2; Rec."Physical Address 2")
+                        field(ContactDetailPhone_Insti; Rec.ContactDetailPhone2)
                         {
-                            Caption = 'Physical Address';
+                            Caption = 'Phone 2';
                             ApplicationArea = All;
-
+                            // ShowMandatory = true;
+                            Editable = EditStatus;
                         }
+
                     }
 
                 }
@@ -883,7 +986,7 @@ page 50233 "Funder Card"
                     {
                         Caption = 'Institutional Additional Details';
                         ApplicationArea = All;
-
+                        Editable = EditStatus;
                     }
                 }
 
@@ -898,6 +1001,7 @@ page 50233 "Funder Card"
                     {
                         ApplicationArea = all;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                         trigger OnValidate()
                         begin
                             CurrPage.Update();
@@ -915,18 +1019,21 @@ page 50233 "Funder Card"
                         Caption = 'Company No.';
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Company KRA"; Rec.KRA)
                     {
                         Caption = 'Tax Pin No.';
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Corporate Contact Name"; Rec."Primary Contact Name")
                     {
                         ApplicationArea = All;
                         Caption = 'Contact Person';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                 }
                 group("Corporate Contact")
@@ -936,28 +1043,41 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         Caption = 'Residential Address/Registered Office';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
+
                     field("Corporate Phone Number"; Rec."Phone Number")
                     {
                         ApplicationArea = All;
                         ExtendedDatatype = PhoneNo;
                         ShowMandatory = true;
+                        Editable = EditStatus;
+                    }
+                    field(ContactDetailPhone_Corporate; Rec.ContactDetailPhone2)
+                    {
+                        Caption = 'Phone 2';
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Corporate Postal Address"; Rec."Postal Address")
                     {
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Corporate Postal Code"; Rec."Postal Code")
                     {
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Corporate Mailing Address"; Rec."Mailing Address")
                     {
                         ApplicationArea = All;
                         Caption = 'Email';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
 
 
@@ -1042,6 +1162,7 @@ page 50233 "Funder Card"
                 field("Bank Payee"; Rec."Bank Payee")
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                 }
                 // field("Payment Terms"; Rec."Payment Terms")
                 // {
@@ -1236,6 +1357,8 @@ page 50233 "Funder Card"
                             Error('Interest Payable Account Required');
                         if Rec.Portfolio = '' then
                             Error('Portfolio Required');
+                        if Rec.FundSource = '' then
+                            Error('Receiving Bank Account Required');
 
                         RecRef.GetTable(Rec);
                         if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
@@ -1261,27 +1384,26 @@ page 50233 "Funder Card"
                     end;
                 }
 
-                // action(SendReopenRequest)
-                // {
-                //     ApplicationArea = Basic, Suite;
-                //     Caption = 'Send Reopen Request';
-                //     Enabled = NOT OpenApprovalEntriesExist;
-                //     Image = OpenWorksheet;
-                //     ToolTip = 'Request approval to change the record.';
-                //     Promoted = true;
-                //     PromotedCategory = Process;
-                //     trigger OnAction()
+                action(SendReopenApprovalRequest)
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Send Reopen A&pproval Request';
+                    Enabled = Rec.Status = Rec.Status::Approved;
+                    Image = UnApply;
+                    ToolTip = 'Request Reopen approval to change the record.';
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    trigger OnAction()
 
-                //     var
-                //         CustomWorkflowMgmt: Codeunit "Funders Approval Mgt";
-                //         RecRef: RecordRef;
-                //     begin
-
-                //         RecRef.GetTable(Rec);
-                //         // if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
-                //         CustomWorkflowMgmt.OnReopenWorkflowForApproval(RecRef);
-                //     end;
-                // }
+                    var
+                        CustomWorkflowMgmt: Codeunit "Funders Approval Mgt";
+                        RecRef: RecordRef;
+                    begin
+                        RecRef.GetTable(Rec);
+                        if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
+                            CustomWorkflowMgmt.OnSendWorkflowForApproval(RecRef);
+                    end;
+                }
             }
 
             action("Portfolio Fee Setup")
@@ -1453,6 +1575,7 @@ page 50233 "Funder Card"
 
     trigger OnNewRecord(BelowxRec: Boolean)
     begin
+
         Rec."Origin Entry" := Rec."Origin Entry"::Funder;
     end;
 

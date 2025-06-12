@@ -14,17 +14,17 @@ page 50236 "Funder Loan Card"
                 field("No."; Rec."No.")
                 {
                     ApplicationArea = All;
-                    // Editable = false;
+                    Editable = false;
                 }
                 field("Funder No."; Rec."Funder No.")
                 {
                     ApplicationArea = All;
-                    // Editable = false;
+                    Editable = false;
                 }
                 field(Name; Rec.Name)
                 {
                     ApplicationArea = All;
-                    // Editable = false;
+                    Editable = false;
                     Caption = 'Funder Name';
                 }
                 // field("Loan Name"; Rec."Loan Name")
@@ -37,6 +37,7 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                     ShowMandatory = true;
+                    Editable = EditStatus;
                     trigger OnValidate()
                     begin
                         if (Rec.PlacementDate <> 0D) and (Rec.MaturityDate <> 0D) then begin
@@ -48,6 +49,7 @@ page 50236 "Funder Loan Card"
                 field(MaturityDate; Rec.MaturityDate)
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                     trigger OnValidate()
                     begin
                         if (Rec.PlacementDate <> 0D) and (Rec.MaturityDate <> 0D) then begin
@@ -68,7 +70,7 @@ page 50236 "Funder Loan Card"
 
                     ApplicationArea = All;
                     Caption = 'Receiving Bank Account';
-                    ShowMandatory = true;
+                    // Editable = false;
                 }
                 field(Currency; Rec.Currency)
                 {
@@ -97,6 +99,20 @@ page 50236 "Funder Loan Card"
                     ApplicationArea = All;
                     Caption = 'Bank Reference No.';
                     ShowMandatory = true;
+                    Editable = EditStatus;
+                }
+                field("Coupa Ref No."; Rec."Coupa Ref No.")
+                {
+                    ApplicationArea = all;
+                    Editable = EditStatus;
+                }
+                field("Overdraft Limit"; Rec."Overdraft Limit")
+                {
+                    ApplicationArea = All;
+                    // Visible = isOverdraftLoan;
+                    Editable = EditStatus;
+                    // ShowMandatory = true;
+
                 }
                 group("G/L Mapping")
                 {
@@ -120,6 +136,7 @@ page 50236 "Funder Loan Card"
                         Editable = false;
                     }
                 }
+
                 field("Total Payed"; Rec."Total Payed")
                 {
                     ApplicationArea = All;
@@ -127,6 +144,7 @@ page 50236 "Funder Loan Card"
                     Editable = not (Rec.Status = Rec.Status::Approved);
                     ToolTip = 'This indicates the Total to Be Payed under Tranches Loan';
                     Caption = 'Total Expected Amount';
+
 
                 }
                 field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
@@ -160,16 +178,25 @@ page 50236 "Funder Loan Card"
                     ApplicationArea = All;
                     Caption = 'Outstanding Interest';
                 }
+                field("Withholding Tax Amount"; Rec."Withholding Tax Amount")
+                {
+                    DrillDown = true;
+                    DrillDownPageId = FunderLedgerEntry;
+                    ApplicationArea = All;
+                    Caption = 'Withholding Amount';
+                }
 
                 field(InterestMethod; Rec.InterestMethod)
                 {
                     ApplicationArea = All;
                     ShowMandatory = true;
+                    Editable = EditStatus;
                 }
                 field(InterestRateType; Rec.InterestRateType)
                 {
                     ApplicationArea = All;
                     ShowMandatory = true;
+                    Editable = EditStatus;
                     trigger OnValidate()
                     begin
                         if Rec.InterestRateType = Rec.InterestRateType::"Floating Rate" then
@@ -183,7 +210,7 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                     ShowMandatory = true;
-                    Editable = not isFloatRate;
+                    Editable = ((not isFloatRate) or EditStatus);
                     Caption = 'Gross Interest rate (p.a)';
                 }
                 field(NetInterestRate; Rec.NetInterestRate)
@@ -246,6 +273,7 @@ page 50236 "Funder Loan Card"
                 {
                     Caption = '*Payment Period (Interest) ';
                     ApplicationArea = All;
+                    Editable = EditStatus;
                     trigger OnValidate()
                     begin
                         UpdateInterestPaymentVisibility();
@@ -259,17 +287,20 @@ page 50236 "Funder Loan Card"
                 {
                     Caption = '*Payment Period (Principal) ';
                     ApplicationArea = All;
+                    Editable = EditStatus;
 
                 }
 
                 field(TaxStatus; Rec.TaxStatus)
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                 }
 
                 field(Withldtax; Rec.Withldtax)
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                 }
                 // field(InvestmentTenor; Rec.InvestmentTenor)
                 // {
@@ -279,10 +310,12 @@ page 50236 "Funder Loan Card"
                 field(InvstPINNo; Rec.InvstPINNo)
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                 }
                 field("Enable GL Posting"; Rec.EnableGLPosting)
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                 }
                 field("Tranche Loan"; Rec."Tranche Loan")
                 {
@@ -308,6 +341,7 @@ page 50236 "Funder Loan Card"
                 field(SecurityType; Rec.SecurityType)
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                     trigger OnValidate()
                     begin
                         if Rec.SecurityType = Rec.SecurityType::"Senior secured" then begin
@@ -344,11 +378,13 @@ page 50236 "Funder Loan Card"
                 field(FormofSec; Rec.FormofSec)
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                 }
                 field(PlacementMaturity; Rec.PlacementMaturity)
                 {
                     Caption = 'Placement Maturity Term';
                     ApplicationArea = All;
+                    Editable = EditStatus;
                 }
                 field(Status; Rec.Status)
                 {
@@ -366,6 +402,7 @@ page 50236 "Funder Loan Card"
                 group("Rollover Details")
                 {
                     Visible = IsRollovered;
+                    Editable = EditStatus;
                     field(Rollovered; Rec.Rollovered)
                     {
                         ApplicationArea = All;
@@ -395,12 +432,14 @@ page 50236 "Funder Loan Card"
                 {
                     Caption = 'Interest Due Date';
                     ApplicationArea = All;
+                    Editable = EditStatus;
 
                 }
                 field(SecondDueDate; Rec.SecondDueDate)
                 {
                     Caption = 'Payment Due Date';
                     ApplicationArea = All;
+                    Editable = EditStatus;
 
                 }
             }
@@ -411,6 +450,7 @@ page 50236 "Funder Loan Card"
                 field("Encumbrance Input"; Rec."Encumbrance Input")
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                 }
                 field("Total Asset Value"; Rec."Total Asset Value")
                 {
@@ -426,7 +466,7 @@ page 50236 "Funder Loan Card"
             group("Loan Repayment")
             {
                 Visible = LoanRepaymentView;
-
+                Editable = EditStatus;
                 field("Repayment Frequency"; Rec."Repayment Frequency")
                 {
                     ApplicationArea = All;
@@ -489,6 +529,7 @@ page 50236 "Funder Loan Card"
 
                     end;
                 }
+
                 action("Compute Interest")
                 {
                     ApplicationArea = Basic, Suite;
@@ -602,6 +643,7 @@ page 50236 "Funder Loan Card"
                         Page.Run(Page::"Portfolio Fee Setup", _portfolioFeeTbl);
                     end;
                 }
+
             }
 
             group("Request Approval")
@@ -625,10 +667,17 @@ page 50236 "Funder Loan Card"
                     begin
                         //Validate Key Fields
                         // Interest Value, Method and Principal
-                        if Rec."Original Disbursed Amount" = 0 then
-                            Error('Original Disbursed Amount Required');
-                        if Rec.InterestRate = 0 then
-                            Error('Gross Interest rate (p.a) Required');
+
+                        if Rec.Category <> UpperCase('Bank Overdraft') then begin
+                            if Rec."Original Disbursed Amount" = 0 then
+                                Error('Original Disbursed Amount Required');
+                            if Rec.InterestRate = 0 then
+                                Error('Gross Interest rate (p.a) Required');
+                        end else begin
+                            if Rec."Overdraft Limit" = 0 then
+                                Error('Overdraft Limit Required');
+                        end;
+
 
                         RecRef.GetTable(Rec);
                         if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
@@ -651,6 +700,26 @@ page 50236 "Funder Loan Card"
                     begin
                         RecRef.GetTable(Rec);
                         CustomWorkflowMgmt.OnCancelWorkflowForApproval(RecRef);
+                    end;
+                }
+                action(SendReopenApprovalRequest)
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Send Reopen A&pproval Request';
+                    Enabled = Rec.Status = Rec.Status::Approved;
+                    Image = UnApply;
+                    ToolTip = 'Request Reopen approval to change the record.';
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    trigger OnAction()
+
+                    var
+                        CustomWorkflowMgmt: Codeunit "Treasury Approval Mgt";
+                        RecRef: RecordRef;
+                    begin
+                        RecRef.GetTable(Rec);
+                        if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
+                            CustomWorkflowMgmt.OnSendWorkflowForApproval(RecRef);
                     end;
                 }
             }
@@ -702,6 +771,50 @@ page 50236 "Funder Loan Card"
                     begin
                         EmailingCU.SendReminderOnInterestDue(Rec."No.")
                     end;
+                }
+            }
+            group(OverdraftActions)
+            {
+                action("Overdraft Ledger Entry")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Overdraft Ledger';
+                    Image = Entries;
+                    PromotedCategory = Process;
+                    Promoted = true;
+                    Enabled = isOverdraftLoan;
+                    Visible = isOverdraftLoan;
+                    trigger OnAction()
+                    var
+                        overdraftLedgerEntry: Record "Overdraft Ledger Entries";
+                    begin
+                        overdraftLedgerEntry.SETRANGE(overdraftLedgerEntry."Loan No.", Rec."No.");
+                        PAGE.RUN(PAGE::"Overdraft Ledger Entries", overdraftLedgerEntry);
+                    end;
+                }
+                action("Overdraft Check Report")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Overdraft Check Report';
+                    Image = OverdueEntries;
+                    PromotedCategory = Process;
+                    Promoted = true;
+                    Enabled = isOverdraftLoan;
+                    Visible = isOverdraftLoan;
+                    RunObject = report "Overdraft Check Report";
+
+                }
+                action("Overdraft Int. Post. Rep.")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Overdraft Interest Post';
+                    Image = PostedMemo;
+                    PromotedCategory = Process;
+                    Promoted = true;
+                    Enabled = isOverdraftLoan;
+                    Visible = isOverdraftLoan;
+                    RunObject = report "Overdraft Interest Posting";
+
                 }
             }
         }
@@ -820,13 +933,15 @@ page 50236 "Funder Loan Card"
                     Promoted = true;
                     PromotedCategory = Report;
                     PromotedIsBig = true;
-                    RunObject = report "Payment Amortization";
+                    // RunObject = report "Payment Amortization";
                     trigger OnAction()
                     var
                         _funderLoan: Record "Funder Loan";
                     begin
                         _funderLoan.Reset();
                         _funderLoan.SetRange("No.", Rec."No.");
+                        Report.Run(Report::"Payment Amortization", true, false, _funderLoan);
+
                         // Report.Run(50230, true, false, _funderLoan);
                     end;
                 }
@@ -854,11 +969,9 @@ page 50236 "Funder Loan Card"
                     ApplicationArea = All;
                     Caption = 'Capitalize Interest';
                     Image = Report;
-                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
                     Promoted = true;
                     PromotedCategory = Report;
                     PromotedIsBig = true;
-                    // RunObject = report "Capitalize Interest";
                     trigger OnAction()
                     var
                         LoanRec: Record "Funder Loan";
@@ -967,6 +1080,7 @@ page 50236 "Funder Loan Card"
         isSecureLoanActive := false;
         isUnsecureLoanActive := true;
         isFloatRate := false;
+        isOverdraftLoan := false;
 
         _funderNo := GlobalFilters.GetGlobalFilter();
         if _funderNo <> '' then begin
@@ -1043,6 +1157,8 @@ page 50236 "Funder Loan Card"
         EncumberanceView := false;
         LoanRepaymentView := false;
         TranchesView := false;
+
+        isOverdraftLoan := Rec.Category = UpperCase('Bank Overdraft')
     end;
 
 
@@ -1066,6 +1182,9 @@ page 50236 "Funder Loan Card"
         if not _pportfolio.FindFirst() then
             Error('Portfolio not found %1', FunderTbl.Portfolio);
 
+        Rec.FundSource := FunderTbl.FundSource;
+        Rec.Validate(FundSource);
+
         if _pportfolio.Category = _pportfolio.Category::"Bank Loan" then
             Rec.Category := UpperCase('Bank Loan');
         if _pportfolio.Category = _pportfolio.Category::Individual then
@@ -1076,6 +1195,8 @@ page 50236 "Funder Loan Card"
             Rec.Category := UpperCase('Asset Term Manager');
         if _pportfolio.Category = _pportfolio.Category::"Medium Term Notes" then
             Rec.Category := UpperCase('Medium Term Notes');
+        if _pportfolio.Category = _pportfolio.Category::"Bank Overdraft" then
+            Rec.Category := UpperCase('Bank Overdraft');
 
         Rec."Origin Entry" := Rec."Origin Entry"::Funder;
 
@@ -1086,7 +1207,7 @@ page 50236 "Funder Loan Card"
         // if Rec."Interest Payable" = '' then
         //     Rec."Interest Payable" := FunderTbl."Interest Payable";
 
-
+        isOverdraftLoan := Rec.Category = UpperCase('Bank Overdraft')
 
 
     end;
@@ -1123,6 +1244,7 @@ page 50236 "Funder Loan Card"
 
     trigger OnAfterGetRecord()
     begin
+        isOverdraftLoan := Rec.Category = UpperCase('Bank Overdraft')
 
     end;
 
@@ -1163,7 +1285,7 @@ page 50236 "Funder Loan Card"
         GenSetup: Record "Treasury General Setup";
         NoSer: Codeunit "No. Series";
         GlobalFilters: Codeunit GlobalFilters;
-        isCurrencyVisible, isSecureLoanActive, isUnsecureLoanActive, isFloatRate : Boolean;
+        isCurrencyVisible, isSecureLoanActive, isUnsecureLoanActive, isFloatRate, isOverdraftLoan : Boolean;
         _funderNo: Text[30];
         FunderTbl: Record Funders;
 
@@ -1171,9 +1293,9 @@ page 50236 "Funder Loan Card"
         , HasApprovalEntries : Boolean;
         ApprovalsMgmt: Codeunit "Approvals Mgmt.";
         PlacementAndMaturityDifference: Integer;
-        EnableInterestPaymentVisibility, EncumberanceView, LoanRepaymentView, TranchesView : Boolean;
+        EnableInterestPaymentVisibility, EncumberanceView, LoanRepaymentView, TranchesView, EditStatus : Boolean;
         "Region/Country": Record Country_Region;
-        EditStatus: Boolean;
+
         IsRollovered: Boolean;
 
     protected var

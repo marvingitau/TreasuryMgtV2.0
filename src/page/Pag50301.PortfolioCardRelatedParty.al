@@ -255,7 +255,7 @@ page 50301 "Portfolio Card RelatedParty"
                     trigger OnAction()
 
                     var
-                        CustomWorkflowMgmt: Codeunit "Portfolio Approval Mgt";
+                        CustomWorkflowMgmt: Codeunit "Related Portfolio Approval Mgt";
                         RecRef: RecordRef;
                     begin
                         RecRef.GetTable(Rec);
@@ -274,11 +274,31 @@ page 50301 "Portfolio Card RelatedParty"
                     PromotedCategory = Process;
                     trigger OnAction()
                     var
-                        CustomWorkflowMgmt: Codeunit "Portfolio Approval Mgt";
+                        CustomWorkflowMgmt: Codeunit "Related Portfolio Approval Mgt";
                         RecRef: RecordRef;
                     begin
                         RecRef.GetTable(Rec);
                         CustomWorkflowMgmt.OnCancelWorkflowForApproval(RecRef);
+                    end;
+                }
+                action(SendReopenApprovalRequest)
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Send Reopen A&pproval Request';
+                    Enabled = Rec.Status = Rec.Status::Approved;
+                    Image = UnApply;
+                    ToolTip = 'Request Reopen approval to change the record.';
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    trigger OnAction()
+
+                    var
+                        CustomWorkflowMgmt: Codeunit "Related Portfolio Approval Mgt";
+                        RecRef: RecordRef;
+                    begin
+                        RecRef.GetTable(Rec);
+                        if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
+                            CustomWorkflowMgmt.OnSendWorkflowForApproval(RecRef);
                     end;
                 }
 
@@ -525,7 +545,7 @@ page 50301 "Portfolio Card RelatedParty"
         "Region/Country": Record Country_Region;
         ShowOtherFields: Boolean;
         ActualProgramSize: Decimal;
-        FunderLoan: Record "Funder Loan";
+        FunderLoan: Record "RelatedParty Loan";
         IsEditable: Boolean;
 
 }

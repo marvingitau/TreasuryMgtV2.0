@@ -87,35 +87,71 @@ page 50303 "RelatedParty List"
     {
         area(Processing)
         {
-            action("Open Records")
+            group("Approval Status")
             {
-                Promoted = true;
-                PromotedIsBig = true;
-                Image = OpenJournal;
-                PromotedCategory = Process;
-                Caption = 'Open Related Party';
-                trigger OnAction()
-                begin
-                    // if Rec.Status = Rec.Status::"Pending Approval" then
-                    Rec.SetRange(Status, Rec.Status::Open);
-                    CurrPage.Update(false); // Refresh the page
-                end;
+                action("Open Records")
+                {
+                    Promoted = true;
+                    PromotedIsBig = true;
+                    Image = OpenJournal;
+                    PromotedCategory = Process;
+                    Caption = 'Open Related Party';
+                    trigger OnAction()
+                    begin
+                        // if Rec.Status = Rec.Status::"Pending Approval" then
+                        Rec.SetRange(Status, Rec.Status::Open);
+                        CurrPage.Update(false); // Refresh the page
+                    end;
+                }
+
+                action("Pending Approval")
+                {
+                    Promoted = true;
+                    PromotedIsBig = true;
+                    Image = Approval;
+                    PromotedCategory = Process;
+                    Caption = 'Pennding RelatedParty';
+                    trigger OnAction()
+                    begin
+                        // if Rec.Status = Rec.Status::Approved then
+                        Rec.SetRange(Status, Rec.Status::"Pending Approval");
+                        CurrPage.Update(false); // Refresh the page
+                    end;
+                }
+
+                action("Approved Approval")
+                {
+                    Promoted = true;
+                    PromotedIsBig = true;
+                    Image = Approval;
+                    PromotedCategory = Process;
+                    Caption = 'Approved RelatedParty';
+                    trigger OnAction()
+                    begin
+                        // if Rec.Status = Rec.Status::Approved then
+                        Rec.SetRange(Status, Rec.Status::Approved);
+                        CurrPage.Update(false); // Refresh the page
+                    end;
+                }
             }
 
-            action("Approved Approval")
+            action("Sales Invoices")
             {
                 Promoted = true;
                 PromotedIsBig = true;
-                Image = Approval;
-                PromotedCategory = Process;
-                Caption = 'Approved RelatedParty';
+                Image = SalesInvoice;
+                PromotedCategory = Category4;
+                Caption = 'Sales Invoice';
+                RunObject = page "Relatedparty Sales Inv Rec.";
                 trigger OnAction()
                 begin
                     // if Rec.Status = Rec.Status::Approved then
-                    Rec.SetRange(Status, Rec.Status::Approved);
-                    CurrPage.Update(false); // Refresh the page
+                    // Rec.SetRange(Status, Rec.Status::Approved);
+                    // CurrPage.Update(false); // Refresh the page
                 end;
             }
+
+
             // action(ActionName)
             // {
 
@@ -124,39 +160,39 @@ page 50303 "RelatedParty List"
 
             //     end;
             // }
-            action("Reminder On Placement Maturity")
-            {
-                Image = Reminder;
-                Promoted = true;
-                PromotedCategory = Process;
-                // PromotedIsBig = true;
-                trigger OnAction()
-                var
-                    PlacementReminder: Report "Reminder on Placement Mature";
-                    _funderLoan: Record "Funder Loan";
-                begin
-                    PlacementReminder.Run();
-                    // _funderLoan.SetRange("No.", Rec."No.");
-                    // Report.Run(50237, true, false, _funderLoan);
-                    // EmailingCU.SendReminderOnPlacementMaturity(Rec."No.")
-                end;
-            }
+            // action("Reminder On Placement Maturity")
+            // {
+            //     Image = Reminder;
+            //     Promoted = true;
+            //     PromotedCategory = Process;
+            //     // PromotedIsBig = true;
+            //     trigger OnAction()
+            //     var
+            //         PlacementReminder: Report "Reminder on Placement Mature";
+            //         _funderLoan: Record "Funder Loan";
+            //     begin
+            //         PlacementReminder.Run();
+            //         // _funderLoan.SetRange("No.", Rec."No.");
+            //         // Report.Run(50237, true, false, _funderLoan);
+            //         // EmailingCU.SendReminderOnPlacementMaturity(Rec."No.")
+            //     end;
+            // }
 
         }
         area(Reporting)
         {
-            action("ReEvaluateFX")
-            {
-                ApplicationArea = All;
-                Caption = 'ReEvaluateFX';
-                Image = Report;
-                // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
-                Promoted = true;
-                PromotedCategory = Report;
-                PromotedIsBig = true;
-                RunObject = report ReEvaluateFX;
+            // action("ReEvaluateFX")
+            // {
+            //     ApplicationArea = All;
+            //     Caption = 'ReEvaluateFX';
+            //     Image = Report;
+            //     // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+            //     Promoted = true;
+            //     PromotedCategory = Report;
+            //     PromotedIsBig = true;
+            //     RunObject = report ReEvaluateFX;
 
-            }
+            // }
             // action("Capitalize Interest")
             // {
             //     ApplicationArea = All;
@@ -169,18 +205,18 @@ page 50303 "RelatedParty List"
             //     RunObject = report "Capitalize Interest";
 
             // }
-            action("Redemption Report")
-            {
-                ApplicationArea = All;
-                Caption = 'Redemption Report';
-                Image = Report;
-                // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
-                Promoted = true;
-                PromotedCategory = Report;
-                PromotedIsBig = true;
-                RunObject = report "Redemption Report";
+            // action("Redemption Report")
+            // {
+            //     ApplicationArea = All;
+            //     Caption = 'Redemption Report';
+            //     Image = Report;
+            //     // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+            //     Promoted = true;
+            //     PromotedCategory = Report;
+            //     PromotedIsBig = true;
+            //     RunObject = report "Redemption Report";
 
-            }
+            // }
         }
     }
 

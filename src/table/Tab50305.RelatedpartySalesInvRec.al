@@ -1,144 +1,76 @@
-table 50234 FunderLedgerEntry
+table 50305 "Relatedparty Sales Inv Rec."
 {
     DataClassification = ToBeClassified;
-    Caption = 'Treasury Ledger Entry';
+
     fields
     {
-        field(1; "Entry No."; Integer)
+        field(1; Line; Integer)
         {
             DataClassification = ToBeClassified;
-            // AutoIncrement = true;
-            Caption = 'Entry No.';
-            Editable = false;
+            AutoIncrement = true;
         }
-        field(2; "Funder No."; Code[20])
+        field(3; "Related Loan No"; Code[50])
         {
             DataClassification = ToBeClassified;
-            TableRelation = Funders."No.";
-            Caption = 'Funder No.';
-        }
-        field(3; "Posting Date"; Date)
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Posting Date';
-        }
-        field(4; "Document Type"; Enum TreasuryTransactionDocType)
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Document Type';
-        }
-        // field(16; "Transaction Type"; Enum FunderTransactionDocType)
-        // {
-        //     DataClassification = ToBeClassified;
-        //     Caption = 'Transaction Type';
-        // }
-        field(5; Description; Text[1000])
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Description';
-        }
-        field(6; "Funder Name"; Text[100])
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Funder Name';
-        }
+            TableRelation = "RelatedParty Loan"."No.";
+            trigger OnValidate()
+            var
+                _relatedLoan: Record "RelatedParty Loan";
+                _relatedParty: Record RelatedParty;
+            begin
+                _relatedLoan.Reset();
+                _relatedLoan.SetRange("No.", "Related Loan No");
+                if _relatedLoan.Find('-') then
+                    "Related Loan Name" := _relatedLoan.Name;
 
-        field(7; "Currency Code"; code[20])
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Currency Code';
+                _relatedParty.Reset();
+                _relatedParty.SetRange("No.", _relatedLoan."Funder No.");
+                if _relatedParty.Find('-') then
+                    "Shortcut Dimension 1 Code" := _relatedParty."Shortcut Dimension 1 Code";
+            end;
         }
-
-        field(8; Amount; Decimal)
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Amount';
-        }
-        field(9; "Amount(LCY)"; Decimal)
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Amount(LCY)';
-        }
-        field(10; "Debit Amount"; Decimal)
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Debit Amount';
-        }
-        field(11; "Credit Amount"; Decimal)
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Debit Amount';
-        }
-        field(12; "Original Amount"; Decimal)
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Original Amount';
-        }
-        field(13; "Remaining Amount"; Decimal)
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Remaining Amount';
-        }
-
-        field(14; "Modification Date"; Date)
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Modification Date';
-        }
-        field(15; "Modification User"; Code[100])
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Modification User';
-        }
-        field(16; "Document No."; Text[100])
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Document No';
-        }
-        field(20; "Remaining Amount(LCY)"; Decimal)
-        {
-            DataClassification = ToBeClassified;
-            Caption = 'Remaining Amount';
-        }
-        field(21; "Loan No."; Code[20])
-        {
-            DataClassification = ToBeClassified;
-            TableRelation = "Funder Loan";
-        }
-        field(22; "Loan Name"; Text[100])
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(23; "Balancing Acc"; Code[100])
-        {
-            DataClassification = ToBeClassified;
-            TableRelation = "G/L Account";
-
-        }
-        field(25; "Origin Entry"; Option)
-        {
-
-            DataClassification = ToBeClassified;
-            OptionMembers = Funder,RelatedParty;
-        }
-        field(30; "External Document No."; Text[250])
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(35; Category; Code[50])
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(38; Category_Line; Integer)
+        field(5; "Related Loan Name"; Text[200])
         {
             DataClassification = ToBeClassified;
         }
 
-        field(39; "Bank Ref. No."; Code[200])
+        field(10; "Computed Interest"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(13; Processed; Boolean)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(20; "Sales Invoice"; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(23; "Posted Sales Invoice"; Code[20])
         {
             DataClassification = ToBeClassified;
         }
 
+        field(50; "Funder"; Code[20])
+        {
+            DataClassification = ToBeClassified;
+            TableRelation = "IC Partner".Code;
+            trigger OnValidate()
+            var
+                _icPartner: Record "IC Partner";
+            begin
+                _icPartner.Get(Funder);
+                "Customer No." := _icPartner."Customer No.";
+            end;
+        }
+        field(55; "Customer No."; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(60; "Posting Date"; Date)
+        {
+            DataClassification = ToBeClassified;
+        }
         field(49900; "Shortcut Dimension 1 Code"; Code[50])
         {
             CaptionClass = '1,1,1';
@@ -196,11 +128,14 @@ table 50234 FunderLedgerEntry
 
         }
 
+
+
+
     }
 
     keys
     {
-        key(PK; "Entry No.")
+        key(PK; Line)
         {
             Clustered = true;
         }
@@ -216,9 +151,7 @@ table 50234 FunderLedgerEntry
 
     trigger OnInsert()
     begin
-        if "Currency Code" <> '' then begin
-            Message("Currency Code");
-        end;
+
     end;
 
     trigger OnModify()

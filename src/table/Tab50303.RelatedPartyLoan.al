@@ -435,7 +435,7 @@ table 50303 "RelatedParty Loan"
                     funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
                     funderLegderEntry."Remaining Amount" := "Original Disbursed Amount";
                     if FundSource = '' then
-                        funderLegderEntry."Opening  Balance Acc" := GenSetup."Opening  Balance Acc";
+                        funderLegderEntry."Balancing Acc" := GenSetup."Opening  Balance Acc";
                     funderLegderEntry.Insert();
                     // Commit();
                     if (EnableGLPosting = true) then
@@ -487,7 +487,7 @@ table 50303 "RelatedParty Loan"
                                 funderLegderEntry."Amount(LCY)" := -_ConvertedCurrency;
                                 funderLegderEntry."Remaining Amount" := _rolloveredPrincipal;
                                 if FundSource = '' then
-                                    funderLegderEntry."Opening  Balance Acc" := GenSetup."Opening  Balance Acc";
+                                    funderLegderEntry."Balancing Acc" := GenSetup."Opening  Balance Acc";
                                 funderLegderEntry.Insert();
                                 if (EnableGLPosting = true) then
                                     RelatedpartyMgt.DirectGLPosting('init', principleAcc, -_rolloveredPrincipal, 'Original Amount ::Patial Principal Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code")
@@ -551,7 +551,7 @@ table 50303 "RelatedParty Loan"
                                 funderLegderEntry."Amount(LCY)" := -(_rolloveredInterest + _rolloveredPrincipal);
                                 funderLegderEntry."Remaining Amount" := -(_rolloveredInterest + _rolloveredPrincipal);
                                 if FundSource = '' then
-                                    funderLegderEntry."Opening  Balance Acc" := GenSetup."Opening  Balance Acc";
+                                    funderLegderEntry."Balancing Acc" := GenSetup."Opening  Balance Acc";
                                 funderLegderEntry.Insert();
                                 if (EnableGLPosting = true) then
                                     RelatedpartyMgt.DirectGLPosting('init', principleAcc, -(_rolloveredInterest + _rolloveredPrincipal), 'Original Amount ::Patial Principal+Interest Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code")
@@ -590,7 +590,7 @@ table 50303 "RelatedParty Loan"
                             funderLegderEntry."Amount(LCY)" := -_ConvertedCurrency;
                             funderLegderEntry."Remaining Amount" := _rolloveredPrincipal;
                             if FundSource = '' then
-                                funderLegderEntry."Opening  Balance Acc" := GenSetup."Opening  Balance Acc";
+                                funderLegderEntry."Balancing Acc" := GenSetup."Opening  Balance Acc";
                             funderLegderEntry.Insert();
                             if (EnableGLPosting = true) then
                                 RelatedpartyMgt.DirectGLPosting('init', principleAcc, -_rolloveredPrincipal, 'Original Amount ::Full Rollover Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code");

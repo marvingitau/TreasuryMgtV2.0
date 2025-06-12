@@ -60,7 +60,8 @@ page 50289 Redemption
                                 ThisMonthsIntrest := funderLegderEntry_1.Amount;
                             end;
 
-                            ThisMonthsAdjustedInterest := FnderMgtCU.CalculateFloatInterest(LoanID, Rec."Redemption Date");
+                            if ThisMonthsIntrest <> 0 then
+                                ThisMonthsAdjustedInterest := FnderMgtCU.CalculateFloatInterest(LoanID, Rec."Redemption Date");
 
                             //Get the Actual Float available for redemption
                             FunderLoan.Reset();
@@ -110,6 +111,11 @@ page 50289 Redemption
                     ApplicationArea = All;
                     Caption = 'Paying Bank';
                     ShowMandatory = true;
+                }
+                field(ReferenceNo; Rec.ReferenceNo)
+                {
+                    ApplicationArea = All;
+
                 }
                 // field(PrincipalAmount; Rec.PrincipalAmount)
                 // {
@@ -182,6 +188,7 @@ page 50289 Redemption
                                 RedemptionLog.AmountRemoved := Rec.PrincipalAmount + Rec.InterestAmount;
                                 RedemptionLog."Redemption Date" := Rec."Redemption Date";
                                 RedemptionLog.PayingBank := Rec.PayingBank;
+                                RedemptionLog."Reference No." := Rec.ReferenceNo;
                                 RedemptionLog.Modify();
                             end else begin
                                 RedemptionLog.Init();
@@ -195,6 +202,7 @@ page 50289 Redemption
                                 RedemptionLog.AmountRemoved := Rec.PrincipalAmount + Rec.InterestAmount;
                                 RedemptionLog."Redemption Date" := Rec."Redemption Date";
                                 RedemptionLog.PayingBank := Rec.PayingBank;
+                                RedemptionLog."Reference No." := Rec.ReferenceNo;
                                 RedemptionLog.Insert();
                             end;
 
@@ -221,6 +229,7 @@ page 50289 Redemption
                                 RedemptionLog.PayingBank := Rec.PayingBank;
                                 RedemptionLog.FloatingPrinc := Rec.FloatPrinci;
                                 RedemptionLog.FloatingIntr := Rec.FloatIntr;
+                                RedemptionLog."Reference No." := Rec.ReferenceNo;
                                 RedemptionLog.Modify();
                             end else begin
                                 RedemptionLog.Init();
@@ -236,6 +245,7 @@ page 50289 Redemption
                                 RedemptionLog.PayingBank := Rec.PayingBank;
                                 RedemptionLog.FloatingPrinc := Rec.FloatPrinci;
                                 RedemptionLog.FloatingIntr := Rec.FloatIntr;
+                                RedemptionLog."Reference No." := Rec.ReferenceNo;
                                 RedemptionLog.Insert();
                             end;
 

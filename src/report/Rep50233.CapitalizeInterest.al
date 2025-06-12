@@ -51,36 +51,36 @@ report 50233 "Capitalize Interest"
         }
     }
 
-    requestpage
-    {
-        // AboutTitle = 'Teaching tip title';
-        // AboutText = 'Teaching tip content';
-        layout
-        {
-            area(Content)
-            {
-                group(GroupName)
-                {
-                    field(No; FunderLoanFilter."No.")
-                    {
-                        ApplicationArea = All;
-                        TableRelation = "Funder Loan"."No.";
-                    }
-                }
-            }
-        }
+    // requestpage
+    // {
+    //     // AboutTitle = 'Teaching tip title';
+    //     // AboutText = 'Teaching tip content';
+    //     layout
+    //     {
+    //         area(Content)
+    //         {
+    //             group(GroupName)
+    //             {
+    //                 field(No; FunderLoanFilter."No.")
+    //                 {
+    //                     ApplicationArea = All;
+    //                     TableRelation = "Funder Loan"."No.";
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
+    //     actions
+    //     {
+    //         area(processing)
+    //         {
+    //             action(LayoutName)
+    //             {
 
-                }
-            }
-        }
-    }
+    //             }
+    //         }
+    //     }
+    // }
 
     // rendering
     // {
@@ -128,7 +128,7 @@ report 50233 "Capitalize Interest"
         AmountSum := 0; // Total Interest minus the payment.
         funderLedgEntry.Reset();
         funderLedgEntry.SetRange("Loan No.", FunderLoan."No.");
-        funderLedgEntry.SetFilter(funderLedgEntry."Document Type", '=%1|=%2|=%3|=%4', funderLedgEntry."Document Type"::Interest, funderLedgEntry."Document Type"::"Interest Paid", funderLedgEntry."Document Type"::"Capitalized Interest", funderLedgEntry."Document Type"::"Reversed Interest");
+        funderLedgEntry.SetFilter(funderLedgEntry."Document Type", '=%1|=%2|=%3|=%4|=%5', funderLedgEntry."Document Type"::Interest, funderLedgEntry."Document Type"::"Interest Paid", funderLedgEntry."Document Type"::"Capitalized Interest", funderLedgEntry."Document Type"::"Reversed Interest", funderLedgEntry."Document Type"::Withholding);
         // funderLedgEntry.SetRange(funderLedgEntry."Document Type", funderLedgEntry."Document Type"::Interest);
         if funderLedgEntry.Find('-') then begin
             repeat
@@ -143,6 +143,7 @@ report 50233 "Capitalize Interest"
             TrsyJnlTbl."Account No." := FunderLoan."No.";
             TrsyJnlTbl."Posting Date" := Today;
             TrsyJnlTbl."Document No." := DocNo;
+            TrsyJnlTbl.Description := FunderLoan."No." + ' ' + FunderLoan.Name + '-' + FunderLoan."Bank Ref. No." + '-' + Format(FunderLoan.PlacementDate) + ' ' + Format(FunderLoan.MaturityDate) + ' ::' + 'Capitalization Interest';
             TrsyJnlTbl."Bal. Account Type" := TrsyJnlTbl."Bal. Account Type"::"Bank Account";
             TrsyJnlTbl."Bal. Account No." := FunderLoan.FundSource;
             TrsyJnlTbl."Transaction Nature" := TrsyJnlTbl."Transaction Nature"::"Capitalized Interest";

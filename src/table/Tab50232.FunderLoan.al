@@ -24,10 +24,14 @@ table 50232 "Funder Loan"
                 Funder.SetRange("No.", "Funder No.");
                 if Funder.Find('-') then begin
                     Name := Funder.Name;
-                    if Funder."Payables Account" = '' then begin
-                        Error('Payable A/c Missing');
-                        exit;
+
+                    if Funder.FunderType <> Funder.FunderType::"Bank Overdraft" then begin
+                        if Funder."Payables Account" = '' then begin // Not applicable in  Bank Overdraft.
+                            Error('Payable A/c Missing');
+                            exit;
+                        end;
                     end;
+
                     if Funder."Interest Expense" = '' then begin
                         Error('Interest Expense A/c Missing');
                         exit;
@@ -133,10 +137,12 @@ table 50232 "Funder Loan"
         field(505; "InterestRate"; Decimal)
         {
             DataClassification = ToBeClassified;
+            DecimalPlaces = 0 : 4;
             trigger OnValidate()
             begin
-                if InterestRate <> 0 then
-                    NetInterestRate := ((100 + Withldtax) / 100) * InterestRate;
+                // if InterestRate <> 0 then
+                NetInterestRate := ((100 - Withldtax) / 100) * InterestRate;
+
             end;
 
         }
@@ -361,27 +367,33 @@ table 50232 "Funder Loan"
                 //Get Posting groups
                 /*if not venPostingGroup.Get("Posting Group") then
                     Error('Missing Posting Group: %1', "No.");*/
-                if FundSource = '' then
-                    Error('Funder Entry (Bank) Must have a value', FundSource);
+                if EnableGLPosting = true then begin
+                    if FundSource = '' then
+                        Error('Funder Entry (Bank) Must have a value', FundSource);
+                end;
+
                 // principleAcc := venPostingGroup."Payables Account";
                 // interestAcc := venPostingGroup."Interest Expense";
                 principleAcc := "Payables Account";
                 interestAcc := "Interest Expense";
                 interestAccPay := "Interest Payable";
 
-                if principleAcc = '' then
-                    Error('Missing G/L - Principle A/C');
-                if interestAcc = '' then
-                    Error('Missing G/L - Interest Expense A/C');
-                if interestAccPay = '' then
-                    Error('Missing G/L - Interest Payable A/C');
-                if "Bank Ref. No." = '' then
-                    Error('Missing Bank Reference No.');
+                if Category <> UpperCase('Bank Overdraft') then begin
+                    if principleAcc = '' then
+                        Error('Missing G/L - Principle A/C');
+                    if interestAcc = '' then
+                        Error('Missing G/L - Interest Expense A/C');
+                    if interestAccPay = '' then
+                        Error('Missing G/L - Interest Payable A/C');
+                    if "Bank Ref. No." = '' then
+                        Error('Missing Bank Reference No.');
 
-                if "Original Disbursed Amount" = 0 then
-                    Error('Original Disbursed Amount Required');
-                if InterestRate = 0 then
-                    Error('Gross Interest rate (p.a) Required');
+                    if "Original Disbursed Amount" = 0 then
+                        Error('Original Disbursed Amount Required');
+                    if InterestRate = 0 then
+                        Error('Gross Interest rate (p.a) Required');
+                end;
+
 
                 if Currency <> '' then
                     _ConvertedCurrency := FunderMgt.ConvertCurrencyAmount(Currency, "Original Disbursed Amount", CustomFX)
@@ -434,7 +446,7 @@ table 50232 "Funder Loan"
                     funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
                     funderLegderEntry."Remaining Amount" := "Original Disbursed Amount";
                     if FundSource = '' then
-                        funderLegderEntry."Opening  Balance Acc" := GenSetup."Opening  Balance Acc";
+                        funderLegderEntry."Balancing Acc" := GenSetup."Opening  Balance Acc";
                     funderLegderEntry.Insert();
                     // Commit();
                     if (EnableGLPosting = true) then
@@ -485,7 +497,7 @@ table 50232 "Funder Loan"
                                 funderLegderEntry."Amount(LCY)" := -_ConvertedCurrency;
                                 funderLegderEntry."Remaining Amount" := _rolloveredPrincipal;
                                 if FundSource = '' then
-                                    funderLegderEntry."Opening  Balance Acc" := GenSetup."Opening  Balance Acc";
+                                    funderLegderEntry."Balancing Acc" := GenSetup."Opening  Balance Acc";
                                 funderLegderEntry.Insert();
                                 if (EnableGLPosting = true) then
                                     FunderMgt.DirectGLPosting('init', principleAcc, -_rolloveredPrincipal, 'Original Amount ::Patial Principal Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code")
@@ -547,7 +559,7 @@ table 50232 "Funder Loan"
                                 funderLegderEntry."Amount(LCY)" := -(_rolloveredInterest + _rolloveredPrincipal);
                                 funderLegderEntry."Remaining Amount" := -(_rolloveredInterest + _rolloveredPrincipal);
                                 if FundSource = '' then
-                                    funderLegderEntry."Opening  Balance Acc" := GenSetup."Opening  Balance Acc";
+                                    funderLegderEntry."Balancing Acc" := GenSetup."Opening  Balance Acc";
                                 funderLegderEntry.Insert();
                                 if (EnableGLPosting = true) then
                                     FunderMgt.DirectGLPosting('init', principleAcc, -(_rolloveredInterest + _rolloveredPrincipal), 'Original Amount ::Patial Principal+Interest Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code")
@@ -585,7 +597,7 @@ table 50232 "Funder Loan"
                             funderLegderEntry."Amount(LCY)" := -_ConvertedCurrency;
                             funderLegderEntry."Remaining Amount" := _rolloveredPrincipal;
                             if FundSource = '' then
-                                funderLegderEntry."Opening  Balance Acc" := GenSetup."Opening  Balance Acc";
+                                funderLegderEntry."Balancing Acc" := GenSetup."Opening  Balance Acc";
                             funderLegderEntry.Insert();
                             if (EnableGLPosting = true) then
                                 FunderMgt.DirectGLPosting('init', principleAcc, -_rolloveredPrincipal, 'Original Amount ::Full Rollover Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
@@ -669,8 +681,16 @@ table 50232 "Funder Loan"
         field(934; "Outstanding Interest"; Decimal)
         {
             AutoFormatType = 1;
-            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest | "Capitalized Interest" | "Interest Paid" | "Reversed Interest")));
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Interest | "Capitalized Interest" | "Interest Paid" | "Reversed Interest" | Withholding)));
             Caption = 'Outstanding Interest';
+            DecimalPlaces = 0 : 2;
+            Editable = false;
+            FieldClass = FlowField;
+        }
+        field(935; "Withholding Tax Amount"; Decimal)
+        {
+            AutoFormatType = 1;
+            CalcFormula = sum(FunderLedgerEntry.Amount where("Loan No." = field("No."), "Document Type" = filter(Withholding)));
             DecimalPlaces = 0 : 2;
             Editable = false;
             FieldClass = FlowField;
@@ -802,16 +822,18 @@ table 50232 "Funder Loan"
         field(2836; NetInterestRate; Decimal)
         {
             DataClassification = ToBeClassified;
+            DecimalPlaces = 0 : 4;
             trigger OnValidate()
             begin
-                if NetInterestRate <> 0 then begin
-                    // Formula
-                    InterestRate := ((100 - Withldtax) / 100) * NetInterestRate;
-                end;
+                // if NetInterestRate <> 0 then begin
+                // Formula
+                InterestRate := NetInterestRate / ((100 - Withldtax) / 100);
+                // end;
 
             end;
 
         }
+
         //Rollovered Record related
         field(3000; Rollovered; Option)
         {
@@ -823,6 +845,14 @@ table 50232 "Funder Loan"
             DataClassification = ToBeClassified;
         }
         field(3002; "Rollovered Interest"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(3009; "Coupa Ref No."; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(3010; "Overdraft Limit"; Decimal)
         {
             DataClassification = ToBeClassified;
         }
@@ -960,18 +990,18 @@ table 50232 "Funder Loan"
             "Loan Name" := NoSer.GetNextNo(GenSetup."Loan No.", 0D, true);
 
         "Status" := "Status"::Open;
-        vPostingGroup.Reset();
-        vPostingGroup.SetRange(Code, "No.");
-        // vPostingGroup.SetRange(vPostingGroup."Treasury Enabled (Local)", true);
-        if vPostingGroup.Find('-') then
-            "Posting Group" := vPostingGroup.Code
-        else begin
-            vPostingGroup.Init();
-            vPostingGroup.Code := "No.";
-            vPostingGroup.Insert();
+        // vPostingGroup.Reset();
+        // vPostingGroup.SetRange(Code, "No.");
+        // // vPostingGroup.SetRange(vPostingGroup."Treasury Enabled (Local)", true);
+        // if vPostingGroup.Find('-') then
+        //     "Posting Group" := vPostingGroup.Code
+        // else begin
+        //     vPostingGroup.Init();
+        //     vPostingGroup.Code := "No.";
+        //     vPostingGroup.Insert();
 
-            "Posting Group" := vPostingGroup.Code;
-        end;
+        //     "Posting Group" := vPostingGroup.Code;
+        // end;
 
 
         // Error('Please set the default Local Posting Group');

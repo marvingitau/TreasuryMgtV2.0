@@ -311,10 +311,10 @@ codeunit 50231 FunderMgtCU
                 // endYearDate := CALCDATE('CY', Today);
                 if _interestComputationTimes = 0 then begin
                     endMonthDate := CALCDATE('<+CM>', Today);
-                    remainingDays := endMonthDate - funderLoan.PlacementDate + 1;
+                    remainingDays := endMonthDate - funderLoan.PlacementDate + 0;
                 end else begin
                     endMonthDate := CALCDATE('<+CM>', Today);
-                    remainingDays := CALCDATE('<CM>', Today) - CALCDATE('<-CM>', Today) + 1
+                    remainingDays := CALCDATE('<CM>', Today) - CALCDATE('<-CM>', Today) + 0
                     // remainingDays := (endMonthDate - Today) + 1;
                 end;
 
@@ -323,8 +323,9 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry3.Reset();
                 funderLegderEntry3.SetRange("Funder No.", funder."No.");
                 funderLegderEntry3.SetRange("Loan No.", FunderLoanNo);
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Original Amount");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Secondary Amount");
+                funderLegderEntry3.SetFilter(funderLegderEntry3."Document Type", '=%1|=%2', funderLegderEntry2."Document Type"::"Original Amount", funderLegderEntry2."Document Type"::"Secondary Amount");
+
+                //funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", );
                 funderLegderEntry3.CalcSums(Amount);
                 _totalOriginalAmount := funderLegderEntry3.Amount;
 
@@ -348,7 +349,7 @@ codeunit 50231 FunderMgtCU
                 if _interestRate_Active = 0 then
                     Error('Interest Rate is Zero');*/
 
-                _differenceOriginalWithdrawal := _currentPrincipalAmnt;
+                // _differenceOriginalWithdrawal := _currentPrincipalAmnt;
                 if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (30 / 360), 0.0001, '=');
                 end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/360" then begin
@@ -432,13 +433,13 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry1."Document No." := _docNo;
                 funderLegderEntry1."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                 funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
-                funderLegderEntry1.Description := 'Withholding calculation' + Format(Today);
+                funderLegderEntry1.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + 'Withholding Calculation';
                 funderLegderEntry1.Amount := -witHldInterest;
                 funderLegderEntry1."Amount(LCY)" := -witHldInterest;
                 funderLegderEntry1.Insert();
                 if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
                     DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
-                //Commit();
+
 
                 funderLegderEntry2.Init(); //
                 funderLegderEntry2."Entry No." := NextEntryNo + 2;
@@ -673,7 +674,7 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry1."Document No." := _docNo;
                 funderLegderEntry1."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                 funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
-                funderLegderEntry1.Description := 'Withholding calculation' + Format(RedemptionDate);
+                funderLegderEntry1.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + 'Withholding calculation Redemption' + Format(RedemptionDate);
                 funderLegderEntry1.Amount := -witHldInterest;
                 funderLegderEntry1."Amount(LCY)" := -witHldInterest;
                 funderLegderEntry1.Insert();
@@ -698,7 +699,7 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry3.Insert();
                 if (funderLoan.EnableGLPosting = true) and (_differenceOriginalWithdrawal <> 0) then
                     DirectGLPosting('redemption', withholdingAcc, witHldInterest, 'Redemption Repayment', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code"); // Debit Paying Bank
-                //Commit();
+
 
 
                 funderLegderEntry2.Init(); //
@@ -941,7 +942,7 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry1.Insert();
                 if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
                     DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
-                //Commit();
+
 
 
                 Message('Interest  Calculated (partial)');
@@ -1029,10 +1030,10 @@ codeunit 50231 FunderMgtCU
                 // endYearDate := CALCDATE('CY', Today);
                 if _interestComputationTimes = 0 then begin // Check for first operation
                     endMonthDate := CALCDATE('<+CM>', Today);
-                    remainingDays := endMonthDate - funderLoan.PlacementDate + 1;
+                    remainingDays := endMonthDate - funderLoan.PlacementDate + 0;
                 end else begin
                     startMonthDate := CALCDATE('<-CM>', Today);
-                    remainingDays := RedemptionDate - startMonthDate + 1;
+                    remainingDays := RedemptionDate - startMonthDate + 0;
                     // remainingDays := CALCDATE('<CM>', RedemptionDate) - CALCDATE('<-CM>', RedemptionDate) + 1;// No of Days in that Month
                 end;
 
@@ -1041,8 +1042,8 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry3.Reset();
                 funderLegderEntry3.SetRange("Funder No.", funder."No.");
                 funderLegderEntry3.SetRange("Loan No.", FunderLoanNo);
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Original Amount");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Secondary Amount");
+                funderLegderEntry3.SetFilter(funderLegderEntry3."Document Type", '=%1|=%2', funderLegderEntry2."Document Type"::"Original Amount", funderLegderEntry2."Document Type"::"Secondary Amount");
+                // funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Secondary Amount");
                 funderLegderEntry3.CalcSums(Amount);
                 _totalOriginalAmount := funderLegderEntry3.Amount;
 
@@ -1113,6 +1114,7 @@ codeunit 50231 FunderMgtCU
 
         _funder: Record Funders;
         _portfolio: Record Portfolio;
+    // _redemption: Record "Redemption Log Tbl";
     begin
         JournalEntry.LockTable();
         if JournalEntry.FindLast() then

@@ -282,6 +282,27 @@ page 50231 "Portfolio Card"
                     end;
                 }
 
+                action(SendReopenApprovalRequest)
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Send Reopen A&pproval Request';
+                    Enabled = Rec.Status = Rec.Status::Approved;
+                    Image = UnApply;
+                    ToolTip = 'Request Reopen approval to change the record.';
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    trigger OnAction()
+
+                    var
+                        CustomWorkflowMgmt: Codeunit "Portfolio Approval Mgt";
+                        RecRef: RecordRef;
+                    begin
+                        RecRef.GetTable(Rec);
+                        if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
+                            CustomWorkflowMgmt.OnSendWorkflowForApproval(RecRef);
+                    end;
+                }
+
             }
 
         }

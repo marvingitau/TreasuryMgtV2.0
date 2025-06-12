@@ -68,6 +68,7 @@ codeunit 50232 "Treasury Mgt CU"
         _auxAmount: Decimal;
 
         totalCapitalInterest: Decimal;
+        totalWithholdingAmount: Decimal;
     begin
         JournalEntry.LockTable();
         if JournalEntry.FindLast() then
@@ -1112,13 +1113,19 @@ codeunit 50232 "Treasury Mgt CU"
                 funderLegderEntry2.CalcSums(Amount);
                 totalCapitalInterest := Abs(funderLegderEntry2.Amount);
 
+                funderLegderEntry2.Reset();
+                funderLegderEntry2.SetRange("Funder No.", funderNo);
+                funderLegderEntry2.SetRange(funderLegderEntry2."Document Type", funderLegderEntry2."Document Type"::Withholding);
+                funderLegderEntry2.CalcSums(Amount);
+                totalWithholdingAmount := Abs(funderLegderEntry2.Amount);
+
                 differentAccrPaidInterest := totalAccruedInterest + totalPaidInterest + totalCapitalInterest; // Get the floating value
                 //Ensure Interest Paid does not negative Accrued Interest
                 if differentAccrPaidInterest > 0 then begin
-                    if differentAccrPaidInterest - Round(TrsyJnl.Amount, 0.01, '=') >= Round(TrsyJnl.Amount, 0.01, '=') then
-                        _amount := Round(TrsyJnl.Amount, 0.01, '=')
-                    else
-                        _amount := differentAccrPaidInterest
+                    // if differentAccrPaidInterest - Round(TrsyJnl.Amount, 0.01, '=') >= Round(TrsyJnl.Amount, 0.01, '=') then
+                    _amount := Round(TrsyJnl.Amount, 0.01, '=');
+                    // else
+                    // _amount := differentAccrPaidInterest
 
                 end else begin
                     _amount := Round(0, 0.01, '=');
@@ -1247,7 +1254,7 @@ codeunit 50232 "Treasury Mgt CU"
                 funderLegderEntry1."Posting Date" := TrsyJnl."Posting Date";
                 funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::"Secondary Amount";
                 funderLegderEntry."Document No." := TrsyJnl."Document No.";
-                funderLegderEntry1.Description := 'Addional Original from Capitalization' + Format(Today) + TrsyJnl.Description;
+                funderLegderEntry1.Description := 'Additional Original from Capitalization' + Format(Today) + TrsyJnl.Description;
                 funderLegderEntry1.Amount := _amount;
                 funderLegderEntry1."Amount(LCY)" := _amount;
                 funderLegderEntry1.Insert();
@@ -1940,6 +1947,11 @@ codeunit 50232 "Treasury Mgt CU"
         startMonth := CalcDate('<-CM>', RedemptionDate);
         endMonth := CalcDate('<+CM>', RedemptionDate);
 
+        RedemptionLogs.Reset();
+        RedemptionLogs.SetRange("Loan No.", LoanNo);
+        if not RedemptionLogs.Find('-') then
+            Error('Redemption Loan No. %1 not found', LoanNo);
+
         funderLegderEntry.Reset();
         if funderLegderEntry.FindLast() then
             NextEntryNo := funderLegderEntry."Entry No." + 1;
@@ -1970,13 +1982,13 @@ codeunit 50232 "Treasury Mgt CU"
             funderLegderEntry."Document No." := funderLegderEntry_1."Document No.";
             funderLegderEntry.Category := funderLegderEntry_1.Category; // Funder Loan Category
             funderLegderEntry."Document Type" := funderLegderEntry_1."Document Type"::"Reversed Interest";
-            funderLegderEntry.Description := 'Interest Reversal calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
+            funderLegderEntry.Description := RedemptionLogs."Reference No." + ' ' + 'Interest Reversal calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
             funderLegderEntry.Amount := -funderLegderEntry_1.Amount;
             funderLegderEntry."Amount(LCY)" := -funderLegderEntry_1."Amount(LCY)";
             funderLegderEntry."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
             funderLegderEntry.Insert();
             if (funderLoan3.EnableGLPosting = true) and (funderLegderEntry_1.Amount <> 0) then
-                FunderMGTCU.DirectGLPosting('reverse-interest', funderLoan3."Interest Payable", funderLegderEntry_1.Amount, 'Interest', funderLoan3."No.", PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//reverse Interest (Db Paying Bank)
+                FunderMGTCU.DirectGLPosting('reverse-interest', funderLoan3."Interest Payable", funderLegderEntry_1.Amount, 'Interest', funderLoan3."No.", PayingBankCode, '', '', '', RedemptionLogs."Reference No.", funder."Shortcut Dimension 1 Code");//reverse Interest (Db Paying Bank)
 
             //Create a Correction One.
             FunderMGTCU.CalculateInterestForPartial(LoanNo, RedemptionDate, PayingBankCode);
@@ -2023,13 +2035,13 @@ codeunit 50232 "Treasury Mgt CU"
             funderLegderEntry_2."Document No." := funderLegderEntry_1."Document No.";
             funderLegderEntry_2.Category := funderLoan3.Category; // Funder Loan Category
             funderLegderEntry_2."Document Type" := funderLegderEntry_2."Document Type"::"Interest Paid";
-            funderLegderEntry_2.Description := 'Interest Redemption Payment calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
+            funderLegderEntry_2.Description := RedemptionLogs."Reference No." + ' ' + 'Interest Redemption Payment calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
             funderLegderEntry_2.Amount := -(PartialAmount);
             funderLegderEntry_2."Amount(LCY)" := -(PartialAmount);
             // funderLegderEntry_2."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
             funderLegderEntry_2.Insert();
             if (funderLoan3.EnableGLPosting = true) and (PartialAmount <> 0) then
-                FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", PartialAmount, 'Interest', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
+                FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", PartialAmount, 'Interest', LoanNo, PayingBankCode, '', '', '', RedemptionLogs."Reference No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
 
             RedemptionLogs.Reset();
             RedemptionLogs.SetRange("Loan No.", LoanNo);
@@ -2063,13 +2075,13 @@ codeunit 50232 "Treasury Mgt CU"
             funderLegderEntry_2."Document No." := funderLegderEntry_1."Document No.";
             funderLegderEntry_2.Category := funderLoan3.Category; // Funder Loan Category
             funderLegderEntry_2."Document Type" := funderLegderEntry_2."Document Type"::"Interest Paid";
-            funderLegderEntry_2.Description := 'Interest Redemption Payment calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
+            funderLegderEntry_2.Description := RedemptionLogs."Reference No." + ' ' + 'Interest Redemption Payment calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
             funderLegderEntry_2.Amount := -(FloatingInter);
             funderLegderEntry_2."Amount(LCY)" := -(FloatingInter);
             // funderLegderEntry_2."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
             funderLegderEntry_2.Insert();
             if (funderLoan3.EnableGLPosting = true) and (FloatingInter <> 0) then
-                FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", FloatingInter, 'Interest', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
+                FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", FloatingInter, 'Interest', LoanNo, PayingBankCode, '', '', '', RedemptionLogs."Reference No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
 
             funderLegderEntry_3.Init();
             funderLegderEntry_3."Entry No." := NextEntryNo + 8;
@@ -2081,13 +2093,13 @@ codeunit 50232 "Treasury Mgt CU"
             funderLegderEntry_3."Document No." := funderLegderEntry_1."Document No.";
             funderLegderEntry_3.Category := funderLoan3.Category; // Funder Loan Category
             funderLegderEntry_3."Document Type" := funderLegderEntry_3."Document Type"::Repayment;
-            funderLegderEntry_3.Description := 'Interest Redemption Payment calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
+            funderLegderEntry_3.Description := RedemptionLogs."Reference No." + ' ' + 'Interest Redemption Payment calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
             funderLegderEntry_3.Amount := -(PartialAmount - FloatingInter);
             funderLegderEntry_3."Amount(LCY)" := -(PartialAmount - FloatingInter);
             // funderLegderEntry_3."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
             funderLegderEntry_3.Insert();
             if (funderLoan3.EnableGLPosting = true) and ((PartialAmount - FloatingInter) <> 0) then
-                FunderMGTCU.DirectGLPosting('partial-redemption', funderLoan3."Interest Payable", (PartialAmount - FloatingInter), 'Partial Redemption Repayment', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//
+                FunderMGTCU.DirectGLPosting('partial-redemption', funderLoan3."Interest Payable", (PartialAmount - FloatingInter), 'Partial Redemption Repayment', LoanNo, PayingBankCode, '', '', '', RedemptionLogs."Reference No.", funder."Shortcut Dimension 1 Code");//
 
             RedemptionLogs.Reset();
             RedemptionLogs.SetRange("Loan No.", LoanNo);

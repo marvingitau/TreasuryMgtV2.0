@@ -1225,7 +1225,7 @@ page 50304 "RelatedParty Card"
                     trigger OnAction()
 
                     var
-                        CustomWorkflowMgmt: Codeunit "Funders Approval Mgt";
+                        CustomWorkflowMgmt: Codeunit "Relatedparty Approval Mgt";
                         RecRef: RecordRef;
                     begin
                         if Rec."Payables Account" = '' then
@@ -1253,7 +1253,7 @@ page 50304 "RelatedParty Card"
                     PromotedCategory = Process;
                     trigger OnAction()
                     var
-                        CustomWorkflowMgmt: Codeunit "Funders Approval Mgt";
+                        CustomWorkflowMgmt: Codeunit "Relatedparty Approval Mgt";
                         RecRef: RecordRef;
                     begin
                         RecRef.GetTable(Rec);
@@ -1261,27 +1261,26 @@ page 50304 "RelatedParty Card"
                     end;
                 }
 
-                // action(SendReopenRequest)
-                // {
-                //     ApplicationArea = Basic, Suite;
-                //     Caption = 'Send Reopen Request';
-                //     Enabled = NOT OpenApprovalEntriesExist;
-                //     Image = OpenWorksheet;
-                //     ToolTip = 'Request approval to change the record.';
-                //     Promoted = true;
-                //     PromotedCategory = Process;
-                //     trigger OnAction()
+                action(SendReopenApprovalRequest)
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Send Reopen A&pproval Request';
+                    Enabled = Rec.Status = Rec.Status::Approved;
+                    Image = UnApply;
+                    ToolTip = 'Request Reopen approval to change the record.';
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    trigger OnAction()
 
-                //     var
-                //         CustomWorkflowMgmt: Codeunit "Funders Approval Mgt";
-                //         RecRef: RecordRef;
-                //     begin
-
-                //         RecRef.GetTable(Rec);
-                //         // if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
-                //         CustomWorkflowMgmt.OnReopenWorkflowForApproval(RecRef);
-                //     end;
-                // }
+                    var
+                        CustomWorkflowMgmt: Codeunit "Relatedparty Approval Mgt";
+                        RecRef: RecordRef;
+                    begin
+                        RecRef.GetTable(Rec);
+                        if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
+                            CustomWorkflowMgmt.OnSendWorkflowForApproval(RecRef);
+                    end;
+                }
             }
 
             action("Portfolio Fee Setup")

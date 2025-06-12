@@ -276,6 +276,10 @@ report 50234 "Investment Confirmation"
         FunderLoanTbl.SetRange("No.", FunderNo);
         if not FunderLoanTbl.Find('-') then
             Error('Funder Loan not %1 found', FunderNo);
+
+        if FunderLoanTbl.Category = UpperCase('Bank Overdraft') then
+            exit;
+
         _fNo := FunderLoanTbl."No.";
         // if FunderLoanTbl.FirstDueDate <> 0D then
         dueDate := FunderLoanTbl.FirstDueDate;

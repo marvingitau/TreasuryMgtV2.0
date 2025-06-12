@@ -311,7 +311,7 @@ codeunit 50243 RelatepartyMgtCU
                 // endYearDate := CALCDATE('CY', Today);
                 if _interestComputationTimes = 0 then begin
                     endMonthDate := CALCDATE('<+CM>', Today);
-                    remainingDays := endMonthDate - funderLoan.PlacementDate + 1;
+                    remainingDays := endMonthDate - funderLoan.PlacementDate + 0;
                 end else begin
                     endMonthDate := CALCDATE('<+CM>', Today);
                     remainingDays := CALCDATE('<CM>', Today) - CALCDATE('<-CM>', Today) + 1
@@ -552,7 +552,7 @@ codeunit 50243 RelatepartyMgtCU
                 // endYearDate := CALCDATE('CY', Today);
                 if _interestComputationTimes = 0 then begin // Check for first operation
                     endMonthDate := CALCDATE('<+CM>', Today);
-                    remainingDays := endMonthDate - funderLoan.PlacementDate + 1;
+                    remainingDays := endMonthDate - funderLoan.PlacementDate + 0;
                 end else begin
                     startMonthDate := CALCDATE('<-CM>', Today);
                     remainingDays := RedemptionDate - startMonthDate + 1;
@@ -1589,9 +1589,115 @@ codeunit 50243 RelatepartyMgtCU
     end;
 
 
+    //IC Operations
+    procedure GenerateICSalesInvoice()
+    var
+        RelatedSelectedLoans: Record "Relatedparty Sales Inv Rec.";
+        RelatedLoansTbl: Record "RelatedParty Loan";
+        SalesInvoiceHeader: Record "Sales Header";
+        SalesInvoiceLine: Record "Sales Line";
+        AccruedInterestAmount: Decimal;
+        Looper: Integer;
+        Customer: Record Customer;
+        SalesPost: Codeunit "Sales-Post";
+        IsHandled: Boolean;
+        GLAccount: Record "G/L Account";
+    begin
+        Looper := 1000;
+        RelatedSelectedLoans.Reset();
+        RelatedSelectedLoans.SetRange(Processed, false);
+        if RelatedSelectedLoans.Find('-') then begin
+            repeat
+                //Skip if funder is missing
+                if RelatedSelectedLoans.Funder = '' then
+                    continue;
+                // Find a customer
+                if not Customer.get(RelatedSelectedLoans."Customer No.") then
+                    Error('Customer %1 found in the system.', RelatedSelectedLoans."Customer No.");
+
+                RelatedLoansTbl.Reset();
+                RelatedLoansTbl.SetRange("No.", RelatedSelectedLoans."Related Loan No");
+                if RelatedLoansTbl.Find('-') then begin
+                    RelatedLoansTbl.CalcFields(GrossInterestamount);
+                    AccruedInterestAmount := RelatedLoansTbl.GrossInterestamount;
+
+                    //Sales Invoice Document
+                    SalesInvoiceHeader.Init();
+                    SalesInvoiceHeader."No." := ''; // Let system assign number
+                    SalesInvoiceHeader."Document Type" := SalesInvoiceHeader."Document Type"::Invoice;
+                    SalesInvoiceHeader."Sell-to Customer No." := Customer."No.";
+                    SalesInvoiceHeader."Posting Date" := WorkDate();
+                    SalesInvoiceHeader."Document Date" := WorkDate();
+                    SalesInvoiceHeader."Due Date" := CalcDate('<30D>', WorkDate());
+                    SalesInvoiceHeader."Shortcut Dimension 1 Code" := RelatedSelectedLoans."Shortcut Dimension 1 Code";
+
+                    if SalesInvoiceHeader.Insert(true) then begin
+                        SalesInvoiceHeader.Validate("Sell-to Customer No.", Customer."No.");
+                        SalesInvoiceHeader.Validate("Posting Date", WorkDate());
+                        SalesInvoiceHeader.Validate("Document Date", WorkDate());
+                        SalesInvoiceHeader.Validate("Due Date", CalcDate('<30D>', WorkDate()));
+                        SalesInvoiceHeader.Validate("Shortcut Dimension 1 Code", RelatedSelectedLoans."Shortcut Dimension 1 Code");
+                        SalesInvoiceHeader.Modify(true);
+
+                        // Sales Invoice Lines
+                        SalesInvoiceLine.Init();
+                        SalesInvoiceLine."Document Type" := SalesInvoiceLine."Document Type"::Invoice;
+                        SalesInvoiceLine.Validate("Sell-to Customer No.", Customer."No.");
+                        SalesInvoiceLine."Document No." := SalesInvoiceHeader."No.";
+                        SalesInvoiceLine."Line No." := Looper;
+
+                        SalesInvoiceLine.Type := SalesInvoiceLine.Type::"G/L Account";
+                        SalesInvoiceLine.Validate("No.", RelatedLoansTbl."Interest Payable");
+                        SalesInvoiceLine.Validate("Unit Price", AccruedInterestAmount);
+                        SalesInvoiceLine.Validate(Quantity, 1);
+                        if SalesInvoiceLine.Insert(true) then begin
+                            SalesInvoiceLine.Validate("Gen. Prod. Posting Group", 'WITHHOLDING');
+                            SalesInvoiceLine.Validate("VAT Bus. Posting Group", 'DOMESTIC');
+                            SalesInvoiceLine.Modify()
+                        end;
+                    end;
+                    //Flag Interest as Sales Invoiced.
+                    RelatedSelectedLoans."Computed Interest" := AccruedInterestAmount;
+                    RelatedSelectedLoans."Posting Date" := Today;
+                    RelatedSelectedLoans.Processed := true;
+                    RelatedSelectedLoans.Modify();
+
+                    // Allow modification before posting
+                    OnBeforePostSalesInvoiceWithGLLines(SalesInvoiceHeader);
+
+                    // Post the invoice
+                    Commit();
+                    if not SalesPost.Run(SalesInvoiceHeader) then
+                        Error('Error posting sales invoice: %1', GetLastErrorText());
+
+                    // Raise event after posting
+                    OnAfterSalesInvoiceWithGLLinesPosted(SalesInvoiceHeader);
+
+                    Message('Sales Invoice %1 has been created and posted successfully.', SalesInvoiceHeader."No.");
+
+                end;
+                Looper += 1;
+            until RelatedSelectedLoans.Next() = 0;
+        end;
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforeCreateSalesInvoiceWithGLLines(var IsHandled: Boolean)
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnBeforePostSalesInvoiceWithGLLines(var SalesHeader: Record "Sales Header")
+    begin
+    end;
+
+    [IntegrationEvent(false, false)]
+    local procedure OnAfterSalesInvoiceWithGLLinesPosted(SalesHeader: Record "Sales Header")
+    begin
+    end;
+
     var
         myGlobalCounter: Integer;
-        // vendor: Record Vendor;
         funderLoan: Record "RelatedParty Loan";
         funder: Record RelatedParty;
         // debtor: Record Debtor;

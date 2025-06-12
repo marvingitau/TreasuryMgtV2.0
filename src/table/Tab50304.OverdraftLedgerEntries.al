@@ -1,76 +1,64 @@
-table 50291 "Redemption Log Tbl"
+table 50304 "Overdraft Ledger Entries"
 {
     DataClassification = ToBeClassified;
-    DataCaptionFields = "Loan No.";
+    LookupPageId = "Overdraft Ledger Entries";
+    DrillDownPageId = "Overdraft Ledger Entries";
     fields
     {
-        field(1; Line; Integer)
+        field(1; "Line No."; Integer)
         {
             DataClassification = ToBeClassified;
             AutoIncrement = true;
         }
-        field(5; RedemptionType; Option)
+        field(4; "Funder No."; Code[50])
         {
             DataClassification = ToBeClassified;
-            OptionMembers = "Full Redemption","Partial Redemption";
         }
-        field(10; PayingBank; Code[20])
+        field(10; "Loan No."; Code[50])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(20; "Posting Date"; Date)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(22; "Opening Bal."; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(23; "Closing Bal."; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(25; "Calculated Interest"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(30; Processed; Boolean)
+        {
+            DataClassification = ToBeClassified;
+            InitValue = false;
+        }
+        field(32; Closed; Boolean) // This indicate if the opening and closing bal are inserted
+        {
+            DataClassification = ToBeClassified;
+            InitValue = false;
+        }
+        field(36; "Balance Difference"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(39; "Bank Account"; Code[50])
         {
             DataClassification = ToBeClassified;
             TableRelation = "Bank Account"."No.";
         }
-        field(20; TotalFloat; Decimal)
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(21; PrincAmountRemoved; Decimal)
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(23; AmountRemoved; Decimal)
-        {
-            DataClassification = ToBeClassified;
-        }
 
-        field(29; IntrAmountRemoved; Decimal)
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(22; "Loan No."; Code[20])
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(25; "New Loan No."; Code[20])
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(24; "Redemption Date"; Date)
-        {
-            DataClassification = ToBeClassified;
-        }
-
-        field(30; RemainingAmount; Decimal)
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(33; FloatingPrinc; Decimal)
-        {
-            DataClassification = ToBeClassified;
-        }
-        field(36; FloatingIntr; Decimal)
-        {
-            DataClassification = ToBeClassified;
-        }
-
-        field(40; "Reference No."; Code[150])
-        {
-            DataClassification = ToBeClassified;
-        }
     }
 
     keys
     {
-        key(PK; Line)
+        key(PK; "Line No.", "Funder No.", "Loan No.")
         {
             Clustered = true;
         }

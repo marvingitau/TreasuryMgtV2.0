@@ -299,6 +299,19 @@ table 50230 Funders
             DataClassification = ToBeClassified;
         }
 
+        field(526; FundSource; Code[100])
+        {
+            DataClassification = ToBeClassified;
+
+            TableRelation = "Bank Account"."No.";
+            trigger OnValidate()
+            var
+                _bankAccs: Record "Bank Account";
+            begin
+
+            end;
+        }
+
         field(600; "Shortcut Dimension 1 Code"; Code[50])
         {
             CaptionClass = '1,1,1';
@@ -685,6 +698,29 @@ table 50230 Funders
             end;
 
         }
+        field(2504; ContactDetailPhone2; Text[250])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen(ContactDetailPhone2);
+                    if (noLength < "Region/Country"."Minimum Phone Length") or (noLength > "Region/Country"."Maximum Phone Length") then begin
+                        Error('Phone No. size must be between %1 and %2', "Region/Country"."Minimum Phone Length", "Region/Country"."Maximum Phone Length");
+                    end;
+                end;
+                // if not TrsyMgtCU.ValidateNumeric(ContactDetailPhone) then
+                //     Error('Invalid Phone Character(s)');
+            end;
+        }
+
         field(2508; "Contact Detail Passport"; Text[250])
         {
             DataClassification = ToBeClassified;
@@ -849,11 +885,7 @@ table 50230 Funders
         }
         field(3000; FunderType; Option)
         {
-            OptionMembers = Individual,"Joint Application",Corporate,Institutional,"Bank Loan";
-            DataClassification = ToBeClassified;
-        }
-        field(3009; "Coupa Ref No."; Text[250])
-        {
+            OptionMembers = Individual,"Joint Application",Corporate,Institutional,"Bank Loan","Bank Overdraft";
             DataClassification = ToBeClassified;
         }
         field(3010; CompanyNo; Text[250])
@@ -955,6 +987,7 @@ table 50230 Funders
         if "Region/Country".Find('-') then begin
             Rec."Phone Number" := "Region/Country"."Phone Code";
             Rec.ContactDetailPhone := "Region/Country"."Phone Code";
+            Rec.ContactDetailPhone2 := "Region/Country"."Phone Code";
         end;
 
         DimensionValue.Reset();

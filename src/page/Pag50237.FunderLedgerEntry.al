@@ -85,8 +85,9 @@ page 50237 FunderLedgerEntry
                 {
                     ApplicationArea = All;
                 }
-                field("Opening  Balance Acc"; Rec."Opening  Balance Acc")
+                field("Balancing Acc"; Rec."Balancing Acc")
                 {
+                    Caption = 'Balancing Account';
                     ApplicationArea = All;
                 }
                 field(GloabalDimCode1; Rec."Shortcut Dimension 1 Code")

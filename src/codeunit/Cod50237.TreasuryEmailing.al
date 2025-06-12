@@ -50,7 +50,7 @@ codeunit 50237 "Treasury Emailing"
         // Body := '<p>Dear ' + Funders.Name + '</p><p> Thank you for your placement of ' + Format(FunderLoan."Original Disbursed Amount") + ' on ' + Format(FunderLoan.PlacementDate) + ' with ' + CompanyName + '.</p> <p> Please find attached the placement confirmation for your review. Kindly sign and return the document at your earliest convenience.</p> <p>If you have any questions or require further assistance, please feel free to contact us at ' + Company."Phone No." + '.</p> <p>Best regards,</p> <p>' + CompanyName + ' – Treasury</p> <br><br><br><br> <p>(This is a system-generated email.)</p>';
         Body := '<p>I hope youre doing well.Please find attached the placement confirmation certificate for your review.</p><p> Kindly let us know if you have any feedback. The final execution copy will be shared for sign-off at a later stage.Please don’t hesitate to reach out if you need any clarifications.</p> <p>Best regards,</p>' + GeneralSetup."Trsy Recipient Name" + ' – Treasury</p> <br><br><br><br> <p>(This is a system-generated email.)</p>';
 
-        if Funders.FunderType = Funders.FunderType::"Bank Loan" then begin
+        if (Funders.FunderType = Funders.FunderType::"Bank Loan") or (Funders.FunderType = Funders.FunderType::"Bank Overdraft") then begin
             exit
         end;
         if Funders.FunderType = Funders.FunderType::Individual then begin

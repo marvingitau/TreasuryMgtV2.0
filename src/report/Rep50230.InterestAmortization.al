@@ -41,36 +41,36 @@ report 50230 "Interest Amortization"
         }
     }
 
-    requestpage
-    {
+    // requestpage
+    // {
 
-        layout
-        {
-            area(Content)
-            {
-                group(GroupName)
-                {
-                    field(No; FunderNo)
-                    {
-                        TableRelation = "Funder Loan"."No.";
-                        ApplicationArea = All;
+    //     layout
+    //     {
+    //         area(Content)
+    //         {
+    //             group(GroupName)
+    //             {
+    //                 field(No; FunderNo)
+    //                 {
+    //                     TableRelation = "Funder Loan"."No.";
+    //                     ApplicationArea = All;
 
-                    }
-                }
-            }
-        }
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
+    //     actions
+    //     {
+    //         area(processing)
+    //         {
+    //             action(LayoutName)
+    //             {
 
-                }
-            }
-        }
-    }
+    //             }
+    //         }
+    //     }
+    // }
 
     rendering
     {
@@ -138,12 +138,14 @@ report 50230 "Interest Amortization"
         _secondStep: Boolean;
     begin
         // Filters := FunderLoanTbl.GetFilter("No.");
-        ReportFlag.Reset();
-        ReportFlag.SetFilter("Line No.", '<>%1', 0);
-        ReportFlag.SetFilter("Utilizing User", '=%1', UserId);
-        if not ReportFlag.FindFirst() then
-            Error('No Report Flag Added');
-        FunderNo := ReportFlag."Funder Loan No.";
+        // ReportFlag.Reset();
+        // ReportFlag.SetFilter("Line No.", '<>%1', 0);
+        // ReportFlag.SetFilter("Utilizing User", '=%1', UserId);
+        // if not ReportFlag.FindFirst() then
+        //     Error('No Report Flag Added');
+        // FunderNo := ReportFlag."Funder Loan No.";
+
+        FunderNo := "Funder Loan".GetFilter("No.");
 
         FunderLoanTbl.Reset();
         FunderLoanTbl.SetRange("No.", FunderNo);
@@ -223,9 +225,9 @@ report 50230 "Interest Amortization"
                 if (monthCounter = 0) then begin
                     //Start Date
                     if IsJanuaryFirst(placementDate) = true then
-                        DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 1 //Remaining to End month
+                        DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 0 //Remaining to End month
                     else
-                        DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 1;
+                        DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 0;
                 end;
                 if (monthCounter = NoOfMonths) then begin
                     //End Date
@@ -323,7 +325,7 @@ report 50230 "Interest Amortization"
                 if QuarterCounter = 0 then begin
                     // _currentQuarterInLoop := GetStartOfQuarter(placementDate);
                     _currentQuarterInLoop := GetEndOfQuarter(placementDate);
-                    DaysInQuarter := (_currentQuarterInLoop - placementDate) + 1;
+                    DaysInQuarter := (_currentQuarterInLoop - placementDate) + 0;
 
                 end
 
@@ -449,7 +451,7 @@ report 50230 "Interest Amortization"
                 // else 
                 if BiannCounter = 1 then begin
                     _currentBiannInLoop := GetEndOfBiannual(placementDate);
-                    DaysInBiann := _currentBiannInLoop - placementDate + 1;
+                    DaysInBiann := _currentBiannInLoop - placementDate + 0;
                 end
                 else if BiannCounter = NoOfBiann then begin
                     _currentBiannInLoop := GetStartOfBiannual(maturityDate);
