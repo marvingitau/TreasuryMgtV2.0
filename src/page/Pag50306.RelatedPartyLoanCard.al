@@ -127,13 +127,14 @@ page 50306 "RelatedParty Loan Card"
                     Enabled = Rec."Tranche Loan";
                     Editable = not (Rec.Status = Rec.Status::Approved);
                     ToolTip = 'This indicates the Total to Be Payed under Tranches Loan';
-                    Caption = 'Total Expected Amount';
+                    Caption = 'Total facility amount on Tranche loans';
 
                 }
                 field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
                 {
                     ApplicationArea = All;
                     Editable = not (Rec.Status = Rec.Status::Approved);
+                    Caption = 'Original / First disbursement Amount';
                 }
                 // field(OrigAmntDisbLCY; Rec.OrigAmntDisbLCY)
                 // {

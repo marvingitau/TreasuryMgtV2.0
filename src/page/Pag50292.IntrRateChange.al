@@ -12,6 +12,14 @@ page 50292 "Intr. Rate Change"
         {
             repeater(General)
             {
+                field(Category; Rec.Category)
+                {
+                    ApplicationArea = All;
+                }
+                field(Description; Rec.Description)
+                {
+                    ApplicationArea = All;
+                }
 
                 field("Effective Dates"; Rec."Effective Dates")
                 {
@@ -58,16 +66,47 @@ page 50292 "Intr. Rate Change"
         }
     }
 
-    trigger OnInsertRecord(BelowxRec: Boolean): Boolean
+    trigger OnOpenPage()
     var
+    begin
+        CategoryFilter := Rec.GetFilter(Category);
+        // Log all applied filters to the debug console
+        // Rec.FilterGroup(4); // Get system filters
+        // if Rec.GetFilters <> '' then
+        //     Message('Initial filters applied: %1',);
+        // Rec.FilterGroup(0); // Reset to default filter group
+        // Message('Initial filters applied: %1', Filters);
+    end;
+
+    trigger OnInsertRecord(BelowxRec: Boolean): Boolean
 
     begin
 
+    end;
+
+    trigger OnNewRecord(BelowxRec: Boolean)
+    begin
+        if CategoryFilter = 'Individual' then
+            Rec.Category := Rec.Category::Individual;
+        if CategoryFilter = 'Bank Loan' then
+            Rec.Category := Rec.Category::"Bank Loan";
+        if CategoryFilter = 'Corporate' then
+            Rec.Category := Rec.Category::Corporate;
+        if CategoryFilter = 'Institutional' then
+            Rec.Category := Rec.Category::Institutional;
+        if CategoryFilter = 'Joint Application' then
+            Rec.Category := Rec.Category::"Joint Application";
+        if CategoryFilter = 'Bank Overdraft' then
+            Rec.Category := Rec.Category::"Bank Overdraft";
+        // if CategoryFilter = 'Individual' then
+        //     Rec.Category := Rec.Category::Individual
 
     end;
 
 
 
     var
+        CategoryFilter: Text;
+
 
 }

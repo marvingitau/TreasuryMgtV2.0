@@ -1,8 +1,8 @@
 table 50232 "Funder Loan"
 {
     DataClassification = ToBeClassified;
-    LookupPageId = "Funder Loans List";
-    DrillDownPageId = "Funder Loans List";
+    LookupPageId = "Funder Loan List";
+    DrillDownPageId = "Funder Loan List";
     DataCaptionFields = "No.", "Loan Name";
     fields
     {
@@ -219,7 +219,7 @@ table 50232 "Funder Loan"
         field(518; "FormofSec"; Text[250])
         {
             DataClassification = ToBeClassified;
-            Caption = 'Form of security';
+            Caption = 'Other Form of security';
         }
         field(519; "DisbursedCurrency"; Decimal)
         {
@@ -248,6 +248,12 @@ table 50232 "Funder Loan"
             DataClassification = ToBeClassified;
             Caption = 'Enable GL Posting';
             InitValue = true;
+        }
+        field(606; EnableWeekDayReporting; Boolean)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Remove WeekEnd Reporting';
+            InitValue = false;
         }
         // field(523; Portfolio; Code[100])
         // {
@@ -674,6 +680,10 @@ table 50232 "Funder Loan"
         {
             DataClassification = ToBeClassified;
         }
+        field(931; "Reference Rate Name"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+        }
         field(932; Margin; Decimal)
         {
             DataClassification = ToBeClassified;
@@ -699,12 +709,12 @@ table 50232 "Funder Loan"
         field(940; PeriodicPaymentOfInterest; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = "Monthly","Quarterly","Biannually","Annually";
+            OptionMembers = "","Monthly","Quarterly","Biannually","Annually";
         }
         field(941; PeriodicPaymentOfPrincipal; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = "Monthly","Quarterly","Biannually","Annually","Total at Due Date";
+            OptionMembers = "","Monthly","Quarterly","Biannually","Annually","Total at Due Date";
             //"Total at Due Date"
         }
 
@@ -916,6 +926,11 @@ table 50232 "Funder Loan"
         field(4010; "Encumbrance Percentage"; Decimal)
         {
             DataClassification = ToBeClassified;
+            trigger OnValidate()
+            begin
+                if "Encumbrance Percentage" <> 0 then
+                    "Encumbrance Input" := ("Encumbrance Percentage" / 100) * "Original Disbursed Amount";
+            end;
         }
 
         // Tranche Fields

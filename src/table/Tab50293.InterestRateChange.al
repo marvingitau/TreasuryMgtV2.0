@@ -9,6 +9,16 @@ table 50293 "Interest Rate Change"
             DataClassification = ToBeClassified;
             AutoIncrement = true;
         }
+        field(3; Category; Option)
+        {
+            DataClassification = ToBeClassified;
+            OptionMembers = " ","Bank Loan",Institutional,Individual,"Asset Term Manager","Medium Term Notes","Bank Overdraft","Joint Application",Corporate;
+
+        }
+        field(4; Description; Text[50])
+        {
+            DataClassification = ToBeClassified;
+        }
         field(10; "Effective Dates"; Date) // Opening Date
         {
             DataClassification = ToBeClassified;
@@ -62,9 +72,12 @@ table 50293 "Interest Rate Change"
 
     keys
     {
-        key(PK; LineNo)
+        key(PK; LineNo, Description)
         {
             Clustered = true;
+        }
+        key(FK; "New Interest Rate")
+        {
         }
     }
 

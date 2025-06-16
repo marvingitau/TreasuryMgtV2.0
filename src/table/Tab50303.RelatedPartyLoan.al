@@ -213,7 +213,7 @@ table 50303 "RelatedParty Loan"
         field(518; "FormofSec"; Text[250])
         {
             DataClassification = ToBeClassified;
-            Caption = 'Form of security';
+            Caption = 'Other Form of security';
         }
         field(519; "DisbursedCurrency"; Decimal)
         {

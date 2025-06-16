@@ -163,39 +163,39 @@ report 50234 "Investment Confirmation"
             }
         }
     }
-
-    requestpage
-    {
-        // AboutTitle = 'Teaching tip title';
-        // AboutText = 'Teaching tip content';
-        layout
+    /*
+        requestpage
         {
-            area(Content)
+            // AboutTitle = 'Teaching tip title';
+            // AboutText = 'Teaching tip content';
+            layout
             {
-                group(GroupName)
+                area(Content)
                 {
-                    field(FunderNumber; FunderNo)
+                    group(GroupName)
                     {
-                        ApplicationArea = All;
-                        Caption = 'Funder No.';
-                        TableRelation = "Funder Loan"."No.";
+                        field(FunderNumber; FunderNo)
+                        {
+                            ApplicationArea = All;
+                            Caption = 'Funder No.';
+                            TableRelation = "Funder Loan"."No.";
+                        }
+                    }
+                }
+            }
+
+            actions
+            {
+                area(processing)
+                {
+                    action(LayoutName)
+                    {
+
                     }
                 }
             }
         }
-
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
-
-                }
-            }
-        }
-    }
-
+    */
     rendering
     {
         layout(LayoutName)
@@ -265,13 +265,14 @@ report 50234 "Investment Confirmation"
         _sumNetInterest: Decimal;
     begin
         // Filters := FunderLoanTbl.GetFilter("No.");
-        ReportFlag.Reset();
-        ReportFlag.SetFilter("Line No.", '<>%1', 0);
-        ReportFlag.SetFilter("Utilizing User", '=%1', UserId);
-        if not ReportFlag.FindFirst() then
-            Error('No Report Flag Added');
-        FunderNo := ReportFlag."Funder Loan No.";
+        // ReportFlag.Reset();
+        // ReportFlag.SetFilter("Line No.", '<>%1', 0);
+        // ReportFlag.SetFilter("Utilizing User", '=%1', UserId);
+        // if not ReportFlag.FindFirst() then
+        //     Error('No Report Flag Added');
+        // FunderNo := ReportFlag."Funder Loan No.";
 
+        FunderNo := "Funder Loan".GetFilter("No.");
         FunderLoanTbl.Reset();
         FunderLoanTbl.SetRange("No.", FunderNo);
         if not FunderLoanTbl.Find('-') then
@@ -442,7 +443,7 @@ report 50234 "Investment Confirmation"
                     if (dueDate <> 0D) and (dueDate > _currentMonthInLoop) then begin
                         Loan.NumberofDays := _currentMonthInLoop - FunderLoanTbl.PlacementDate;
                     end else begin
-                        Loan.NumberofDays := DaysInQuarter;
+                        Loan.NumberofDays := DaysInMonth;
                     end;
                     Loan.Insert();
 

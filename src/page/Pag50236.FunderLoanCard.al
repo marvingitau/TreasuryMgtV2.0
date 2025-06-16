@@ -42,6 +42,15 @@ page 50236 "Funder Loan Card"
                     begin
                         if (Rec.PlacementDate <> 0D) and (Rec.MaturityDate <> 0D) then begin
                             PlacementAndMaturityDifference := (Rec.MaturityDate - Rec.PlacementDate);
+
+
+                            if Rec.PeriodicPaymentOfInterest = Rec.PeriodicPaymentOfInterest::Monthly then begin
+                                Rec.FirstDueDate := TreasuryMgtCU.GetEndOfMonthDate(Rec.PlacementDate);
+                            end;
+                            if Rec.PeriodicPaymentOfPrincipal = Rec.PeriodicPaymentOfPrincipal::Monthly then begin
+                                Rec.SecondDueDate := TreasuryMgtCU.GetEndOfMonthDate(Rec.PlacementDate);
+                            end;
+
                             Message('Loan Duration is %1', Format(PlacementAndMaturityDifference));
                         end;
                     end;
@@ -110,7 +119,7 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                     // Visible = isOverdraftLoan;
-                    Editable = EditStatus;
+                    Editable = EditStatus and isOverdraftLoan;
                     // ShowMandatory = true;
 
                 }
@@ -143,7 +152,7 @@ page 50236 "Funder Loan Card"
                     Enabled = Rec."Tranche Loan";
                     Editable = not (Rec.Status = Rec.Status::Approved);
                     ToolTip = 'This indicates the Total to Be Payed under Tranches Loan';
-                    Caption = 'Total Expected Amount';
+                    Caption = 'Total facility amount on Tranche loans';
 
 
                 }
@@ -151,6 +160,7 @@ page 50236 "Funder Loan Card"
                 {
                     ApplicationArea = All;
                     Editable = not (Rec.Status = Rec.Status::Approved);
+                    Caption = 'Original / First disbursement Amount';
                 }
                 // field(OrigAmntDisbLCY; Rec.OrigAmntDisbLCY)
                 // {
@@ -199,10 +209,14 @@ page 50236 "Funder Loan Card"
                     Editable = EditStatus;
                     trigger OnValidate()
                     begin
-                        if Rec.InterestRateType = Rec.InterestRateType::"Floating Rate" then
-                            isFloatRate := true
-                        else
+                        if Rec.InterestRateType = Rec.InterestRateType::"Floating Rate" then begin
+                            isFloatRate := true;
+                            Rec."Reference Rate" := 0;
+                            Rec.Margin := 0;
+                        end else begin
+
                             isFloatRate := false;
+                        end;
                         CurrPage.Update();
                     end;
                 }
@@ -225,14 +239,57 @@ page 50236 "Funder Loan Card"
                     field("Reference Rate"; Rec."Reference Rate")
                     {
                         ApplicationArea = All;
-                        ShowMandatory = true;
                         Editable = isFloatRate;
-                        trigger OnValidate()
+
+                        // trigger OnValidate()
+                        // begin
+                        //     Rec.InterestRate := Rec."Reference Rate" + Rec.Margin;
+                        //     Rec.Modify();
+                        //     CurrPage.Update();
+                        // end;
+
+                        DrillDownPageId = "Intr. Rate Change";
+                        trigger OnDrillDown()
+                        var
+                            funder: Record Funders;
+                            intrChange: Record "Interest Rate Change";
                         begin
-                            Rec.InterestRate := Rec."Reference Rate" + Rec.Margin;
-                            Rec.Modify();
-                            CurrPage.Update();
+                            funder.Reset();
+                            funder.SetRange("No.", Rec."Funder No.");
+                            if not funder.Find('-') then
+                                Error('Funder %1 not found', Rec."Funder No.");
+
+                            intrChange.Reset();
+                            if funder.FunderType = funder.FunderType::"Bank Loan" then
+                                intrChange.SetRange(intrChange.Category, intrChange.Category::"Bank Loan");
+                            if funder.FunderType = funder.FunderType::Corporate then
+                                intrChange.SetRange(intrChange.Category, intrChange.Category::Corporate);
+                            if funder.FunderType = funder.FunderType::Individual then
+                                intrChange.SetRange(intrChange.Category, intrChange.Category::Individual);
+                            if funder.FunderType = funder.FunderType::Institutional then
+                                intrChange.SetRange(intrChange.Category, intrChange.Category::Institutional);
+                            if funder.FunderType = funder.FunderType::"Joint Application" then
+                                intrChange.SetRange(intrChange.Category, intrChange.Category::"Joint Application");
+                            if funder.FunderType = funder.FunderType::"Bank Overdraft" then
+                                intrChange.SetRange(intrChange.Category, intrChange.Category::"Bank Overdraft");
+
+                            if Page.RunModal(Page::"Intr. Rate Change", intrChange) = Action::LookupOK then begin
+                                Rec."Reference Rate Name" := intrChange.Description;
+                                Rec."Reference Rate" := intrChange."New Interest Rate";
+                                Rec.InterestRate := Rec."Reference Rate" + Rec.Margin;
+                                Rec.Validate(InterestRate);
+                                CurrPage.Update();
+                            end;
+
                         end;
+                    }
+                    field("Reference Rate Name"; Rec."Reference Rate Name")
+                    {
+                        ApplicationArea = All;
+                        Editable = false;
+
+
+
                     }
                     field(Margin; Rec.Margin)
                     {
@@ -242,6 +299,7 @@ page 50236 "Funder Loan Card"
                         trigger OnValidate()
                         begin
                             Rec.InterestRate := Rec."Reference Rate" + Rec.Margin;
+                            Rec.Validate(InterestRate);
                             Rec.Modify();
                             CurrPage.Update();
                         end;
@@ -274,8 +332,25 @@ page 50236 "Funder Loan Card"
                     Caption = '*Payment Period (Interest) ';
                     ApplicationArea = All;
                     Editable = EditStatus;
+                    ShowMandatory = true;
                     trigger OnValidate()
                     begin
+                        //Check placement date for the interest amortization
+                        if Rec.PlacementDate = 0D then
+                            Error('Please populate Placement Date first.');
+                        if Rec.PeriodicPaymentOfInterest = Rec.PeriodicPaymentOfInterest::Monthly then begin
+                            Rec.FirstDueDate := TreasuryMgtCU.GetEndOfMonthDate(Rec.PlacementDate);
+                        end;
+                        if Rec.PeriodicPaymentOfInterest = Rec.PeriodicPaymentOfInterest::Quarterly then begin
+                            Rec.FirstDueDate := TreasuryMgtCU.GetQuarterClosingDate(Rec.PlacementDate);
+                        end;
+                        if Rec.PeriodicPaymentOfInterest = Rec.PeriodicPaymentOfInterest::Biannually then begin
+                            Rec.FirstDueDate := TreasuryMgtCU.GetBiannualClosingDate(Rec.PlacementDate);
+                        end;
+                        if Rec.PeriodicPaymentOfInterest = Rec.PeriodicPaymentOfInterest::Annually then begin
+                            Rec.FirstDueDate := TreasuryMgtCU.GetYearEndClosingDate(Rec.PlacementDate);
+                        end;
+
                         UpdateInterestPaymentVisibility();
 
                         // CurrPage.Update();
@@ -288,19 +363,49 @@ page 50236 "Funder Loan Card"
                     Caption = '*Payment Period (Principal) ';
                     ApplicationArea = All;
                     Editable = EditStatus;
+                    ShowMandatory = true;
+                    trigger OnValidate()
+                    begin
+                        //Check placement date for the interest amortization
+                        if Rec.PlacementDate = 0D then
+                            Error('Please populate Placement Date first.');
+                        if Rec.MaturityDate = 0D then
+                            Error('Please populate Maturity Date first.');
 
+                        if Rec.PeriodicPaymentOfPrincipal = Rec.PeriodicPaymentOfPrincipal::Monthly then begin
+                            Rec.SecondDueDate := TreasuryMgtCU.GetEndOfMonthDate(Rec.PlacementDate);
+                        end;
+                        if Rec.PeriodicPaymentOfPrincipal = Rec.PeriodicPaymentOfPrincipal::Quarterly then begin
+                            Rec.SecondDueDate := TreasuryMgtCU.GetQuarterClosingDate(Rec.PlacementDate);
+                        end;
+                        if Rec.PeriodicPaymentOfPrincipal = Rec.PeriodicPaymentOfPrincipal::Biannually then begin
+                            Rec.SecondDueDate := TreasuryMgtCU.GetBiannualClosingDate(Rec.PlacementDate);
+                        end;
+                        if Rec.PeriodicPaymentOfPrincipal = Rec.PeriodicPaymentOfPrincipal::Annually then begin
+                            Rec.SecondDueDate := TreasuryMgtCU.GetYearEndClosingDate(Rec.PlacementDate);
+                        end;
+                        if Rec.PeriodicPaymentOfPrincipal = Rec.PeriodicPaymentOfPrincipal::"Total at Due Date" then begin
+                            Rec.SecondDueDate := Rec.MaturityDate;
+                        end;
+
+                    end;
                 }
 
                 field(TaxStatus; Rec.TaxStatus)
                 {
                     ApplicationArea = All;
                     Editable = EditStatus;
+                    trigger OnValidate()
+                    begin
+                        if Rec.TaxStatus = Rec.TaxStatus::"Tax Exempt" then
+                            Rec.Withldtax := 0;
+                    end;
                 }
 
                 field(Withldtax; Rec.Withldtax)
                 {
                     ApplicationArea = All;
-                    Editable = EditStatus;
+                    Editable = EditStatus or not (Rec.TaxStatus = Rec.TaxStatus::"Tax Exempt");
                 }
                 // field(InvestmentTenor; Rec.InvestmentTenor)
                 // {
@@ -313,6 +418,11 @@ page 50236 "Funder Loan Card"
                     Editable = EditStatus;
                 }
                 field("Enable GL Posting"; Rec.EnableGLPosting)
+                {
+                    ApplicationArea = All;
+                    Editable = EditStatus;
+                }
+                field("Enable WeekDay Reporting"; Rec.EnableWeekDayReporting)
                 {
                     ApplicationArea = All;
                     Editable = EditStatus;
@@ -433,13 +543,15 @@ page 50236 "Funder Loan Card"
                     Caption = 'Interest Due Date';
                     ApplicationArea = All;
                     Editable = EditStatus;
+                    ShowMandatory = true;
 
                 }
                 field(SecondDueDate; Rec.SecondDueDate)
                 {
-                    Caption = 'Payment Due Date';
+                    Caption = 'Principal Payment Due Date';
                     ApplicationArea = All;
                     Editable = EditStatus;
+                    ShowMandatory = true;
 
                 }
             }
@@ -447,21 +559,23 @@ page 50236 "Funder Loan Card"
             {
                 Visible = EncumberanceView;
 
+                field("Encumbrance Percentage"; Rec."Encumbrance Percentage")
+                {
+                    ApplicationArea = All;
+                    Editable = EditStatus;
+                }
+
                 field("Encumbrance Input"; Rec."Encumbrance Input")
                 {
                     ApplicationArea = All;
                     Editable = EditStatus;
                 }
-                field("Total Asset Value"; Rec."Total Asset Value")
-                {
-                    ApplicationArea = All;
-                    Editable = false;
-                }
-                field("Encumbrance Percentage"; Rec."Encumbrance Percentage")
-                {
-                    ApplicationArea = All;
-                    Editable = false;
-                }
+                // field("Total Asset Value"; Rec."Total Asset Value")
+                // {
+                //     ApplicationArea = All;
+                //     Editable = false;
+                // }
+
             }
             group("Loan Repayment")
             {
@@ -817,6 +931,22 @@ page 50236 "Funder Loan Card"
 
                 }
             }
+            group(InterestRates)
+            {
+                // "Intr. Rate Change"
+                action("Interest Rates")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Reference Interest Rates';
+                    Image = OverdueEntries;
+                    PromotedCategory = Process;
+                    Promoted = true;
+                    // Enabled = isOverdraftLoan;
+                    // Visible = isOverdraftLoan;
+                    RunObject = page "Intr. Rate Change";
+
+                }
+            }
         }
 
         area(Reporting)
@@ -1040,9 +1170,10 @@ page 50236 "Funder Loan Card"
                         ReportFlag: Record "Report Flags";
                     begin
                         // InvestConfRp.SetFunderNoFilter(Rec."No.");
+                        Rec.Reset();
+                        Rec.SetRange("No.", Rec."No.");
 
-
-                        Report.Run(Report::"Investment Confirmation");
+                        Report.Run(Report::"Investment Confirmation", true, false, Rec);
                     end;
 
                 }
@@ -1284,6 +1415,7 @@ page 50236 "Funder Loan Card"
         myInt: Integer;
         GenSetup: Record "Treasury General Setup";
         NoSer: Codeunit "No. Series";
+        TreasuryMgtCU: Codeunit "Treasury Mgt CU";
         GlobalFilters: Codeunit GlobalFilters;
         isCurrencyVisible, isSecureLoanActive, isUnsecureLoanActive, isFloatRate, isOverdraftLoan : Boolean;
         _funderNo: Text[30];

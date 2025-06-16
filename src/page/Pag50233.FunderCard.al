@@ -107,6 +107,7 @@ page 50233 "Funder Card"
                         ApplicationArea = all;
                         ShowMandatory = true;
                         Editable = EditStatus;
+                        Visible = false;
                         trigger OnValidate()
                         begin
                             CurrPage.Update();
@@ -117,6 +118,7 @@ page 50233 "Funder Card"
                     {
                         ApplicationArea = All;
                         Editable = false;
+                        Visible = false;
                     }
 
                     // field("Counterparty Type"; Rec."Counterparty Type")
@@ -371,27 +373,66 @@ page 50233 "Funder Card"
                         ShowMandatory = true;
                         Editable = EditStatus;
                     }
-                    field(PersonalDetOccupation; Rec.PersonalDetOccupation)
+                    field(JointNatureOfBusiness; Rec.JointNatureOfBusiness)
                     {
                         ApplicationArea = All;
+                        ShowMandatory = true;
+                        Caption = 'Employment Status';
+                        Editable = EditStatus;
+                    }
+                    field(JointOccupation; Rec.JointOccupation)
+                    {
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
                         Caption = 'Occupation';
-                        ShowMandatory = true;
-                        Editable = EditStatus;
+                        Editable = Rec.JointNatureOfBusiness = Rec.JointNatureOfBusiness::"Self Employed";
+
                     }
-                    field(PersonalDetNatOfBus; Rec.PersonalDetNatOfBus)
+                    field(JointEmployer; Rec.JointEmployer)
                     {
                         ApplicationArea = All;
-                        Caption = 'Nature of Business';
-                        ShowMandatory = true;
-                        Editable = EditStatus;
-                    }
-                    field(PersonalDetEmployer; Rec.PersonalDetEmployer)
-                    {
-                        ApplicationArea = All;
+                        // ShowMandatory = true;
                         Caption = 'Employer';
-                        ShowMandatory = true;
-                        Editable = EditStatus;
+                        Editable = Rec.JointNatureOfBusiness = Rec.JointNatureOfBusiness::Employed;
+
                     }
+                    field(JointEmployerPosition; Rec.JointEmployerPosition)
+                    {
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
+                        Caption = 'Position';
+                        Editable = Rec.JointNatureOfBusiness = Rec.JointNatureOfBusiness::Employed;
+
+                    }
+                    field(JointEmployementOther; Rec.JointEmployementOther)
+                    {
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
+                        Caption = 'Other';
+                        Editable = Rec.JointNatureOfBusiness = Rec.JointNatureOfBusiness::Other;
+
+                    }
+                    // field(PersonalDetOccupation; Rec.PersonalDetOccupation)
+                    // {
+                    //     ApplicationArea = All;
+                    //     Caption = 'Occupation';
+                    //     ShowMandatory = true;
+                    //     Editable = EditStatus;
+                    // }
+                    // field(PersonalDetNatOfBus; Rec.PersonalDetNatOfBus)
+                    // {
+                    //     ApplicationArea = All;
+                    //     Caption = 'Nature of Business';
+                    //     ShowMandatory = true;
+                    //     Editable = EditStatus;
+                    // }
+                    // field(PersonalDetEmployer; Rec.PersonalDetEmployer)
+                    // {
+                    //     ApplicationArea = All;
+                    //     Caption = 'Employer';
+                    //     ShowMandatory = true;
+                    //     Editable = EditStatus;
+                    // }
                 }
                 group("Joint Contact")
                 {
@@ -408,6 +449,14 @@ page 50233 "Funder Card"
                         ExtendedDatatype = PhoneNo;
                         ShowMandatory = true;
                         Editable = EditStatus;
+                    }
+                    field("Joint Phone Number B"; Rec."Phone Number B")
+                    {
+                        ApplicationArea = All;
+                        ExtendedDatatype = PhoneNo;
+                        ShowMandatory = true;
+                        Editable = EditStatus;
+                        Caption = 'Phone Number 2';
                     }
                     field("Joint Postal Address"; Rec."Postal Address")
                     {
@@ -519,27 +568,66 @@ page 50233 "Funder Card"
                         ShowMandatory = true;
                         Editable = EditStatus;
                     }
-                    field(PersonalDetOccupation_Joint2; Rec.PersonalDetOccupation_Joint2)
+                    field(JointNatureOfBusiness_J2; Rec.JointNatureOfBusiness_J2)
                     {
                         ApplicationArea = All;
+                        ShowMandatory = true;
+                        Caption = 'Employment Status';
+                        Editable = EditStatus;
+                    }
+                    field(JointOccupation_J2; Rec.JointOccupation_J2)
+                    {
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
                         Caption = 'Occupation';
-                        ShowMandatory = true;
-                        Editable = EditStatus;
+                        Editable = Rec.JointNatureOfBusiness_J2 = Rec.JointNatureOfBusiness_J2::"Self Employed";
+
                     }
-                    field(PersonalDetNatOfBus_Joint2; Rec.PersonalDetNatOfBus_Joint2)
+                    field(JointEmployer_J2; Rec.JointEmployer_J2)
                     {
                         ApplicationArea = All;
-                        Caption = 'Nature of Business';
-                        ShowMandatory = true;
-                        Editable = EditStatus;
-                    }
-                    field(PersonalDetEmployer_Joint2; Rec.PersonalDetEmployer_Joint2)
-                    {
-                        ApplicationArea = All;
+                        // ShowMandatory = true;
                         Caption = 'Employer';
-                        ShowMandatory = true;
-                        Editable = EditStatus;
+                        Editable = Rec.JointNatureOfBusiness_J2 = Rec.JointNatureOfBusiness_J2::Employed;
+
                     }
+                    field(JointEmployerPosition_J2; Rec.JointEmployerPosition_J2)
+                    {
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
+                        Caption = 'Position';
+                        Editable = Rec.JointNatureOfBusiness_J2 = Rec.JointNatureOfBusiness_J2::Employed;
+
+                    }
+                    field(JointEmployementOther_J2; Rec.JointEmployementOther_J2)
+                    {
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
+                        Caption = 'Other';
+                        Editable = Rec.JointNatureOfBusiness_J2 = Rec.JointNatureOfBusiness_J2::Other;
+
+                    }
+                    // field(PersonalDetOccupation_Joint2; Rec.PersonalDetOccupation_Joint2)
+                    // {
+                    //     ApplicationArea = All;
+                    //     Caption = 'Occupation';
+                    //     ShowMandatory = true;
+                    //     Editable = EditStatus;
+                    // }
+                    // field(PersonalDetNatOfBus_Joint2; Rec.PersonalDetNatOfBus_Joint2)
+                    // {
+                    //     ApplicationArea = All;
+                    //     Caption = 'Nature of Business';
+                    //     ShowMandatory = true;
+                    //     Editable = EditStatus;
+                    // }
+                    // field(PersonalDetEmployer_Joint2; Rec.PersonalDetEmployer_Joint2)
+                    // {
+                    //     ApplicationArea = All;
+                    //     Caption = 'Employer';
+                    //     ShowMandatory = true;
+                    //     Editable = EditStatus;
+                    // }
                 }
                 group("Joint Contact 2")
                 {
@@ -553,6 +641,13 @@ page 50233 "Funder Card"
                     {
                         ApplicationArea = All;
                         ExtendedDatatype = PhoneNo;
+                        ShowMandatory = true;
+                    }
+                    field("Phone Number Joint2 B"; Rec."Phone Number Joint2 B")
+                    {
+                        ApplicationArea = All;
+                        ExtendedDatatype = PhoneNo;
+                        Caption = 'Phone 2';
                         ShowMandatory = true;
                     }
                     field("Joint Postal Address joint2"; Rec."Postal Address Joint2")
@@ -653,26 +748,66 @@ page 50233 "Funder Card"
                         // ShowMandatory = true;
                         Editable = EditStatus;
                     }
-                    field(PersonalDetOccupation_Joint3; Rec.PersonalDetOccupation_Joint3)
+                    // field(PersonalDetOccupation_Joint3; Rec.PersonalDetOccupation_Joint3)
+                    // {
+                    //     ApplicationArea = All;
+                    //     Caption = 'Occupation';
+                    //     // ShowMandatory = true;
+                    //     Editable = EditStatus;
+                    // }
+                    // field(PersonalDetNatOfBus_Joint3; Rec.PersonalDetNatOfBus_Joint3)
+                    // {
+                    //     ApplicationArea = All;
+                    //     Caption = 'Nature of Business';
+                    //     // ShowMandatory = true;
+                    //     Editable = EditStatus;
+                    // }
+                    // field(PersonalDetEmployer_Joint3; Rec.PersonalDetEmployer_Joint3)
+                    // {
+                    //     ApplicationArea = All;
+                    //     Caption = 'Employer';
+                    //     // ShowMandatory = true;
+                    //     Editable = EditStatus;
+                    // }
+
+                    field(JointNatureOfBusiness_J3; Rec.JointNatureOfBusiness_J3)
                     {
                         ApplicationArea = All;
+                        ShowMandatory = true;
+                        Caption = 'Employment Status';
+                        Editable = EditStatus;
+                    }
+                    field(JointOccupation_J3; Rec.JointOccupation_J3)
+                    {
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
                         Caption = 'Occupation';
-                        // ShowMandatory = true;
-                        Editable = EditStatus;
+                        Editable = Rec.JointNatureOfBusiness_J3 = Rec.JointNatureOfBusiness_J3::"Self Employed";
+
                     }
-                    field(PersonalDetNatOfBus_Joint3; Rec.PersonalDetNatOfBus_Joint3)
+                    field(JointEmployer_J3; Rec.JointEmployer_J3)
                     {
                         ApplicationArea = All;
-                        Caption = 'Nature of Business';
                         // ShowMandatory = true;
-                        Editable = EditStatus;
-                    }
-                    field(PersonalDetEmployer_Joint3; Rec.PersonalDetEmployer_Joint3)
-                    {
-                        ApplicationArea = All;
                         Caption = 'Employer';
+                        Editable = Rec.JointNatureOfBusiness_J3 = Rec.JointNatureOfBusiness_J3::Employed;
+
+                    }
+                    field(JointEmployerPosition_J3; Rec.JointEmployerPosition_J3)
+                    {
+                        ApplicationArea = All;
                         // ShowMandatory = true;
-                        Editable = EditStatus;
+                        Caption = 'Position';
+                        Editable = Rec.JointNatureOfBusiness_J3 = Rec.JointNatureOfBusiness_J3::Employed;
+
+                    }
+                    field(JointEmployementOther_J3; Rec.JointEmployementOther_J3)
+                    {
+                        ApplicationArea = All;
+                        // ShowMandatory = true;
+                        Caption = 'Other';
+                        Editable = Rec.JointNatureOfBusiness_J3 = Rec.JointNatureOfBusiness_J3::Other;
+
                     }
                 }
                 group("Joint Contact 3")
@@ -689,6 +824,14 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         ExtendedDatatype = PhoneNo;
                         Caption = 'Phone Number';
+                        // ShowMandatory = true;
+                        Editable = EditStatus;
+                    }
+                    field("Joint Phone Number J3 B"; Rec."Phone Number Joint3 B")
+                    {
+                        ApplicationArea = All;
+                        ExtendedDatatype = PhoneNo;
+                        Caption = 'Phone Number 2';
                         // ShowMandatory = true;
                         Editable = EditStatus;
                     }
@@ -815,6 +958,12 @@ page 50233 "Funder Card"
                         ShowMandatory = true;
                         Editable = EditStatus;
                     }
+                    field(BankContactDetailPhone2; Rec.ContactDetailPhone2)
+                    {
+                        Caption = 'Phone 2';
+                        ApplicationArea = All;
+                        Editable = EditStatus;
+                    }
                 }
                 group("Contact 2")
                 {
@@ -852,6 +1001,12 @@ page 50233 "Funder Card"
                         Caption = 'Phone';
                         ApplicationArea = All;
                         ShowMandatory = true;
+                        Editable = EditStatus;
+                    }
+                    field(BankContactDetailPhone_3; Rec.ContactDetailPhone3)
+                    {
+                        Caption = 'Phone 2';
+                        ApplicationArea = All;
                         Editable = EditStatus;
                     }
                 }
@@ -919,6 +1074,13 @@ page 50233 "Funder Card"
                         field(InstiPhone; Rec.ContactDetailPhone)
                         {
                             Caption = 'Phone';
+                            ApplicationArea = All;
+                            ShowMandatory = true;
+                            Editable = EditStatus;
+                        }
+                        field(InstiPhone2; Rec.ContactDetailPhone3)
+                        {
+                            Caption = 'Phone 2';
                             ApplicationArea = All;
                             ShowMandatory = true;
                             Editable = EditStatus;
@@ -1002,6 +1164,7 @@ page 50233 "Funder Card"
                         ApplicationArea = all;
                         ShowMandatory = true;
                         Editable = EditStatus;
+                        Visible = false;
                         trigger OnValidate()
                         begin
                             CurrPage.Update();
@@ -1012,6 +1175,7 @@ page 50233 "Funder Card"
                     {
                         ApplicationArea = All;
                         Editable = false;
+                        Visible = false;
                     }
 
                     field(CompanyNo; Rec.CompanyNo)

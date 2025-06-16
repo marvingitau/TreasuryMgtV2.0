@@ -211,6 +211,70 @@ table 50230 Funders
                 end;
             end;
         }
+        field(141; "Phone Number B"; Code[100])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Phone Number");
+                    if (noLength < "Region/Country"."Minimum Phone Length") or (noLength > "Region/Country"."Maximum Phone Length") then begin
+                        Error('Phone No. size must be between %1 and %2', "Region/Country"."Minimum Phone Length", "Region/Country"."Maximum Phone Length");
+                    end;
+                end;
+            end;
+        }
+
+        field(142; "Phone Number Joint2 B"; Code[100])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Phone Number");
+                    if (noLength < "Region/Country"."Minimum Phone Length") or (noLength > "Region/Country"."Maximum Phone Length") then begin
+                        Error('Phone No. size must be between %1 and %2', "Region/Country"."Minimum Phone Length", "Region/Country"."Maximum Phone Length");
+                    end;
+                end;
+            end;
+        }
+
+        field(143; "Phone Number Joint3 B"; Code[100])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Phone Number");
+                    if (noLength < "Region/Country"."Minimum Phone Length") or (noLength > "Region/Country"."Maximum Phone Length") then begin
+                        Error('Phone No. size must be between %1 and %2', "Region/Country"."Minimum Phone Length", "Region/Country"."Maximum Phone Length");
+                    end;
+                end;
+            end;
+        }
+
+
         field(150; "Fax Number"; Text[50])
         {
             DataClassification = ToBeClassified;
@@ -345,6 +409,76 @@ table 50230 Funders
             DataClassification = ToBeClassified;
             // TableRelation = BankBranch.BankCode;
         }
+
+
+        field(702; "JointNatureOfBusiness"; Option)
+        {
+            OptionMembers = Employed,"Self Employed",Other;
+            DataClassification = ToBeClassified;
+        }
+        field(703; "JointOccupation"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(704; JointEmployer; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(705; JointEmployerPosition; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(706; JointEmployementOther; Text[1000])
+        {
+            DataClassification = ToBeClassified;
+        }
+
+
+        field(707; "JointNatureOfBusiness_J2"; Option)
+        {
+            OptionMembers = Employed,"Self Employed",Other;
+            DataClassification = ToBeClassified;
+        }
+        field(708; "JointOccupation_J2"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(709; JointEmployer_J2; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(710; JointEmployerPosition_J2; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(711; JointEmployementOther_J2; Text[1000])
+        {
+            DataClassification = ToBeClassified;
+        }
+
+
+        field(712; "JointNatureOfBusiness_J3"; Option)
+        {
+            OptionMembers = Employed,"Self Employed",Other;
+            DataClassification = ToBeClassified;
+        }
+        field(713; "JointOccupation_J3"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(714; JointEmployer_J3; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(715; JointEmployerPosition_J3; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(716; JointEmployementOther_J3; Text[1000])
+        {
+            DataClassification = ToBeClassified;
+        }
+
 
         //Joint 2 and 3
         field(1000; PersonalDetIDPassport_Joint2; Text[250])
@@ -720,6 +854,28 @@ table 50230 Funders
                 //     Error('Invalid Phone Character(s)');
             end;
         }
+        field(2514; ContactDetailPhone3; Text[250])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen(ContactDetailPhone3);
+                    if (noLength < "Region/Country"."Minimum Phone Length") or (noLength > "Region/Country"."Maximum Phone Length") then begin
+                        Error('Phone No. size must be between %1 and %2', "Region/Country"."Minimum Phone Length", "Region/Country"."Maximum Phone Length");
+                    end;
+                end;
+                // if not TrsyMgtCU.ValidateNumeric(ContactDetailPhone) then
+                //     Error('Invalid Phone Character(s)');
+            end;
+        }
 
         field(2508; "Contact Detail Passport"; Text[250])
         {
@@ -988,6 +1144,16 @@ table 50230 Funders
             Rec."Phone Number" := "Region/Country"."Phone Code";
             Rec.ContactDetailPhone := "Region/Country"."Phone Code";
             Rec.ContactDetailPhone2 := "Region/Country"."Phone Code";
+            Rec.ContactDetailPhone_2 := "Region/Country"."Phone Code";
+            Rec.ContactDetailPhone_Joint3 := "Region/Country"."Phone Code";
+            Rec.ContactDetailPhone_Joint2 := "Region/Country"."Phone Code";
+            Rec.ContactDetailPhone3 := "Region/Country"."Phone Code";
+            Rec."Phone Number B" := "Region/Country"."Phone Code";
+            Rec."Phone Number Joint2" := "Region/Country"."Phone Code";
+            Rec."Phone Number Joint2 B" := "Region/Country"."Phone Code";
+            Rec."Phone Number Joint3" := "Region/Country"."Phone Code";
+            Rec."Phone Number Joint3 B" := "Region/Country"."Phone Code";
+
         end;
 
         DimensionValue.Reset();

@@ -44,6 +44,7 @@ page 50305 "RelatedParty Loans List"
                 field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
                 {
                     ApplicationArea = All;
+                    Caption = 'Original / First disbursement Amount';
                 }
                 field(Category; Rec.Category)
                 {

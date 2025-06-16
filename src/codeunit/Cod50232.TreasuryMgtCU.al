@@ -1803,6 +1803,85 @@ codeunit 50232 "Treasury Mgt CU"
         exit(YearEndDate - TodayDate);
     end;
 
+    /// <summary>
+    /// Returns the end-of-month date for the specified date.
+    /// </summary>
+    /// <param name="InputDate">The date to evaluate</param>
+    /// <returns>The last day of the month for the input date</returns>
+    procedure GetEndOfMonthDate(InputDate: Date): Date
+    begin
+        if InputDate = 0D then
+            exit(0D);
+
+        exit(CalcDate('<CM>', InputDate));
+    end;
+
+    /// <summary>
+    /// Returns the quarter closing date (last day of quarter) for the specified date.
+    /// </summary>
+    /// <param name="InputDate">The date to evaluate</param>
+    /// <returns>The last day of the quarter for the input date</returns>
+    procedure GetQuarterClosingDate(InputDate: Date): Date
+    var
+        Month: Integer;
+        Year: Integer;
+    begin
+        if InputDate = 0D then
+            exit(0D);
+
+        Month := DATE2DMY(InputDate, 2);
+        Year := DATE2DMY(InputDate, 3);
+
+        case Month of
+            1 .. 3:
+                exit(DMY2Date(31, 3, Year));  // Q1: March 31
+            4 .. 6:
+                exit(DMY2Date(30, 6, Year));  // Q2: June 30
+            7 .. 9:
+                exit(DMY2Date(30, 9, Year));  // Q3: September 30
+            10 .. 12:
+                exit(DMY2Date(31, 12, Year)); // Q4: December 31
+        end;
+    end;
+
+    /// <summary>
+    /// Returns the biannual closing date (June 30 or December 31) for the specified date.
+    /// </summary>
+    /// <param name="InputDate">The date to evaluate</param>
+    /// <returns>The closing date of the current biannual period</returns>
+    procedure GetBiannualClosingDate(InputDate: Date): Date
+    var
+        Month: Integer;
+        Year: Integer;
+    begin
+        if InputDate = 0D then
+            exit(0D);
+
+        Month := DATE2DMY(InputDate, 2);
+        Year := DATE2DMY(InputDate, 3);
+
+        if Month <= 6 then
+            exit(DMY2Date(30, 6, Year))  // First half-year: June 30
+        else
+            exit(DMY2Date(31, 12, Year)); // Second half-year: December 31
+    end;
+
+    /// <summary>
+    /// Returns the year-end closing date (December 31) for the specified date.
+    /// </summary>
+    /// <param name="InputDate">The date to evaluate</param>
+    /// <returns>December 31 of the input date's year</returns>
+    procedure GetYearEndClosingDate(InputDate: Date): Date
+    var
+        Year: Integer;
+    begin
+        if InputDate = 0D then
+            exit(0D);
+
+        Year := DATE2DMY(InputDate, 3);
+        exit(DMY2Date(31, 12, Year));
+    end;
+
     // Check if any interest for this loan has been computed for this month.
     procedure CheckIfAnyInterestWasCalculatedForThisMonth(RedemptionDate: Date; LoanNo: Code[20]; PayingBankCode: Code[50])
     var

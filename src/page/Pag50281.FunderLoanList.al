@@ -33,6 +33,10 @@ page 50281 "Funder Loan List"
                     ApplicationArea = All;
                     Caption = 'Funder Name';
                 }
+                field(Category; Rec.Category)
+                {
+                    ApplicationArea = All;
+                }
                 field(Currency; Rec.Currency)
                 {
                     ApplicationArea = All;
@@ -40,6 +44,7 @@ page 50281 "Funder Loan List"
                 field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
                 {
                     ApplicationArea = All;
+                    Caption = 'Original / First disbursement Amount';
                 }
                 field(InterestRate; Rec.InterestRate)
                 {
