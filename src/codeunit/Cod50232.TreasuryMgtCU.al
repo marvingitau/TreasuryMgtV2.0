@@ -188,8 +188,8 @@ codeunit 50232 "Treasury Mgt CU"
                             JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account";
                             JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
                         end;
-
-                        GLPost.RunWithCheck(JournalEntry);
+                        if TrsyJnl."Enable GL Posting" = true then
+                            GLPost.RunWithCheck(JournalEntry);
                         //*****************************
                         //Funder Ledger Entries
                         //*****************************
@@ -369,7 +369,8 @@ codeunit 50232 "Treasury Mgt CU"
                                 if funderLoan.Currency <> '' then
                                     JournalEntry."Currency Code" := funderLoan.Currency;
                                 // JournalEntry.Insert();
-                                GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
+                                if TrsyJnl."Enable GL Posting" = true then
+                                    GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
 
                                 // end;
                             end;
@@ -402,7 +403,8 @@ codeunit 50232 "Treasury Mgt CU"
                             if TrsyJnl."Currency Code" <> '' then
                                 JournalEntry."Currency Code" := TrsyJnl."Currency Code";
                             // JournalEntry.Insert();
-                            GLPost.RunWithCheck(JournalEntry); // Post Cr Transaction
+                            if TrsyJnl."Enable GL Posting" = true then
+                                GLPost.RunWithCheck(JournalEntry); // Post Cr Transaction
 
                             //********************************
                             //       Funder ledget entries
@@ -714,7 +716,8 @@ codeunit 50232 "Treasury Mgt CU"
                 // JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
                 if TrsyJnl."Currency Code" <> '' then
                     JournalEntry."Currency Code" := TrsyJnl."Currency Code";
-                GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
+                if TrsyJnl."Enable GL Posting" = true then
+                    GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
 
 
 
@@ -968,7 +971,8 @@ codeunit 50232 "Treasury Mgt CU"
                 // JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
                 if TrsyJnl."Currency Code" <> '' then
                     JournalEntry."Currency Code" := TrsyJnl."Currency Code";
-                GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
+                if TrsyJnl."Enable GL Posting" = true then
+                    GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
 
 
 
@@ -1208,7 +1212,8 @@ codeunit 50232 "Treasury Mgt CU"
                 // JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
                 if TrsyJnl."Currency Code" <> '' then
                     JournalEntry."Currency Code" := TrsyJnl."Currency Code";
-                GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
+                if TrsyJnl."Enable GL Posting" = true then
+                    GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
 
 
 
@@ -1510,7 +1515,8 @@ codeunit 50232 "Treasury Mgt CU"
                 // JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
                 if TrsyJnl."Currency Code" <> '' then
                     JournalEntry."Currency Code" := TrsyJnl."Currency Code";
-                GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
+                if TrsyJnl."Enable GL Posting" = true then
+                    GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
 
 
 
@@ -1660,6 +1666,28 @@ codeunit 50232 "Treasury Mgt CU"
 
         if not IsValid then
             Error('Date %1 must be a quarter end date (March 31, June 30, September 30, or December 31)', DateToCheck);
+    end;
+
+    /// <summary>
+    /// Checks if the specified date is the last day of its month.
+    /// </summary>
+    /// <param name="DateToCheck">The date to validate</param>
+    /// <returns>True if the date is the last day of its month, false otherwise</returns>
+    procedure IsEndOfMonth(DateToCheck: Date): Boolean
+    var
+        NextDay: Date;
+        Day: Integer;
+        Month: Integer;
+        Year: Integer;
+    begin
+        if DateToCheck = 0D then
+            exit(false);
+
+        // Calculate the next day
+        NextDay := CalcDate('<1D>', DateToCheck);
+
+        // If the next day is in a different month, then this is end of month
+        exit(Date2DMY(DateToCheck, 2) <> Date2DMY(NextDay, 2));
     end;
 
     procedure IsTodayEndOfMonth(): Boolean
@@ -1844,6 +1872,51 @@ codeunit 50232 "Treasury Mgt CU"
         end;
     end;
 
+    // procedure IsEndOfQuarter(DateToCheck: Date): Boolean
+    // var
+    //     QuarterEndDate: Date;
+    //     Year: Integer;
+    // begin
+    //     if DateToCheck = 0D then
+    //         exit(false);
+
+    //     Year := Date2DMY(DateToCheck, 3);
+
+    //     // Check against all possible quarter end dates for the year
+    //     if DateToCheck = DMY2Date(31, 3, Year) then exit(true);
+    //     if DateToCheck = DMY2Date(30, 6, Year) then exit(true);
+    //     if DateToCheck = DMY2Date(30, 9, Year) then exit(true);
+    //     if DateToCheck = DMY2Date(31, 12, Year) then exit(true);
+
+    //     exit(false);
+    // end;
+
+    /// <summary>
+    /// Checks if the specified date is a quarter end date (March 31, June 30, September 30, or December 31).
+    /// </summary>
+    /// <param name="DateToCheck">The date to validate</param>
+    /// <returns>True if the date is a quarter end date, false otherwise</returns>
+    procedure IsEndOfQuarter(DateToCheck: Date): Boolean
+    var
+        Day: Integer;
+        Month: Integer;
+    begin
+        if DateToCheck = 0D then
+            exit(false);
+
+        Day := Date2DMY(DateToCheck, 1);
+        Month := Date2DMY(DateToCheck, 2);
+
+        // Check for standard quarter-end dates
+        exit(
+            ((Month = 3) and (Day = 31)) or  // Q1 (March 31)
+            ((Month = 6) and (Day = 30)) or  // Q2 (June 30)
+            ((Month = 9) and (Day = 30)) or  // Q3 (September 30)
+            ((Month = 12) and (Day = 31))    // Q4 (December 31)
+        );
+    end;
+
+
     /// <summary>
     /// Returns the biannual closing date (June 30 or December 31) for the specified date.
     /// </summary>
@@ -1867,6 +1940,29 @@ codeunit 50232 "Treasury Mgt CU"
     end;
 
     /// <summary>
+    /// Checks if the specified date is a biannual end date (June 30 or December 31).
+    /// </summary>
+    /// <param name="DateToCheck">The date to validate</param>
+    /// <returns>True if the date is a biannual end date, false otherwise</returns>
+    procedure IsEndOfBiannual(DateToCheck: Date): Boolean
+    var
+        Day: Integer;
+        Month: Integer;
+    begin
+        if DateToCheck = 0D then
+            exit(false);
+
+        Day := Date2DMY(DateToCheck, 1);
+        Month := Date2DMY(DateToCheck, 2);
+
+        // Check for standard biannual-end dates
+        exit(
+            ((Month = 6) and (Day = 30)) or   // First half (June 30)
+            ((Month = 12) and (Day = 31))      // Second half (December 31)
+        );
+    end;
+
+    /// <summary>
     /// Returns the year-end closing date (December 31) for the specified date.
     /// </summary>
     /// <param name="InputDate">The date to evaluate</param>
@@ -1882,8 +1978,22 @@ codeunit 50232 "Treasury Mgt CU"
         exit(DMY2Date(31, 12, Year));
     end;
 
+    /// <summary>
+    /// Checks if the specified date is the end of year (December 31).
+    /// </summary>
+    /// <param name="DateToCheck">The date to validate</param>
+    /// <returns>True if the date is December 31, false otherwise</returns>
+    procedure IsEndOfYear(DateToCheck: Date): Boolean
+    begin
+        if DateToCheck = 0D then
+            exit(false);
+
+        exit((Date2DMY(DateToCheck, 1) = 31) and  // Day = 31
+             (Date2DMY(DateToCheck, 2) = 12));    // Month = December
+    end;
+
     // Check if any interest for this loan has been computed for this month.
-    procedure CheckIfAnyInterestWasCalculatedForThisMonth(RedemptionDate: Date; LoanNo: Code[20]; PayingBankCode: Code[50])
+    procedure CheckIfAnyInterestWasCalculatedForThisMonth(RedemptionDate: Date; LoanNo: Code[20]; PayingBankCode: Code[50]; ReferenceNo: Code[1000])
     var
         funderLegderEntry: Record FunderLedgerEntry;
         funderLegderEntry_1: Record FunderLedgerEntry;
@@ -1899,12 +2009,20 @@ codeunit 50232 "Treasury Mgt CU"
 
         TotalInterestAmount: Decimal;
         TotalInterestAmountLCY: Decimal;
+
+        TotalWithholdingAmountLCY: Decimal;
+        TotalWithholdingAmount: Decimal;
+        LoopCounter: Integer;
+        WithholdingAc: Code[20];
     begin
         monthNo := Date2DMY(RedemptionDate, 2);
         yearNo := Date2DMY(RedemptionDate, 3);
         startMonth := CalcDate('<-CM>', RedemptionDate);
         endMonth := CalcDate('<+CM>', RedemptionDate);
 
+        GenSetup.Get();
+        WithholdingAc := GenSetup.FunderWithholdingAcc;
+        LoopCounter := 10;
         funderLegderEntry.Reset();
         if funderLegderEntry.FindLast() then
             NextEntryNo := funderLegderEntry."Entry No." + 1;
@@ -1914,7 +2032,7 @@ codeunit 50232 "Treasury Mgt CU"
         funderLegderEntry_1.SetRange("Document Type", funderLegderEntry."Document Type"::Interest);
         funderLegderEntry_1.SetRange("Posting Date", startMonth, endMonth);
         if funderLegderEntry_1.Find('-') then begin
-
+            // repeat
             funder.Reset();
             funder.SetRange("No.", funderLegderEntry_1."Funder No.");
             if not funder.Find('-') then
@@ -1924,6 +2042,8 @@ codeunit 50232 "Treasury Mgt CU"
             funderLoan3.SetRange("No.", funderLegderEntry_1."Loan No.");
             if not funderLoan3.Find('-') then
                 Error('Funder Loan %1 Not Found', funderLegderEntry_1."Loan No.");
+
+
 
             funderLegderEntry.Init();
             funderLegderEntry."Entry No." := NextEntryNo;
@@ -1938,38 +2058,45 @@ codeunit 50232 "Treasury Mgt CU"
             funderLegderEntry.Description := 'Interest Reversal calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
             funderLegderEntry.Amount := -funderLegderEntry_1.Amount;
             funderLegderEntry."Amount(LCY)" := -funderLegderEntry_1."Amount(LCY)";
-            funderLegderEntry."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
+            // funderLegderEntry."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
+            funderLegderEntry."Interest Payable Amount" := -funderLegderEntry_1."Interest Payable Amount";
+            funderLegderEntry."Interest Payable Amount (LCY)" := -funderLegderEntry_1."Interest Payable Amount (LCY)";
+            funderLegderEntry."Witholding Amount" := (-funderLegderEntry_1."Witholding Amount");
+            funderLegderEntry."Witholding Amount (LCY)" := (-funderLegderEntry_1."Witholding Amount (LCY)");
+
+            funderLegderEntry."Account No." := funderLoan3."Interest Expense";
+            funderLegderEntry."Account Type" := funderLegderEntry."Account Type"::"G/L Account";
+            funderLegderEntry."Bal. Account No." := funderLoan3."Interest Payable";
+            funderLegderEntry."Bal. Account Type" := funderLegderEntry."Bal. Account Type"::"G/L Account";
+            funderLegderEntry."Bal. Account No. 2" := WithholdingAc; // Wth
+            funderLegderEntry."Bal. Account Type 2" := funderLegderEntry."Bal. Account Type"::"G/L Account"; //Wth
             funderLegderEntry.Insert();
+
             if (funderLoan3.EnableGLPosting = true) and (funderLegderEntry_1.Amount <> 0) then
-                FunderMGTCU.DirectGLPosting('reverse-interest', funderLoan3."Interest Payable", funderLegderEntry_1.Amount, 'Interest', funderLoan3."No.", PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//reverse Interest (Db Paying Bank)
+                FunderMGTCU.DirectGLPosting('reverse-interest', funderLegderEntry_1."Account No.", WithholdingAc, funderLegderEntry_1.Amount, funderLegderEntry_1."Witholding Amount", 'Reversing Interest', funderLoan3."No.", funderLegderEntry_1."Bal. Account No.", funderLegderEntry_1."Currency Code", '', '', ReferenceNo, funder."Shortcut Dimension 1 Code");
 
             //Create a Correction One.
             FunderMGTCU.CalculateInterest(LoanNo, RedemptionDate, PayingBankCode);
+            // LoopCounter += 1;
+            // until funderLegderEntry_1.Next() = 0;
         end else begin
             //Create a new One.
             FunderMGTCU.CalculateInterest(LoanNo, RedemptionDate, PayingBankCode);
         end;
-        // recondsCount := funderLegderEntry_1.Count();
+
         // Clear All our Interests
         TotalInterestAmount := 0;
         TotalInterestAmountLCY := 0;
         funderLegderEntry.Reset();
         funderLegderEntry.SetRange("Loan No.", LoanNo);
         funderLegderEntry.SetFilter("Document Type", '=%1|=%2|=%3|=%4', funderLegderEntry."Document Type"::Interest, funderLegderEntry."Document Type"::"Interest Paid", funderLegderEntry."Document Type"::"Capitalized Interest", funderLegderEntry."Document Type"::"Reversed Interest");
-        // funderLegderEntry.SetRange("Document Type", funderLegderEntry."Document Type"::Interest);
-        // funderLegderEntry.SetRange("Document Type", funderLegderEntry."Document Type"::"Interest Paid");
-        // funderLegderEntry.SetRange("Document Type", funderLegderEntry."Document Type"::"Capitalized Interest");
-        // funderLegderEntry.SetRange("Document Type", funderLegderEntry."Document Type"::"Reversed Interest");
+
         if funderLegderEntry.Find('-') then begin
             repeat
                 TotalInterestAmount := TotalInterestAmount + funderLegderEntry.Amount;
                 TotalInterestAmountLCY := TotalInterestAmountLCY + funderLegderEntry."Amount(LCY)";
             until funderLegderEntry.Next() = 0;
         end;
-        // funderLegderEntry.CalcSums(Amount);
-        // TotalInterestAmount := funderLegderEntry.Amount;
-        // funderLegderEntry.CalcSums("Amount(LCY)");
-        // TotalInterestAmountLCY := funderLegderEntry."Amount(LCY)";
 
         funderLoan3.Reset();
         funderLoan3.SetRange("No.", LoanNo);
@@ -1981,8 +2108,12 @@ codeunit 50232 "Treasury Mgt CU"
         if not funder.Find('-') then
             Error('Funder %1 Not Found', funderLoan3."Funder No.");
 
+        funderLegderEntry_2.Reset();
+        if funderLegderEntry_2.FindLast() then
+            NextEntryNo := funderLegderEntry_2."Entry No." + 1;
+
         funderLegderEntry_2.Init();
-        funderLegderEntry_2."Entry No." := NextEntryNo + 6;
+        funderLegderEntry_2."Entry No." := NextEntryNo + 2;
         funderLegderEntry_2."Funder No." := funder."No.";
         funderLegderEntry_2."Funder Name" := funder.Name;
         funderLegderEntry_2."Loan Name" := funderLoan3."Loan Name";
@@ -1994,15 +2125,61 @@ codeunit 50232 "Treasury Mgt CU"
         funderLegderEntry_2.Description := 'Interest Redemption Payment calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
         funderLegderEntry_2.Amount := -(TotalInterestAmount);
         funderLegderEntry_2."Amount(LCY)" := -(TotalInterestAmountLCY);
-        // funderLegderEntry_2."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
         funderLegderEntry_2.Insert();
         if (funderLoan3.EnableGLPosting = true) and (TotalInterestAmount <> 0) then
-            FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", TotalInterestAmount, 'Interest', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
+            FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", WithholdingAc, TotalInterestAmount, 0, 'Interest', LoanNo, PayingBankCode, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
+
+        //Clear All Wthholding Tax
+
+        TotalWithholdingAmount := 0;
+        TotalWithholdingAmountLCY := 0;
+        funderLegderEntry.Reset();
+        funderLegderEntry.SetRange("Loan No.", LoanNo);
+        funderLegderEntry.SetFilter("Document Type", '=%1', funderLegderEntry."Document Type"::Withholding);
+
+        if funderLegderEntry.Find('-') then begin
+            repeat
+                TotalWithholdingAmount := TotalWithholdingAmount + funderLegderEntry.Amount;
+                TotalWithholdingAmountLCY := TotalWithholdingAmountLCY + funderLegderEntry."Amount(LCY)";
+            until funderLegderEntry.Next() = 0;
+        end;
+
+        funderLoan3.Reset();
+        funderLoan3.SetRange("No.", LoanNo);
+        if not funderLoan3.Find('-') then
+            Error('Funder Loan %1 Not Found', LoanNo);
+
+        funder.Reset();
+        funder.SetRange("No.", funderLoan3."Funder No.");
+        if not funder.Find('-') then
+            Error('Funder %1 Not Found', funderLoan3."Funder No.");
+
+        funderLegderEntry_2.Reset();
+        if funderLegderEntry_2.FindLast() then
+            NextEntryNo := funderLegderEntry_2."Entry No." + 1;
+
+        funderLegderEntry_2.Init();
+        funderLegderEntry_2."Entry No." := NextEntryNo + 3;
+        funderLegderEntry_2."Funder No." := funder."No.";
+        funderLegderEntry_2."Funder Name" := funder.Name;
+        funderLegderEntry_2."Loan Name" := funderLoan3."Loan Name";
+        funderLegderEntry_2."Loan No." := funderLoan3."No.";
+        funderLegderEntry_2."Posting Date" := RedemptionDate;
+        funderLegderEntry_2."Document No." := funderLegderEntry_1."Document No.";
+        funderLegderEntry_2.Category := funderLoan3.Category; // Funder Loan Category
+        funderLegderEntry_2."Document Type" := funderLegderEntry_2."Document Type"::Withholding;
+        funderLegderEntry_2.Description := 'Withholding Clearance under Redemption  calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
+        funderLegderEntry_2.Amount := Abs(TotalWithholdingAmount);
+        funderLegderEntry_2."Amount(LCY)" := Abs(TotalWithholdingAmountLCY);
+        funderLegderEntry_2.Insert();
+        // if (funderLoan3.EnableGLPosting = true) and (Abs(TotalWithholdingAmount) <> 0) then
+        // FunderMGTCU.DirectGLPosting('withholding', funderLoan3."Interest Payable", WithholdingAc, Abs(TotalWithholdingAmount), 0, 'Withholding Clearance Under Redemption Op.', LoanNo, WithholdingAc, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
+
 
 
     end;
 
-    procedure PartialRedemptionPostings(RedemptionDate: Date; LoanNo: Code[20]; PayingBankCode: Code[50]; FloatingPrinci: Decimal; FloatingInter: Decimal; PartialAmount: Decimal)
+    procedure PartialRedemptionPostings(RedemptionDate: Date; LoanNo: Code[20]; PayingBankCode: Code[50]; FloatingPrinci: Decimal; FloatingInter: Decimal; FloatIntrPlusFloatPrinci: Decimal; LogLineNo: Integer)
     var
         funderLegderEntry: Record FunderLedgerEntry;
         funderLegderEntry_1: Record FunderLedgerEntry;
@@ -2020,20 +2197,62 @@ codeunit 50232 "Treasury Mgt CU"
         TotalInterestAmount: Decimal;
         TotalInterestAmountLCY: Decimal;
         RedemptionLogs: Record "Redemption Log Tbl";
+        WithholdingAc: Code[20];
     begin
         monthNo := Date2DMY(RedemptionDate, 2);
         yearNo := Date2DMY(RedemptionDate, 3);
         startMonth := CalcDate('<-CM>', RedemptionDate);
         endMonth := CalcDate('<+CM>', RedemptionDate);
 
+        GenSetup.Get();
+        WithholdingAc := GenSetup.FunderWithholdingAcc;
+
         RedemptionLogs.Reset();
-        RedemptionLogs.SetRange("Loan No.", LoanNo);
+        RedemptionLogs.SetRange(RedemptionLogs."Loan No.", LoanNo);
+        RedemptionLogs.SetRange(RedemptionLogs.Line, LogLineNo);
         if not RedemptionLogs.Find('-') then
             Error('Redemption Loan No. %1 not found', LoanNo);
 
         funderLegderEntry.Reset();
         if funderLegderEntry.FindLast() then
             NextEntryNo := funderLegderEntry."Entry No." + 1;
+
+        //Clear Already Populate Witholding Tax
+        funderLegderEntry_1.Reset();
+        funderLegderEntry_1.SetRange("Loan No.", LoanNo);
+        funderLegderEntry_1.SetRange("Document Type", funderLegderEntry."Document Type"::Withholding);
+        funderLegderEntry_1.SetRange("Posting Date", startMonth, endMonth);
+        if funderLegderEntry_1.Find('-') then begin
+
+            funder.Reset();
+            funder.SetRange("No.", funderLegderEntry_1."Funder No.");
+            if not funder.Find('-') then
+                Error('Funder %1 Not Found', funderLegderEntry_1."Funder No.");
+
+            funderLoan3.Reset();
+            funderLoan3.SetRange("No.", funderLegderEntry_1."Loan No.");
+            if not funderLoan3.Find('-') then
+                Error('Funder Loan %1 Not Found', funderLegderEntry_1."Loan No.");
+
+            funderLegderEntry_2.Init();
+            funderLegderEntry_2."Entry No." := NextEntryNo + 3;
+            funderLegderEntry_2."Funder No." := funder."No.";
+            funderLegderEntry_2."Funder Name" := funder.Name;
+            funderLegderEntry_2."Loan Name" := funderLoan3."Loan Name";
+            funderLegderEntry_2."Loan No." := funderLoan3."No.";
+            funderLegderEntry_2."Posting Date" := RedemptionDate;
+            funderLegderEntry_2."Document No." := funderLegderEntry_1."Document No.";
+            funderLegderEntry_2.Category := funderLoan3.Category; // Funder Loan Category
+            funderLegderEntry_2."Document Type" := funderLegderEntry_2."Document Type"::Withholding;
+            funderLegderEntry_2.Description := 'Withholding Clearance under Redemption  calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
+            funderLegderEntry_2.Amount := Abs(funderLegderEntry_1.Amount);
+            funderLegderEntry_2."Amount(LCY)" := Abs(funderLegderEntry_1."Amount(LCY)");
+            funderLegderEntry_2.Insert();
+
+            // if (funderLoan3.EnableGLPosting = true) and (Abs(funderLegderEntry_1.Amount) <> 0) then
+            //     FunderMGTCU.DirectGLPosting('withholding', funderLoan3."Interest Payable", WithholdingAc, Abs(funderLegderEntry_1.Amount), 0, 'Withholding Clearance Under Redemption Op.', LoanNo, WithholdingAc, '', '', '', funderLoan3."Bank Ref. No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
+
+        end;
 
         funderLegderEntry_1.Reset();
         funderLegderEntry_1.SetRange("Loan No.", LoanNo);
@@ -2062,12 +2281,24 @@ codeunit 50232 "Treasury Mgt CU"
             funderLegderEntry.Category := funderLegderEntry_1.Category; // Funder Loan Category
             funderLegderEntry."Document Type" := funderLegderEntry_1."Document Type"::"Reversed Interest";
             funderLegderEntry.Description := RedemptionLogs."Reference No." + ' ' + 'Interest Reversal calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
+
             funderLegderEntry.Amount := -funderLegderEntry_1.Amount;
             funderLegderEntry."Amount(LCY)" := -funderLegderEntry_1."Amount(LCY)";
-            funderLegderEntry."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
+            funderLegderEntry."Interest Payable Amount" := -funderLegderEntry_1."Interest Payable Amount";
+            funderLegderEntry."Interest Payable Amount (LCY)" := -funderLegderEntry_1."Interest Payable Amount (LCY)";
+            funderLegderEntry."Witholding Amount" := -funderLegderEntry_1."Witholding Amount";
+            funderLegderEntry."Witholding Amount (LCY)" := -funderLegderEntry_1."Witholding Amount (LCY)";
+
+            funderLegderEntry."Account No." := funderLegderEntry_1."Account No."; // Intr Exp
+            funderLegderEntry."Account Type" := funderLegderEntry_1."Account Type"::"G/L Account";
+            funderLegderEntry."Bal. Account No." := funderLegderEntry_1."Bal. Account No."; // Intr Pay
+            funderLegderEntry."Bal. Account Type" := funderLegderEntry_1."Bal. Account Type"::"G/L Account";
+            funderLegderEntry."Bal. Account No. 2" := funderLegderEntry_1."Bal. Account No. 2"; // Wth
+            funderLegderEntry."Bal. Account Type 2" := funderLegderEntry_1."Bal. Account Type 2"::"G/L Account"; //Wth
+
             funderLegderEntry.Insert();
             if (funderLoan3.EnableGLPosting = true) and (funderLegderEntry_1.Amount <> 0) then
-                FunderMGTCU.DirectGLPosting('reverse-interest', funderLoan3."Interest Payable", funderLegderEntry_1.Amount, 'Interest', funderLoan3."No.", PayingBankCode, '', '', '', RedemptionLogs."Reference No.", funder."Shortcut Dimension 1 Code");//reverse Interest (Db Paying Bank)
+                FunderMGTCU.DirectGLPosting('reverse-interest', funderLegderEntry_1."Account No.", WithholdingAc, funderLegderEntry_1.Amount, funderLegderEntry_1."Witholding Amount", 'Reversing Interest', funderLoan3."No.", funderLegderEntry_1."Bal. Account No.", funderLegderEntry_1."Currency Code", '', '', RedemptionLogs."Reference No.", funder."Shortcut Dimension 1 Code");//reverse Interest (Db Paying Bank)
 
             //Create a Correction One.
             FunderMGTCU.CalculateInterestForPartial(LoanNo, RedemptionDate, PayingBankCode);
@@ -2075,65 +2306,9 @@ codeunit 50232 "Treasury Mgt CU"
             //Create a new One.
             FunderMGTCU.CalculateInterestForPartial(LoanNo, RedemptionDate, PayingBankCode);
         end;
-        // recondsCount := funderLegderEntry_1.Count();
-        // Clear All our Interests
-        TotalInterestAmount := 0;
-        TotalInterestAmountLCY := 0;
-        funderLegderEntry.Reset();
-        funderLegderEntry.SetRange("Loan No.", LoanNo);
-        funderLegderEntry.SetFilter("Document Type", '=%1|=%2|=%3|=%4', funderLegderEntry."Document Type"::Interest, funderLegderEntry."Document Type"::"Interest Paid", funderLegderEntry."Document Type"::"Capitalized Interest", funderLegderEntry."Document Type"::"Reversed Interest");
 
-        if funderLegderEntry.Find('-') then begin
-            repeat
-                TotalInterestAmount := TotalInterestAmount + funderLegderEntry.Amount;
-                TotalInterestAmountLCY := TotalInterestAmountLCY + funderLegderEntry."Amount(LCY)";
-            until funderLegderEntry.Next() = 0;
-        end;
-        // funderLegderEntry.CalcSums(Amount);
-        // TotalInterestAmount := funderLegderEntry.Amount;
-        // funderLegderEntry.CalcSums("Amount(LCY)");
-        // TotalInterestAmountLCY := funderLegderEntry."Amount(LCY)";
-        if FloatingInter - PartialAmount > 0 then begin
-            funderLoan3.Reset();
-            funderLoan3.SetRange("No.", LoanNo);
-            if not funderLoan3.Find('-') then
-                Error('Funder Loan %1 Not Found', LoanNo);
 
-            funder.Reset();
-            funder.SetRange("No.", funderLoan3."Funder No.");
-            if not funder.Find('-') then
-                Error('Funder %1 Not Found', funderLoan3."Funder No.");
-
-            funderLegderEntry_2.Init();
-            funderLegderEntry_2."Entry No." := NextEntryNo + 6;
-            funderLegderEntry_2."Funder No." := funder."No.";
-            funderLegderEntry_2."Funder Name" := funder.Name;
-            funderLegderEntry_2."Loan Name" := funderLoan3."Loan Name";
-            funderLegderEntry_2."Loan No." := funderLoan3."No.";
-            funderLegderEntry_2."Posting Date" := RedemptionDate;
-            funderLegderEntry_2."Document No." := funderLegderEntry_1."Document No.";
-            funderLegderEntry_2.Category := funderLoan3.Category; // Funder Loan Category
-            funderLegderEntry_2."Document Type" := funderLegderEntry_2."Document Type"::"Interest Paid";
-            funderLegderEntry_2.Description := RedemptionLogs."Reference No." + ' ' + 'Interest Redemption Payment calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
-            funderLegderEntry_2.Amount := -(PartialAmount);
-            funderLegderEntry_2."Amount(LCY)" := -(PartialAmount);
-            // funderLegderEntry_2."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
-            funderLegderEntry_2.Insert();
-            if (funderLoan3.EnableGLPosting = true) and (PartialAmount <> 0) then
-                FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", PartialAmount, 'Interest', LoanNo, PayingBankCode, '', '', '', RedemptionLogs."Reference No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
-
-            RedemptionLogs.Reset();
-            RedemptionLogs.SetRange("Loan No.", LoanNo);
-            RedemptionLogs.SetRange(RedemptionLogs.RedemptionType, RedemptionLogs.RedemptionType::"Partial Redemption");
-            if RedemptionLogs.Find('-') then begin
-                RedemptionLogs.IntrAmountRemoved := PartialAmount;
-                RedemptionLogs.PrincAmountRemoved := 0;
-                RedemptionLogs.RemainingAmount := (RedemptionLogs.FloatingPrinc + RedemptionLogs.FloatingIntr) - PartialAmount;
-                RedemptionLogs.Modify();
-            end;
-
-        end;
-        if FloatingInter - PartialAmount < 0 then begin
+        if FloatingInter > 0 then begin
             funderLoan3.Reset();
             funderLoan3.SetRange("No.", LoanNo);
             if not funderLoan3.Find('-') then
@@ -2160,7 +2335,30 @@ codeunit 50232 "Treasury Mgt CU"
             // funderLegderEntry_2."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
             funderLegderEntry_2.Insert();
             if (funderLoan3.EnableGLPosting = true) and (FloatingInter <> 0) then
-                FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", FloatingInter, 'Interest', LoanNo, PayingBankCode, '', '', '', RedemptionLogs."Reference No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
+                FunderMGTCU.DirectGLPosting('interest-payment', funderLoan3."Interest Payable", WithholdingAc, FloatingInter, 0, 'Interest', LoanNo, PayingBankCode, '', '', '', RedemptionLogs."Reference No.", funder."Shortcut Dimension 1 Code");//Clear All the Interest (Db Paying Bank)
+
+            RedemptionLogs.Reset();
+            RedemptionLogs.SetRange("Loan No.", LoanNo);
+            RedemptionLogs.SetRange(Line, LogLineNo);
+            RedemptionLogs.SetRange(RedemptionLogs.RedemptionType, RedemptionLogs.RedemptionType::"Partial Redemption");
+            if RedemptionLogs.Find('-') then begin
+                RedemptionLogs.IntrAmountRemoved := FloatingInter;
+                RedemptionLogs.PrincAmountRemoved := FloatingPrinci;
+                RedemptionLogs.RemainingAmount := FloatIntrPlusFloatPrinci;
+                RedemptionLogs.Modify();
+            end;
+        end;
+
+        if FloatingPrinci > 0 then begin
+            funderLoan3.Reset();
+            funderLoan3.SetRange("No.", LoanNo);
+            if not funderLoan3.Find('-') then
+                Error('Funder Loan %1 Not Found', LoanNo);
+
+            funder.Reset();
+            funder.SetRange("No.", funderLoan3."Funder No.");
+            if not funder.Find('-') then
+                Error('Funder %1 Not Found', funderLoan3."Funder No.");
 
             funderLegderEntry_3.Init();
             funderLegderEntry_3."Entry No." := NextEntryNo + 8;
@@ -2173,49 +2371,63 @@ codeunit 50232 "Treasury Mgt CU"
             funderLegderEntry_3.Category := funderLoan3.Category; // Funder Loan Category
             funderLegderEntry_3."Document Type" := funderLegderEntry_3."Document Type"::Repayment;
             funderLegderEntry_3.Description := RedemptionLogs."Reference No." + ' ' + 'Interest Redemption Payment calculation' + ' ' + funder.Name + ' ' + funder."No." + Format(Today);
-            funderLegderEntry_3.Amount := -(PartialAmount - FloatingInter);
-            funderLegderEntry_3."Amount(LCY)" := -(PartialAmount - FloatingInter);
-            // funderLegderEntry_3."Remaining Amount" := funderLegderEntry_1."Remaining Amount";
+            funderLegderEntry_3.Amount := -FloatingPrinci;
+            funderLegderEntry_3."Amount(LCY)" := -FloatingPrinci;
             funderLegderEntry_3.Insert();
-            if (funderLoan3.EnableGLPosting = true) and ((PartialAmount - FloatingInter) <> 0) then
-                FunderMGTCU.DirectGLPosting('partial-redemption', funderLoan3."Interest Payable", (PartialAmount - FloatingInter), 'Partial Redemption Repayment', LoanNo, PayingBankCode, '', '', '', RedemptionLogs."Reference No.", funder."Shortcut Dimension 1 Code");//
+            if (funderLoan3.EnableGLPosting = true) and (FloatingPrinci <> 0) then
+                FunderMGTCU.DirectGLPosting('partial-redemption', funderLoan3."Interest Payable", WithholdingAc, FloatingPrinci, 0, 'Partial Redemption Repayment', LoanNo, PayingBankCode, '', '', '', RedemptionLogs."Reference No.", funder."Shortcut Dimension 1 Code");//
 
             RedemptionLogs.Reset();
             RedemptionLogs.SetRange("Loan No.", LoanNo);
+            RedemptionLogs.SetRange(Line, LogLineNo);
             RedemptionLogs.SetRange(RedemptionLogs.RedemptionType, RedemptionLogs.RedemptionType::"Partial Redemption");
             if RedemptionLogs.Find('-') then begin
                 RedemptionLogs.IntrAmountRemoved := FloatingInter;
-                RedemptionLogs.PrincAmountRemoved := PartialAmount - FloatingInter;
-                RedemptionLogs.RemainingAmount := (RedemptionLogs.FloatingPrinc + RedemptionLogs.FloatingIntr) - PartialAmount;
+                RedemptionLogs.PrincAmountRemoved := FloatingPrinci;
+                RedemptionLogs.RemainingAmount := FloatIntrPlusFloatPrinci;
                 RedemptionLogs.Modify();
             end;
         end;
-
-
-
-
     end;
 
     procedure GetInterestRate(OriginNo: code[20]; Origin: Code[100]): Decimal
     var
         _interestRate_Active: Decimal;
+        _dynamicInterestRateTbl: Record "Dynamic Interest Rate";
         _interestRateTbl: Record "Interest Rate Change";
         _setup: Record "Treasury General Setup";
     begin
         _setup.Get(0);
         if _setup."Enable Dynamic Interest" = true then begin
             if Origin = 'FUNDER' then begin
-                _interestRateTbl.Reset();
-                _interestRateTbl.SetFilter(Active, '=%1', true);
-                _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
-                if _interestRateTbl.Find('-') then begin
-                    exit(_interestRateTbl."New Interest Rate")
+
+                funderLoan.Reset();
+                funderLoan.SetRange("No.", OriginNo);
+                if not funderLoan.Find('-') then
+                    Error('Get Interest Funder Loan %1 Dont Exist', OriginNo);
+                //Update Reference Values
+                if (funderLoan.Category = 'BANK LOAN') and (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
+                    _interestRateTbl.Reset();
+                    _interestRateTbl.SetCurrentKey("Effective Dates");
+                    _interestRateTbl.Ascending(false);
+                    _interestRateTbl.SetRange(Category, _interestRateTbl.Category::"Bank Loan");
+                    _interestRateTbl.SetRange(_interestRateTbl."Inter. Rate Group Name", funderLoan."Group Reference Name");
+                    _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                    if _interestRateTbl.Find('-') then begin
+                        funderLoan."Reference Rate" := _interestRateTbl."New Interest Rate";
+                        funderLoan.Modify();
+                    end;
+
+                end;
+
+                _dynamicInterestRateTbl.Reset();
+                _dynamicInterestRateTbl.SetFilter(Active, '=%1', true);
+                _dynamicInterestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                if _dynamicInterestRateTbl.Find('-') then begin
+                    exit(_dynamicInterestRateTbl."New Interest Rate")
                 end
                 else begin
-                    funderLoan.Reset();
-                    funderLoan.SetRange("No.", OriginNo);
-                    if not funderLoan.Find('-') then
-                        Error('Get Interest Funder Loan %1 Dont Exist', OriginNo);
+
 
                     _interestRate_Active := 0;
                     if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
@@ -2229,11 +2441,32 @@ codeunit 50232 "Treasury Mgt CU"
 
             end;
             if Origin = 'FUNDER_REPORT' then begin
-                _interestRateTbl.Reset();
-                _interestRateTbl.SetFilter(Active, '=%1', true);
-                _interestRateTbl.SetFilter("Effective Dates", '%1..%2', Today);
-                if _interestRateTbl.Find('-') then begin
-                    exit(_interestRateTbl."New Interest Rate")
+
+                funderLoan.Reset();
+                funderLoan.SetRange("No.", OriginNo);
+                if not funderLoan.Find('-') then
+                    Error('Get Interest Funder Loan %1 Dont Exist', OriginNo);
+                //Update Reference Values
+                if (funderLoan.Category = 'BANK LOAN') and (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
+                    _interestRateTbl.Reset();
+                    _interestRateTbl.SetCurrentKey("Effective Dates");
+                    _interestRateTbl.Ascending(false);
+                    _interestRateTbl.SetRange(Category, _interestRateTbl.Category::"Bank Loan");
+                    _interestRateTbl.SetRange(_interestRateTbl."Inter. Rate Group Name", funderLoan."Group Reference Name");
+                    _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                    if _interestRateTbl.Find('-') then begin
+                        funderLoan."Reference Rate" := _interestRateTbl."New Interest Rate";
+                        funderLoan.Modify();
+                    end;
+
+                end;
+
+
+                _dynamicInterestRateTbl.Reset();
+                _dynamicInterestRateTbl.SetFilter(Active, '=%1', true);
+                _dynamicInterestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                if _dynamicInterestRateTbl.Find('-') then begin
+                    exit(_dynamicInterestRateTbl."New Interest Rate")
                 end
                 else begin
                     funderLoan.Reset();
@@ -2252,11 +2485,11 @@ codeunit 50232 "Treasury Mgt CU"
                 end;
             end;
             if Origin = 'RELATEDPARTY' then begin
-                _interestRateTbl.Reset();
-                _interestRateTbl.SetFilter(Active, '=%1', true);
-                _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
-                if _interestRateTbl.Find('-') then begin
-                    exit(_interestRateTbl."New Interest Rate")
+                _dynamicInterestRateTbl.Reset();
+                _dynamicInterestRateTbl.SetFilter(Active, '=%1', true);
+                _dynamicInterestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                if _dynamicInterestRateTbl.Find('-') then begin
+                    exit(_dynamicInterestRateTbl."New Interest Rate")
                 end
                 else begin
                     RelatedParty.Reset();
@@ -2274,13 +2507,12 @@ codeunit 50232 "Treasury Mgt CU"
                     exit(_interestRate_Active)
                 end
             end;
-
             if Origin = 'RELATEDPARTY_REPORT' then begin
-                _interestRateTbl.Reset();
-                _interestRateTbl.SetFilter(Active, '=%1', true);
-                _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
-                if _interestRateTbl.Find('-') then begin
-                    exit(_interestRateTbl."New Interest Rate")
+                _dynamicInterestRateTbl.Reset();
+                _dynamicInterestRateTbl.SetFilter(Active, '=%1', true);
+                _dynamicInterestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                if _dynamicInterestRateTbl.Find('-') then begin
+                    exit(_dynamicInterestRateTbl."New Interest Rate")
                 end
                 else begin
                     RelatedParty.Reset();
@@ -2299,13 +2531,29 @@ codeunit 50232 "Treasury Mgt CU"
                 end
             end;
 
-        end else begin
-            if Origin = 'FUNDER' then begin
+        end
+        else begin
 
+            if Origin = 'FUNDER' then begin
                 funderLoan.Reset();
                 funderLoan.SetRange("No.", OriginNo);
                 if not funderLoan.Find('-') then
                     Error('Get Interest Funder Loan %1 Dont Exist', OriginNo);
+
+                //Update Reference Values
+                if (funderLoan.Category = 'BANK LOAN') and (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
+                    _interestRateTbl.Reset();
+                    _interestRateTbl.SetCurrentKey("Effective Dates");
+                    _interestRateTbl.Ascending(false);
+                    _interestRateTbl.SetRange(Category, _interestRateTbl.Category::"Bank Loan");
+                    _interestRateTbl.SetRange(_interestRateTbl."Inter. Rate Group Name", funderLoan."Group Reference Name");
+                    _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                    if _interestRateTbl.Find('-') then begin
+                        funderLoan."Reference Rate" := _interestRateTbl."New Interest Rate";
+                        funderLoan.Modify();
+                    end;
+                end;
+
                 _interestRate_Active := 0;
                 if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
                     _interestRate_Active := funderLoan.InterestRate;
@@ -2322,6 +2570,21 @@ codeunit 50232 "Treasury Mgt CU"
                 funderLoan.SetRange("No.", OriginNo);
                 if not funderLoan.Find('-') then
                     Error('Get Interest Funder Loan %1 Dont Exist', OriginNo);
+
+                //Update Reference Values
+                if (funderLoan.Category = 'BANK LOAN') and (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
+                    _interestRateTbl.Reset();
+                    _interestRateTbl.SetCurrentKey("Effective Dates");
+                    _interestRateTbl.Ascending(false);
+                    _interestRateTbl.SetRange(Category, _interestRateTbl.Category::"Bank Loan");
+                    _interestRateTbl.SetRange(_interestRateTbl."Inter. Rate Group Name", funderLoan."Group Reference Name");
+                    _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                    if _interestRateTbl.Find('-') then begin
+                        funderLoan."Reference Rate" := _interestRateTbl."New Interest Rate";
+                        funderLoan.Modify();
+                    end;
+
+                end;
                 _interestRate_Active := 0;
                 if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
                     _interestRate_Active := funderLoan.InterestRate;
@@ -2348,7 +2611,6 @@ codeunit 50232 "Treasury Mgt CU"
                 exit(_interestRate_Active)
 
             end;
-
             if Origin = 'RELATEDPARTY_REPORT' then begin
 
                 RelatedParty.Reset();
@@ -2372,18 +2634,18 @@ codeunit 50232 "Treasury Mgt CU"
     procedure GetInterestRateSchedule(OriginNo: code[20]; TerminalDate: Date; Origin: Code[100]): Decimal
     var
         _interestRate_Active: Decimal;
-        _interestRateTbl: Record "Interest Rate Change";
+        _dynamicInterestRateTbl: Record "Dynamic Interest Rate";
         _setup: Record "Treasury General Setup";
     begin
         _setup.Get(0);
         if _setup."Enable Dynamic Interest" = true then begin
             if Origin = 'FUNDER' then begin
-                _interestRateTbl.Reset();
-                _interestRateTbl.SetFilter(Active, '=%1', true);
-                _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
-                _interestRateTbl.SetFilter("Effective Dates", '>=%1', TerminalDate); // This that period(Month,Quarter,..) group end date
-                if _interestRateTbl.Find('-') then begin
-                    exit(_interestRateTbl."New Interest Rate")
+                _dynamicInterestRateTbl.Reset();
+                _dynamicInterestRateTbl.SetFilter(Active, '=%1', true);
+                _dynamicInterestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                _dynamicInterestRateTbl.SetFilter("Effective Dates", '>=%1', TerminalDate); // This that period(Month,Quarter,..) group end date
+                if _dynamicInterestRateTbl.Find('-') then begin
+                    exit(_dynamicInterestRateTbl."New Interest Rate")
                 end
                 else begin
                     funderLoan.Reset();
@@ -2404,13 +2666,13 @@ codeunit 50232 "Treasury Mgt CU"
             end;
 
             if Origin = 'FUNDER_REPORT' then begin
-                _interestRateTbl.Reset();
-                _interestRateTbl.SetFilter(Active, '=%1', true);
-                // _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
-                _interestRateTbl.SetFilter("Effective Dates", '<=%1', TerminalDate); // This that period group end date
+                _dynamicInterestRateTbl.Reset();
+                _dynamicInterestRateTbl.SetFilter(Active, '=%1', true);
+                // _dynamicInterestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                _dynamicInterestRateTbl.SetFilter("Effective Dates", '<=%1', TerminalDate); // This that period group end date
 
-                if _interestRateTbl.Find('-') then begin
-                    exit(_interestRateTbl."New Interest Rate")
+                if _dynamicInterestRateTbl.Find('-') then begin
+                    exit(_dynamicInterestRateTbl."New Interest Rate")
                 end
                 else begin
                     funderLoan.Reset();
@@ -2430,13 +2692,13 @@ codeunit 50232 "Treasury Mgt CU"
             end;
 
             if Origin = 'RELATEDPARTY' then begin
-                _interestRateTbl.Reset();
-                _interestRateTbl.SetFilter(Active, '=%1', true);
-                _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
-                _interestRateTbl.SetFilter("Effective Dates", '>=%1', TerminalDate); // This that period group end date
+                _dynamicInterestRateTbl.Reset();
+                _dynamicInterestRateTbl.SetFilter(Active, '=%1', true);
+                _dynamicInterestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                _dynamicInterestRateTbl.SetFilter("Effective Dates", '>=%1', TerminalDate); // This that period group end date
 
-                if _interestRateTbl.Find('-') then begin
-                    exit(_interestRateTbl."New Interest Rate")
+                if _dynamicInterestRateTbl.Find('-') then begin
+                    exit(_dynamicInterestRateTbl."New Interest Rate")
                 end
                 else begin
                     RelatedParty.Reset();
@@ -2456,13 +2718,13 @@ codeunit 50232 "Treasury Mgt CU"
             end;
 
             if Origin = 'RELATEDPARTY_REPORT' then begin
-                _interestRateTbl.Reset();
-                _interestRateTbl.SetFilter(Active, '=%1', true);
-                // _interestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
-                _interestRateTbl.SetFilter("Effective Dates", '<=%1', TerminalDate); // This that period group end date
+                _dynamicInterestRateTbl.Reset();
+                _dynamicInterestRateTbl.SetFilter(Active, '=%1', true);
+                // _dynamicInterestRateTbl.SetFilter("Effective Dates", '<=%1', Today);
+                _dynamicInterestRateTbl.SetFilter("Effective Dates", '<=%1', TerminalDate); // This that period group end date
 
-                if _interestRateTbl.Find('-') then begin
-                    exit(_interestRateTbl."New Interest Rate")
+                if _dynamicInterestRateTbl.Find('-') then begin
+                    exit(_dynamicInterestRateTbl."New Interest Rate")
                 end
                 else begin
                     RelatedParty.Reset();
@@ -2617,4 +2879,5 @@ codeunit 50232 "Treasury Mgt CU"
         EmailingCU: Codeunit "Treasury Emailing";
         FunderMGTCU: Codeunit FunderMgtCU;
         RelatedParty: Record "RelatedParty Loan";
+        GenSetup: Record "Treasury General Setup";
 }

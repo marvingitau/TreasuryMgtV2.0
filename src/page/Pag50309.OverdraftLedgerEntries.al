@@ -38,6 +38,7 @@ page 50309 "Overdraft Ledger Entries"
                 field("Balance Difference"; Rec."Balance Difference")
                 {
                     ApplicationArea = All;
+                    Visible = false;
                 }
                 field("Bank Account"; Rec."Bank Account")
                 {
@@ -45,6 +46,14 @@ page 50309 "Overdraft Ledger Entries"
                     Visible = false;
                 }
                 field("Calculated Interest"; Rec."Calculated Interest")
+                {
+                    ApplicationArea = All;
+                }
+                field("Calculated Witholding Amount"; Rec."Calculated Witholding Amount")
+                {
+                    ApplicationArea = All;
+                }
+                field("Twin Record ID"; Rec."Twin Record ID")
                 {
                     ApplicationArea = All;
                 }
@@ -69,8 +78,39 @@ page 50309 "Overdraft Ledger Entries"
     {
         area(Processing)
         {
-            action(ActionName)
+            action("Calculate Interest")
             {
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                Image = InteractionTemplate;
+                RunObject = report "OD Interest Calculation";
+
+                trigger OnAction()
+                begin
+
+                end;
+            }
+            action("Post Interest")
+            {
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                Image = Post;
+                RunObject = report "OD Interest Posting";
+
+                trigger OnAction()
+                begin
+
+                end;
+            }
+            action("Calculate & Post Overdraft Interest")
+            {
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                Image = Process;
+                RunObject = report "Overdraft Interest Posting";
 
                 trigger OnAction()
                 begin

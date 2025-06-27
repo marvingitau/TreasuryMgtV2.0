@@ -12,12 +12,20 @@ table 50289 "Roll over Tbl"
         field(5; RollOverType; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = "Full Rollover","Partial Rollover";
+            OptionMembers = "","Full Rollover","Partial Rollover";
         }
         field(10; PlacementMaturity; Option)
         {
             DataClassification = ToBeClassified;
             OptionMembers = Principal,Interest,"Principal + Interest",Terminate;
+        }
+        field(15; Principal; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(16; AccruedInterest; Decimal)
+        {
+            DataClassification = ToBeClassified;
         }
         field(20; Amount; Decimal)
         {

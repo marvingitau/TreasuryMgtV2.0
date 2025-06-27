@@ -85,9 +85,39 @@ page 50237 FunderLedgerEntry
                 {
                     ApplicationArea = All;
                 }
-                field("Balancing Acc"; Rec."Balancing Acc")
+                // field("Balancing Acc"; Rec."Balancing Acc")
+                // {
+                //     Caption = 'Balancing Account';
+                //     ApplicationArea = All;
+                // }
+                field("Account Type"; Rec."Account Type")
                 {
-                    Caption = 'Balancing Account';
+                    Caption = 'Account Type';
+                    ApplicationArea = All;
+                }
+                field("Account No."; Rec."Account No.")
+                {
+                    Caption = 'Account No.';
+                    ApplicationArea = All;
+                }
+                field("Bal. Account Type"; Rec."Bal. Account Type")
+                {
+                    Caption = 'Bal. Account Type';
+                    ApplicationArea = All;
+                }
+                field("Bal. Account No."; Rec."Bal. Account No.")
+                {
+                    Caption = 'Bal. Account No.';
+                    ApplicationArea = All;
+                }
+                field("Bal. Account Type 2"; Rec."Bal. Account Type 2")
+                {
+                    Caption = 'Bal. Account Type 2';
+                    ApplicationArea = All;
+                }
+                field("Bal. Account No. 2"; Rec."Bal. Account No. 2")
+                {
+                    Caption = 'Bal. Account No. 2';
                     ApplicationArea = All;
                 }
                 field(GloabalDimCode1; Rec."Shortcut Dimension 1 Code")

@@ -46,6 +46,7 @@ report 50283 "Overdraft Check Report"
                         OverdraftLedgerEntryTbl1."Posting Date" := CalcDate('<+1D>', Today());
                         OverdraftLedgerEntryTbl1."Opening Bal." := Abs(_lcyBalanceAmount);
                         OverdraftLedgerEntryTbl1."Bank Account" := "Funder Loan".FundSource;
+                        OverdraftLedgerEntryTbl1."Twin Record ID" := OverdraftLedgerEntryTbl."Loan No.";
                         OverdraftLedgerEntryTbl1.Insert();
                     end else begin
                         //Closing Open entries that did not close due to missing negative bal
@@ -69,6 +70,7 @@ report 50283 "Overdraft Check Report"
                             OverdraftLedgerEntryTbl2."Posting Date" := CalcDate('<+1D>', Today());
                             OverdraftLedgerEntryTbl2."Opening Bal." := Abs(_lcyBalanceAmount);
                             OverdraftLedgerEntryTbl2."Bank Account" := "Funder Loan".FundSource;
+                            OverdraftLedgerEntryTbl2."Twin Record ID" := OverdraftLedgerEntryTbl."Loan No.";
                             OverdraftLedgerEntryTbl2.Closed := false;
                             OverdraftLedgerEntryTbl2.Insert();
                         end;

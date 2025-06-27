@@ -138,6 +138,107 @@ table 50234 FunderLedgerEntry
         {
             DataClassification = ToBeClassified;
         }
+        field(43; "Account Type"; Enum "Gen. Journal Account Type")
+        {
+            Caption = 'Account Type';
+            DataClassification = ToBeClassified;
+
+        }
+        field(45; "Account No."; Code[20]) //Debit A/C
+        {
+            TableRelation =
+            if ("Account Type" = const("G/L Account")) "G/L Account" where("Account Type" = const(Posting),
+                                                                                               Blocked = const(false))
+            else
+            if ("Account Type" = const(Customer)) Customer
+            else
+            if ("Account Type" = const(Vendor)) Vendor
+            else
+            if ("Account Type" = const("Bank Account")) "Bank Account"
+            else
+            if ("Account Type" = const("Fixed Asset")) "Fixed Asset"
+            else
+            if ("Account Type" = const("IC Partner")) "IC Partner"
+            else
+            if ("Account Type" = const("Allocation Account")) "Allocation Account"
+            else
+            if ("Account Type" = const(Employee)) Employee;
+            // else
+            // if ("Account Type" = const("Funder")) "Funder Loan";
+
+
+            DataClassification = ToBeClassified;
+        }
+
+        field(47; "Bal. Account Type"; Enum "Gen. Journal Account Type")
+        {
+            DataClassification = ToBeClassified;
+
+        }
+        field(50; "Bal. Account No."; Code[100])//Account No.    Balancing Acc
+        {
+            DataClassification = ToBeClassified;
+            TableRelation =
+            if ("Account Type" = const("G/L Account")) "G/L Account" where("Account Type" = const(Posting),
+                                                                                               Blocked = const(false))
+            else
+            if ("Account Type" = const(Customer)) Customer
+            else
+            if ("Account Type" = const(Vendor)) Vendor
+            else
+            if ("Account Type" = const("Bank Account")) "Bank Account"
+            else
+            if ("Account Type" = const("Fixed Asset")) "Fixed Asset"
+            else
+            if ("Account Type" = const("IC Partner")) "IC Partner"
+            else
+            if ("Account Type" = const("Allocation Account")) "Allocation Account"
+            else
+            if ("Account Type" = const(Employee)) Employee;
+        }
+
+        field(51; "Bal. Account Type 2"; Enum "Gen. Journal Account Type")
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(52; "Bal. Account No. 2"; Code[100])//Account No.    Balancing Acc
+        {
+            DataClassification = ToBeClassified;
+            TableRelation =
+            if ("Account Type" = const("G/L Account")) "G/L Account" where("Account Type" = const(Posting),
+                                                                                               Blocked = const(false))
+            else
+            if ("Account Type" = const(Customer)) Customer
+            else
+            if ("Account Type" = const(Vendor)) Vendor
+            else
+            if ("Account Type" = const("Bank Account")) "Bank Account"
+            else
+            if ("Account Type" = const("Fixed Asset")) "Fixed Asset"
+            else
+            if ("Account Type" = const("IC Partner")) "IC Partner"
+            else
+            if ("Account Type" = const("Allocation Account")) "Allocation Account"
+            else
+            if ("Account Type" = const(Employee)) Employee;
+        }
+
+        field(53; "Interest Payable Amount"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(54; "Interest Payable Amount (LCY)"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(55; "Witholding Amount"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(56; "Witholding Amount (LCY)"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
 
         field(49900; "Shortcut Dimension 1 Code"; Code[50])
         {

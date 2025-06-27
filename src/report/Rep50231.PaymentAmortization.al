@@ -191,15 +191,7 @@ report 50231 "Payment Amortization"
         _totalPayment := 0;
         _outstandingAmount := 0;
         _interestRate_Active := 0;
-        // _interestRate_Active := TrsyMgt.GetInterestRate(FunderLoanTbl."No.", 'FUNDER_REPORT');
-        /* 
-        if (FunderLoanTbl.InterestRateType = FunderLoanTbl.InterestRateType::"Fixed Rate") then
-            _interestRate_Active := FunderLoanTbl.InterestRate;
-        if (FunderLoanTbl.InterestRateType = FunderLoanTbl.InterestRateType::"Floating Rate") then
-            _interestRate_Active := (FunderLoanTbl."Reference Rate" + FunderLoanTbl.Margin);
-        // if _interestRate_Active = 0 then
-        //     Error('Interest Rate is Zero');
-        */
+
 
         _withHoldingTax_Percent := FunderLoanTbl.Withldtax;
         _withHoldingTax_Amnt := 0;
@@ -219,20 +211,27 @@ report 50231 "Payment Amortization"
         FirstDueAccumulator.DeleteAll();
 
         if FunderLoanTbl.PeriodicPaymentOfPrincipal = FunderLoanTbl.PeriodicPaymentOfPrincipal::Monthly then begin
+            /*
+            **
+            **      ENSURE RIGHT SQEW IS TAKEN CARE IF
+            */
 
             if ((_dueDateInfluence = true) and (_skipWeekendInfluence = true)) then begin
                 //No of days in that month
                 NoOfMonths := MonthsBetween(dueDate, maturityDate) + 0;
+                if NoOfMonths = 0 then
+                    NoOfMonths := 1; //ENSURE RIGHT SQEW IS TAKEN CARE 0Fs
+
                 _dailyPrincipal := _principle / (NoOfMonths + 1);
 
                 for monthCounter := 0 to NoOfMonths do begin
                     _currentMonthInLoop := 0D;
-                    if (monthCounter = 0) then begin
+                    if (monthCounter = 0) and (monthCounter <> NoOfMonths) then begin
                         _currentMonthInLoop := dueDate;
                         DaysInMonth := dueDate - placementDate;
                         _outstandingAmount := _principle - _dailyPrincipal;
                     end
-                    else if (monthCounter = 1) then begin
+                    else if (monthCounter = 1) and (monthCounter <> NoOfMonths) then begin
                         _currentMonthInLoop := AdjustWeekendDate(CalcDate('<+1M>', dueDate));
                         _previousMonthInLoop := dueDate;
                         // DaysInMonth := _currentMonthInLoop - _previousMonthInLoop + 0;
@@ -271,7 +270,7 @@ report 50231 "Payment Amortization"
                     end;
 
 
-                    if (dueDate <> 0D) and (dueDate >= _currentMonthInLoop) then begin
+                    if (dueDate <> 0D) and (dueDate = _currentMonthInLoop) then begin
                         _secondStep := true;
                         FirstDueAccumulator.Line := monthCounter + 1;
                         FirstDueAccumulator.DueDate := _currentMonthInLoop;
@@ -287,7 +286,8 @@ report 50231 "Payment Amortization"
                         FirstDueAccumulator.OutStandingAmt := _outstandingAmount;
                         FirstDueAccumulator.NumberofDays := DaysInMonth;
                         FirstDueAccumulator.Insert();
-                    end else begin
+                    end
+                    else begin
                         FirstDueAccumulator.Reset();
                         FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
                         FirstDueAccumulator.SetRange(Reviewed, false);
@@ -360,19 +360,26 @@ report 50231 "Payment Amortization"
 
             end;
 
+            /*
+            **
+            **      ENSURE RIGHT SQEW IS TAKEN CARE IF
+            */
             if ((_dueDateInfluence = true) and (_skipWeekendInfluence = false)) then begin
                 //No of days in that month
                 NoOfMonths := MonthsBetween(dueDate, maturityDate) + 0;
+                if NoOfMonths = 0 then
+                    NoOfMonths := 1; //ENSURE RIGHT SQEW IS TAKEN CARE 0Fs
+
                 _dailyPrincipal := _principle / (NoOfMonths + 1);
 
                 for monthCounter := 0 to NoOfMonths do begin
                     _currentMonthInLoop := 0D;
-                    if (monthCounter = 0) then begin
+                    if (monthCounter = 0) and (monthCounter <> NoOfMonths) then begin
                         _currentMonthInLoop := dueDate;
                         DaysInMonth := dueDate - placementDate;
                         _outstandingAmount := _principle - _dailyPrincipal;
                     end
-                    else if (monthCounter = 1) then begin
+                    else if (monthCounter = 1) and (monthCounter <> NoOfMonths) then begin
                         _currentMonthInLoop := (CalcDate('<+1M>', dueDate));
                         _previousMonthInLoop := dueDate;
                         // DaysInMonth := _currentMonthInLoop - _previousMonthInLoop + 0;
@@ -411,7 +418,7 @@ report 50231 "Payment Amortization"
                     end;
 
 
-                    if (dueDate <> 0D) and (dueDate >= _currentMonthInLoop) then begin
+                    if (dueDate <> 0D) and (dueDate = _currentMonthInLoop) then begin
                         _secondStep := true;
                         FirstDueAccumulator.Line := monthCounter + 1;
                         FirstDueAccumulator.DueDate := _currentMonthInLoop;
@@ -427,7 +434,8 @@ report 50231 "Payment Amortization"
                         FirstDueAccumulator.OutStandingAmt := _outstandingAmount;
                         FirstDueAccumulator.NumberofDays := DaysInMonth;
                         FirstDueAccumulator.Insert();
-                    end else begin
+                    end
+                    else begin
                         FirstDueAccumulator.Reset();
                         FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
                         FirstDueAccumulator.SetRange(Reviewed, false);
@@ -648,12 +656,19 @@ report 50231 "Payment Amortization"
 
             end;
         end;
-        // DateRange := CalcDate('<1M>', StartDate);
+
         if FunderLoanTbl.PeriodicPaymentOfPrincipal = FunderLoanTbl.PeriodicPaymentOfPrincipal::Quarterly then begin
+            /*
+            **
+            **      ENSURE RIGHT SQEW IS TAKEN CARE IF
+            */
 
             if ((_dueDateInfluence = true) and (_skipWeekendInfluence = true)) then begin
 
                 NoOfQuarter := QuartersBetween(dueDate, maturityDate) + 0; // No of Quarters
+                if NoOfQuarter = 0 then
+                    NoOfQuarter := 1; //ENSURE RIGHT SQEW IS TAKEN CARE 0F
+
                 StatingQuarterEndDate := placementDate;                                                       // StatingQuarterEndDate := GetClosestQuarterEndDate(placementDate);
                 StatingQuarterStartDate := GetClosestQuarterStartDate(placementDate);
                 _dailyPrincipal := _principle / (NoOfQuarter + 1);
@@ -661,13 +676,13 @@ report 50231 "Payment Amortization"
                 for QuarterCounter := 0 to NoOfQuarter do begin
                     _currentQuarterInLoop := 0D;
                     DaysInQuarter := 0;
-                    if QuarterCounter = 0 then begin
+                    if (QuarterCounter = 0) and (QuarterCounter <> NoOfQuarter) then begin
                         _currentQuarterInLoop := dueDate;
 
                         DaysInQuarter := dueDate - placementDate + 0;
                         _outstandingAmount := _principle - _dailyPrincipal;
                     end
-                    else if QuarterCounter = 1 then begin
+                    else if (QuarterCounter = 1) and (QuarterCounter <> NoOfQuarter) then begin
                         _currentQuarterInLoop := AdjustWeekendDate(CALCDATE('<+3M>', dueDate));
                         _previousQuarterInLoop := dueDate;
 
@@ -693,7 +708,7 @@ report 50231 "Payment Amortization"
 
                         DaysInQuarter := _currentQuarterInLoop - _previousQuarterInLoop;
 
-                        _outstandingAmount := _principle - (_dailyPrincipal * QuarterCounter);
+                        _outstandingAmount := _principle - (_dailyPrincipal * (QuarterCounter + 1));
 
                     end;
 
@@ -709,7 +724,7 @@ report 50231 "Payment Amortization"
                         monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInQuarter / 365);
                     end;
 
-                    if (dueDate <> 0D) and (dueDate >= _currentQuarterInLoop) then begin // QuarterCounter = 0 and (dueDate > _currentQuarterInLoop)
+                    if (dueDate <> 0D) and (dueDate = _currentQuarterInLoop) then begin // QuarterCounter = 0 and (dueDate > _currentQuarterInLoop)
                         //FirstDueAccumulator.Init();
                         _secondStep := true;
                         FirstDueAccumulator.Line := QuarterCounter + 1;
@@ -726,7 +741,8 @@ report 50231 "Payment Amortization"
                         FirstDueAccumulator.OutStandingAmt := _outstandingAmount;
                         FirstDueAccumulator.NumberofDays := DaysInQuarter;
                         FirstDueAccumulator.Insert();
-                    end else begin
+                    end
+                    else begin
                         FirstDueAccumulator.Reset();
                         FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
                         FirstDueAccumulator.SetRange(Reviewed, false);
@@ -798,9 +814,17 @@ report 50231 "Payment Amortization"
 
             end;
 
+            /*
+              **
+              **      ENSURE RIGHT SQEW IS TAKEN CARE IF
+            */
+
             if ((_dueDateInfluence = true) and (_skipWeekendInfluence = false)) then begin
 
                 NoOfQuarter := QuartersBetween(dueDate, maturityDate) + 0; // No of Quarters
+                if NoOfQuarter = 0 then
+                    NoOfQuarter := 1; //ENSURE RIGHT SQEW IS TAKEN CARE IF
+
                 StatingQuarterEndDate := placementDate;                                                       // StatingQuarterEndDate := GetClosestQuarterEndDate(placementDate);
                 StatingQuarterStartDate := GetClosestQuarterStartDate(placementDate);
                 _dailyPrincipal := _principle / (NoOfQuarter + 1);
@@ -808,12 +832,12 @@ report 50231 "Payment Amortization"
                 for QuarterCounter := 0 to NoOfQuarter do begin
                     _currentQuarterInLoop := 0D;
                     DaysInQuarter := 0;
-                    if QuarterCounter = 0 then begin
+                    if (QuarterCounter = 0) and (QuarterCounter <> NoOfQuarter) then begin
                         _currentQuarterInLoop := dueDate;
                         DaysInQuarter := dueDate - placementDate + 0;
                         _outstandingAmount := _principle - _dailyPrincipal;
                     end
-                    else if QuarterCounter = 1 then begin
+                    else if (QuarterCounter = 1) and (QuarterCounter <> NoOfQuarter) then begin
                         _currentQuarterInLoop := (CALCDATE('<+3M>', dueDate));
                         _previousQuarterInLoop := dueDate;
 
@@ -833,13 +857,11 @@ report 50231 "Payment Amortization"
                         // _currentQuarterInLoop := GetEndOfQuarter(maturityDate);
                     end
                     else begin
-                        // _currentQuarterInLoop := CALCDATE('<+' + Format(QuarterCounter) + 'Q>', StatingQuarterEndDate);
                         _currentQuarterInLoop := (CALCDATE('<+' + Format((QuarterCounter) * 3) + 'M>', dueDate));
                         _previousQuarterInLoop := (CALCDATE('<+' + Format((QuarterCounter - 1) * 3) + 'M>', dueDate));
-
                         DaysInQuarter := _currentQuarterInLoop - _previousQuarterInLoop;
-                        _outstandingAmount := _principle - (_dailyPrincipal * QuarterCounter);
 
+                        _outstandingAmount := _principle - (_dailyPrincipal * (QuarterCounter + 1));
                     end;
 
                     _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentQuarterInLoop, 'FUNDER_REPORT');
@@ -854,7 +876,7 @@ report 50231 "Payment Amortization"
                         monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInQuarter / 365);
                     end;
 
-                    if (dueDate <> 0D) and (dueDate >= _currentQuarterInLoop) then begin // QuarterCounter = 0 and (dueDate > _currentQuarterInLoop)
+                    if (dueDate <> 0D) and (dueDate = _currentQuarterInLoop) then begin // QuarterCounter = 0 and (dueDate > _currentQuarterInLoop)
                         //FirstDueAccumulator.Init();
                         _secondStep := true;
                         FirstDueAccumulator.Line := QuarterCounter + 1;
@@ -1109,8 +1131,10 @@ report 50231 "Payment Amortization"
         end;
 
         if FunderLoanTbl.PeriodicPaymentOfPrincipal = FunderLoanTbl.PeriodicPaymentOfPrincipal::Biannually then begin
-            //12
-            //No of days in that month
+            /*
+             **
+             **      ENSURE RIGHT SQEW IS TAKEN CARE IF
+             */
             if ((_dueDateInfluence = true) and (_skipWeekendInfluence = true)) then begin
 
                 NoOfBiann := BiannualPeriodsBetweenDueDateEffect(dueDate, maturityDate) + 0;
@@ -1148,10 +1172,10 @@ report 50231 "Payment Amortization"
                         _currentBiannInLoop := maturityDate;
                     end
                     else begin
+                        _outstandingAmount := _principle - (_dailyPrincipal * (BiannCounter + 1));
                         _currentBiannInLoop := AdjustWeekendDate(CALCDATE('<+' + Format((BiannCounter) * 6) + 'M>', dueDate));
                         _previousBiannInLoop := AdjustWeekendDate(CALCDATE('<+' + Format((BiannCounter - 1) * 6) + 'M>', dueDate));
                         DaysInBiann := _currentBiannInLoop - _previousBiannInLoop;
-                        _outstandingAmount := _principle - (_dailyPrincipal * BiannCounter);
                     end;
 
 
@@ -1296,10 +1320,10 @@ report 50231 "Payment Amortization"
                         _currentBiannInLoop := maturityDate;
                     end
                     else begin
+                        _outstandingAmount := _principle - (_dailyPrincipal * (BiannCounter + 1));
                         _currentBiannInLoop := (CALCDATE('<+' + Format((BiannCounter) * 6) + 'M>', dueDate));
                         _previousBiannInLoop := (CALCDATE('<+' + Format((BiannCounter - 1) * 6) + 'M>', dueDate));
                         DaysInBiann := _currentBiannInLoop - _previousBiannInLoop;
-                        _outstandingAmount := _principle - (_dailyPrincipal * BiannCounter);
                     end;
 
 
@@ -1334,9 +1358,6 @@ report 50231 "Payment Amortization"
                         FirstDueAccumulator.NumberofDays := DaysInBiann;
                         FirstDueAccumulator.Insert();
                     end
-                    // else if dueDate = _currentBiannInLoop then begin
-                    //     continue;
-                    // end
                     else begin
                         FirstDueAccumulator.Reset();
                         FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
@@ -1564,20 +1585,26 @@ report 50231 "Payment Amortization"
 
         if FunderLoanTbl.PeriodicPaymentOfPrincipal = FunderLoanTbl.PeriodicPaymentOfPrincipal::Annually then begin
 
-
+            /*
+            **
+            **      ENSURE RIGHT SQEW IS TAKEN CARE IF
+            */
             if ((_dueDateInfluence = true) and (_skipWeekendInfluence = true)) then begin
-                NoOfAnnual := AnnualPeriodsBetween(dueDate, maturityDate) + 1;
+                NoOfAnnual := AnnualPeriodsBetween(dueDate, maturityDate) + 0;
+                if NoOfAnnual = 0 then
+                    NoOfAnnual := 1;//ENSURE RIGHT SQEW IS TAKEN CARE 0Fs
+
                 StatingAnnualEndDate := GetClosestAnnualEndDate(placementDate);
                 _dailyPrincipal := _principle / (NoOfAnnual + 1);
                 for AnnualCounter := 0 to NoOfAnnual do begin
                     _currentAnnualInLoop := 0D;
                     DaysInAnnual := 0;
-                    if AnnualCounter = 0 then begin
+                    if (AnnualCounter = 0) and (AnnualCounter <> NoOfAnnual) then begin
                         _currentAnnualInLoop := dueDate;
                         DaysInAnnual := dueDate - placementDate;
                         _outstandingAmount := _principle - _dailyPrincipal;
                     end
-                    else if AnnualCounter = 1 then begin
+                    else if (AnnualCounter = 1) and (AnnualCounter <> NoOfAnnual) then begin
                         _currentAnnualInLoop := AdjustWeekendDate(CALCDATE('<+12M>', dueDate));
                         _previousAnnualInLoop := dueDate;
                         DaysInAnnual := _currentAnnualInLoop - _previousAnnualInLoop;
@@ -1586,22 +1613,21 @@ report 50231 "Payment Amortization"
                     else if AnnualCounter = NoOfAnnual then begin
                         _currentAnnualInLoop := maturityDate;
                         _previousAnnualInLoop := AdjustWeekendDate(CALCDATE('<+' + Format((AnnualCounter - 1) * 12) + 'M>', dueDate));
-                        DaysInAnnual := maturityDate - _previousAnnualInLoop + 1;
+                        DaysInAnnual := maturityDate - _previousAnnualInLoop;
                         _amortization := _principle;
                         _outstandingAmount := 0;
                         _totalPayment := _principle;
-                        // _currentAnnualInLoop := GetEndOfYear(maturityDate);
 
                     end
                     else begin
                         _currentAnnualInLoop := AdjustWeekendDate(CALCDATE('<+' + Format((AnnualCounter) * 12) + 'M>', dueDate));
                         _previousAnnualInLoop := AdjustWeekendDate(CALCDATE('<+' + Format((AnnualCounter - 1) * 12) + 'M>', dueDate));
 
-                        _outstandingAmount := _principle - (_dailyPrincipal * AnnualCounter);
-                        DaysInAnnual := GetDaysInYear(DATE2DMY(_currentAnnualInLoop, 3))
+                        _outstandingAmount := _principle - (_dailyPrincipal * (AnnualCounter + 1));
+                        // DaysInAnnual := GetDaysInYear(DATE2DMY(_currentAnnualInLoop, 3))
+                        DaysInAnnual := _currentAnnualInLoop - _previousAnnualInLoop;
                     end;
-                    //Get quarter date. - sub the current date for days.
-                    //Add to the next quarter
+
                     _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentAnnualInLoop, 'FUNDER_REPORT');
 
 
@@ -1615,7 +1641,7 @@ report 50231 "Payment Amortization"
                         monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInAnnual / 365);
                     end;
 
-                    if (dueDate <> 0D) and (dueDate >= _currentAnnualInLoop) then begin
+                    if (dueDate <> 0D) and (dueDate = _currentAnnualInLoop) then begin
                         //FirstDueAccumulator.Init();
                         _secondStep := true;
                         FirstDueAccumulator.Line := AnnualCounter + 1;
@@ -1632,7 +1658,156 @@ report 50231 "Payment Amortization"
                         FirstDueAccumulator.OutStandingAmt := _outstandingAmount;
                         FirstDueAccumulator.NumberofDays := DaysInAnnual;
                         FirstDueAccumulator.Insert();
-                    end else begin
+                    end
+                    else begin
+                        FirstDueAccumulator.Reset();
+                        FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
+                        FirstDueAccumulator.SetRange(Reviewed, false);
+                        FirstDueAccumulator.CalcSums(Interest);
+                        FirstDueAccumulator.CalcSums(NetInterest);
+                        FirstDueAccumulator.CalcSums(WithHldTaxAmt);
+                        FirstDueAccumulator.CalcSums(TotalPayment);
+                        FirstDueAccumulator.CalcSums(OutStandingAmt);
+                        FirstDueAccumulator.CalcSums(NumberofDays);
+                        FirstDueAccumulator.CalcSums(Amortization);
+
+                        if FirstDueAccumulator.Count > 0 then begin
+                            _sumInterest := FirstDueAccumulator.Interest;
+                            _sumNetInterest := FirstDueAccumulator.NetInterest;
+                            _sumWtholding := FirstDueAccumulator.WithHldTaxAmt;
+                            _sumTotalPayment := FirstDueAccumulator.TotalPayment;
+                            _sumOutstanding := FirstDueAccumulator.OutStandingAmt;
+                            _sumAmortization := FirstDueAccumulator.Amortization;
+                            _sumNumberOfDays := FirstDueAccumulator.NumberofDays;
+                            FirstDueAccumulator.Reviewed := true;
+                            FirstDueAccumulator.Modify();
+                        end else begin
+                            _sumInterest := 0;
+                            _sumNetInterest := 0;
+                            _sumWtholding := 0;
+                            _sumTotalPayment := 0;
+                            _sumOutstanding := 0;
+                            _sumAmortization := 0;
+                            _sumNumberOfDays := 0;
+                        end;
+
+                        if AnnualCounter = 1 then begin
+                            Loan.Init();
+                            Loan.Interest := monthlyInterest + _sumInterest;
+                            Loan.LoanNo := _fNo;
+                            Loan.WithHldTaxAmt := _sumWtholding;
+                            Loan.NetInterest := _sumNetInterest;
+                            Loan.LoopCount := -1;
+                            Loan.Amortization := _sumAmortization;
+                            Loan.InterestRate := _interestRate_Active;
+                            Loan.TotalPayment := _sumTotalPayment;
+                            Loan.OutStandingAmt := _sumOutstanding;
+                            Loan.NumberofDays := _sumNumberOfDays;
+                            Loan.DueDate := dueDate;
+                            Loan.CalculationDate := dueDate;
+                            Loan.Insert();
+                        end;
+
+                        Loan.Init();
+                        Loan.Interest := monthlyInterest + _sumInterest;
+                        Loan.LoanNo := _fNo;
+                        Loan.WithHldTaxAmt := _withHoldingTax_Amnt;
+                        Loan.NetInterest := (monthlyInterest - _withHoldingTax_Amnt);
+                        Loan.LoopCount := AnnualCounter;
+                        Loan.Amortization := _dailyPrincipal;
+                        Loan.InterestRate := _interestRate_Active;
+                        Loan.TotalPayment := (_totalPayment + monthlyInterest);
+                        Loan.OutStandingAmt := _outstandingAmount;
+                        Loan.NumberofDays := DaysInAnnual;
+                        Loan.DueDate := _currentAnnualInLoop;
+                        Loan.CalculationDate := _currentAnnualInLoop;
+                        Loan.Insert();
+
+                        FirstDueAccumulator.Reset();
+                        if FirstDueAccumulator.Count > 0 then
+                            FirstDueAccumulator.DeleteAll();
+                    end;
+
+                end;
+
+            end;
+
+            /*
+            **
+            **      ENSURE RIGHT SQEW IS TAKEN CARE IF
+            */
+
+            if ((_dueDateInfluence = true) and (_skipWeekendInfluence = false)) then begin
+                NoOfAnnual := AnnualPeriodsBetween(dueDate, maturityDate) + 0;
+                if NoOfAnnual = 0 then
+                    NoOfAnnual := 1;//ENSURE RIGHT SQEW IS TAKEN CARE 0Fs
+
+                StatingAnnualEndDate := GetClosestAnnualEndDate(placementDate);
+                _dailyPrincipal := _principle / (NoOfAnnual + 1);
+                for AnnualCounter := 0 to NoOfAnnual do begin
+                    _currentAnnualInLoop := 0D;
+                    DaysInAnnual := 0;
+                    if (AnnualCounter = 0) and (AnnualCounter <> NoOfAnnual) then begin
+                        _currentAnnualInLoop := dueDate;
+                        DaysInAnnual := dueDate - placementDate;
+                        _outstandingAmount := _principle - _dailyPrincipal;
+                    end
+                    else if (AnnualCounter = 1) and (AnnualCounter <> NoOfAnnual) then begin
+                        _currentAnnualInLoop := (CALCDATE('<+12M>', dueDate));
+                        _previousAnnualInLoop := dueDate;
+                        DaysInAnnual := _currentAnnualInLoop - _previousAnnualInLoop;
+                        _outstandingAmount := _principle - (_dailyPrincipal * 2);
+                    end
+                    else if AnnualCounter = NoOfAnnual then begin
+                        _currentAnnualInLoop := maturityDate;
+                        _previousAnnualInLoop := (CALCDATE('<+' + Format((AnnualCounter - 1) * 12) + 'M>', dueDate));
+                        DaysInAnnual := maturityDate - _previousAnnualInLoop;
+                        _amortization := _principle;
+                        _outstandingAmount := 0;
+                        _totalPayment := _principle;
+
+                    end
+                    else begin
+                        _currentAnnualInLoop := (CALCDATE('<+' + Format((AnnualCounter) * 12) + 'M>', dueDate));
+                        _previousAnnualInLoop := (CALCDATE('<+' + Format((AnnualCounter - 1) * 12) + 'M>', dueDate));
+
+                        _outstandingAmount := _principle - (_dailyPrincipal * (AnnualCounter + 1));
+                        // DaysInAnnual := GetDaysInYear(DATE2DMY(_currentAnnualInLoop, 3))
+                        DaysInAnnual := _currentAnnualInLoop - _previousAnnualInLoop;
+                    end;
+
+                    _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentAnnualInLoop, 'FUNDER_REPORT');
+
+
+                    if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"30/360" then begin
+                        monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 360);
+                    end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/360" then begin
+                        monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInAnnual / 360);
+                    end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/364" then begin
+                        monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInAnnual / 364);
+                    end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/365" then begin
+                        monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInAnnual / 365);
+                    end;
+
+                    if (dueDate <> 0D) and (dueDate = _currentAnnualInLoop) then begin
+                        //FirstDueAccumulator.Init();
+                        _secondStep := true;
+                        FirstDueAccumulator.Line := AnnualCounter + 1;
+                        FirstDueAccumulator.DueDate := _currentAnnualInLoop;
+                        FirstDueAccumulator.Interest := monthlyInterest;
+                        FirstDueAccumulator.CalculationDate := _currentAnnualInLoop;
+                        FirstDueAccumulator.LoanNo := _fNo;
+                        FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
+                        FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
+                        FirstDueAccumulator.LoopCount := AnnualCounter + 1;
+                        FirstDueAccumulator.Amortization := _dailyPrincipal;
+                        FirstDueAccumulator.InterestRate := _interestRate_Active;
+                        FirstDueAccumulator.TotalPayment := _totalPayment + monthlyInterest;
+                        FirstDueAccumulator.OutStandingAmt := _outstandingAmount;
+                        FirstDueAccumulator.NumberofDays := DaysInAnnual;
+                        FirstDueAccumulator.Insert();
+                    end
+                    else begin
                         FirstDueAccumulator.Reset();
                         FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
                         FirstDueAccumulator.SetRange(Reviewed, false);

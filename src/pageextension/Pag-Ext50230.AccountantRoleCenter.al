@@ -163,6 +163,14 @@ pageextension 50230 AccountantRoleCenter extends 9027
                     RunObject = page "Funder Change List";
                     ToolTip = 'Funder Change List';
                 }
+                action("Interest  Rate Change Group")
+                {
+                    ApplicationArea = Basic, Suite;
+                    Caption = 'Interest  Rate Change Group';
+                    Image = ResourceJournal;
+                    RunObject = page "Intr. Rate Change Group";
+                    ToolTip = 'Interest  Rate Change Group';
+                }
 
                 // action(GLMapping)
                 // {

@@ -1,4 +1,4 @@
-report 50284 "Overdraft Interest Posting"
+report 50285 "OD Interest Calculation"
 {
     UsageCategory = ReportsAndAnalysis;
     ApplicationArea = All;
@@ -59,6 +59,7 @@ report 50284 "Overdraft Interest Posting"
                 _durationDate := (_maturityDate - _placementDate);
                 // _absoluteBalance := Abs("Closing Bal." - "Opening Bal.");
                 _absoluteBalance := Abs("Closing Bal.");
+
                 if _absoluteBalance <= 0 then
                     CurrReport.Skip();
 
@@ -80,19 +81,9 @@ report 50284 "Overdraft Interest Posting"
                     LoanTbl.TestField(Withldtax);
                     _witHldTaxAmount := (LoanTbl.Withldtax / 100) * _calculatedInterest;
                 end;
-
-
-                if (_calculatedInterest > 0) then //LoanTbl.EnableGLPosting = true
-                    begin
-
-                    FunderMgt.DirectGLPosting('interest', LoanTbl."Interest Expense", _withholdingAcc, _calculatedInterest, _witHldTaxAmount, 'Overdraft Interest Amount', "Loan No.", LoanTbl."Interest Payable", LoanTbl.Currency, '', _docNo, 'Bank Ref. No.', FunderTbl."Shortcut Dimension 1 Code");
-                end
-                else
-                    CurrReport.Skip();
-
                 "Overdraft Ledger Entries"."Calculated Interest" := _calculatedInterest;
-                "Overdraft Ledger Entries"."Calculated Witholding Amount" := _witHldTaxAmount;
-                "Overdraft Ledger Entries".Processed := true;
+                "Overdraft Ledger Entries"."Calculated Witholding Amount" := Abs(_witHldTaxAmount);
+                // "Overdraft Ledger Entries".Processed := true;
                 "Overdraft Ledger Entries".Modify();
             end;
         }
@@ -153,7 +144,7 @@ report 50284 "Overdraft Interest Posting"
 
     trigger OnPostReport()
     begin
-        Message(' Overdraft interest Posting Done');
+        Message(' Overdraft interest Calculation Done');
     end;
 
     var

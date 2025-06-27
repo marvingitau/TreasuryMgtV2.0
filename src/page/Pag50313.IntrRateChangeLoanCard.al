@@ -1,11 +1,14 @@
-page 50292 "Intr. Rate Change"
+page 50313 "Intr. Rate Change Loan Card"
 {
     PageType = List;
     ApplicationArea = All;
     UsageCategory = Lists;
     SourceTable = "Interest Rate Change";
     Caption = 'Interest Rate Change List';
-    // This will calculate interest depending on the effective date. 
+    // Editable = false;
+    InsertAllowed = false;
+    ModifyAllowed = false;
+    DeleteAllowed = false;
     layout
     {
         area(Content)
@@ -47,7 +50,7 @@ page 50292 "Intr. Rate Change"
                 {
                     Caption = 'Enabled';
                     ApplicationArea = All;
-                    Visible = false;
+                    Enabled = false;
                 }
             }
         }

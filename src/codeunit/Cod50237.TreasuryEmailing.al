@@ -63,9 +63,9 @@ codeunit 50237 "Treasury Emailing"
         // if Funders."Email Address" <> '' then
         //     EmailMessage.AddRecipient(Enum::"Email Recipient Type"::Cc, BufferSetup.POEmailCC1);
 
-        // RecRef.GetTable(FunderLoan);
+        RecRef.GetTable(FunderLoan);
         TempBlob.CreateOutStream(FileOutStream);
-        Report.SaveAs(Report::"Investment Confirmation", '', ReportFormat::Pdf, FileOutStream);
+        Report.SaveAs(Report::"Investment Confirmation", '', ReportFormat::Pdf, FileOutStream, RecRef);
         TempBlob.CreateInStream(FileInStream);
         EmailMessage.AddAttachment('Confirmation.pdf', 'PDF', FileInStream);
         // Clear(TempBlob);
@@ -160,9 +160,9 @@ codeunit 50237 "Treasury Emailing"
         // if RelatedParty."Email Address" <> '' then
         //     EmailMessage.AddRecipient(Enum::"Email Recipient Type"::Cc, BufferSetup.POEmailCC1);
 
-        // RecRef.GetTable(FunderLoan);
+        RecRef.GetTable(RelatedParty);
         TempBlob.CreateOutStream(FileOutStream);
-        Report.SaveAs(Report::"RelatedParty Invest. Conf.", '', ReportFormat::Pdf, FileOutStream);
+        Report.SaveAs(Report::"RelatedParty Invest. Conf.", '', ReportFormat::Pdf, FileOutStream, RecRef);
         TempBlob.CreateInStream(FileInStream);
         EmailMessage.AddAttachment('Confirmation.pdf', 'PDF', FileInStream);
         // Clear(TempBlob);
@@ -337,7 +337,7 @@ codeunit 50237 "Treasury Emailing"
 
         RecRef.GetTable(_remOnPlacementMature);
         TempBlob.CreateOutStream(FileOutStream);
-        Report.SaveAs(Report::ReminderAlertPerCategory, '', ReportFormat::Pdf, FileOutStream);
+        Report.SaveAs(Report::ReminderAlertPerCategory, '', ReportFormat::Pdf, FileOutStream, RecRef);
         TempBlob.CreateInStream(FileInStream);
         EmailMessage.AddAttachment('CategoryMaturity.pdf', 'PDF', FileInStream);
 

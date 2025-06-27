@@ -2,7 +2,7 @@ page 50233 "Funder Card"
 {
     PageType = Card;
     ApplicationArea = All;
-    UsageCategory = Administration;
+    UsageCategory = Documents;
     SourceTable = Funders;
     Caption = 'Funder/Supplier Card';
 
@@ -1792,6 +1792,7 @@ page 50233 "Funder Card"
         ShowInstitutionalFastTab := Rec.FunderType = Rec.FunderType::Institutional;
         ShowJointFastTab := Rec.FunderType = Rec.FunderType::"Joint Application";
         ShowCorporateFastTab := Rec.FunderType = Rec.FunderType::Corporate;
+        ShowCorporateFastTab := Rec.FunderType = Rec.FunderType::Relatedparty;
     end;
 
     local procedure FieldEditProp()

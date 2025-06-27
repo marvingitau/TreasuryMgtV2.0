@@ -38,21 +38,13 @@ report 50247 "Redemption Report"
                     field(Name; LoanNo)
                     {
                         TableRelation = "Funder Loan"."No.";
+                        ApplicationArea = All;
                     }
                 }
             }
         }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
 
-                }
-            }
-        }
     }
 
     rendering

@@ -136,7 +136,7 @@ table 50233 "Treasury General Setup"
             InitValue = false;
             trigger OnValidate()
             var
-                dyinte: Record "Interest Rate Change";
+                dyinte: Record "Dynamic Interest Rate";
             begin
                 dyinte.Reset();
                 dyinte.SetFilter(LineNo, '<>%1', 0);

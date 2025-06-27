@@ -4,8 +4,8 @@ page 50230 "Funder List"
     ApplicationArea = All;
     UsageCategory = Lists;
     SourceTable = Funders;
-    CardPageId = "Funder Card";
     Caption = 'Funder/Supplier List';
+    CardPageId = "Funder Card";
 
     layout
     {
@@ -142,6 +142,19 @@ page 50230 "Funder List"
                 end;
             }
 
+            action("Purchase Invoices")
+            {
+                ApplicationArea = All;
+                Caption = 'Purchase Invoices';
+                Image = OverdueEntries;
+                PromotedCategory = Category4;
+                Promoted = true;
+                PromotedIsBig = true;
+                PromotedOnly = true;
+                RunObject = page "Funder Purch. Inv Rec.";
+
+
+            }
         }
         area(Reporting)
         {

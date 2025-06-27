@@ -50,16 +50,7 @@ report 50242 "Related Party Statement"
             }
         }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
 
-                }
-            }
-        }
     }
 
     rendering

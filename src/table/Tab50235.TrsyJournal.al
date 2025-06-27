@@ -213,6 +213,12 @@ table 50235 "Trsy Journal"
         {
             DataClassification = ToBeClassified;
         }
+        field(900; "Enable GL Posting"; Boolean)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Enable GL Posting';
+            InitValue = true;
+        }
     }
 
     keys

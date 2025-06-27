@@ -564,16 +564,7 @@ report 50238 "Reminder On Intr. Due"
             }
         }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
 
-                }
-            }
-        }
     }
 
     rendering

@@ -92,16 +92,7 @@ report 50239 "Interest Payment Amortization"
             }
         }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
 
-                }
-            }
-        }
     }
 
     rendering

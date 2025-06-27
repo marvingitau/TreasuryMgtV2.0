@@ -1,10 +1,10 @@
-page 50310 "Relatedparty Sales Inv Rec."
+page 50311 "Funder Purch. Inv Rec."
 {
     PageType = List;
     ApplicationArea = All;
     UsageCategory = Lists;
-    SourceTable = "Relatedparty Sales Inv Rec.";
-    Caption = 'Relatedparty Sales Inv';
+    SourceTable = "Funder Purch. Inv Rec.";
+    Caption = 'Funder Purchase Inv';
 
     layout
     {
@@ -17,11 +17,11 @@ page 50310 "Relatedparty Sales Inv Rec."
                     ApplicationArea = All;
                     Visible = false;
                 }
-                field("Related Loan No"; Rec."Related Loan No")
+                field("Funder Loan No"; Rec."Funder Loan No")
                 {
                     ApplicationArea = All;
                 }
-                field("Related Loan Name"; Rec."Related Loan Name")
+                field("Funder Loan Name"; Rec."Funder Loan Name")
                 {
                     ApplicationArea = All;
                 }
@@ -30,7 +30,7 @@ page 50310 "Relatedparty Sales Inv Rec."
                     ApplicationArea = All;
                     Caption = 'Our Funder';
                 }
-                field("Customer No."; Rec."Customer No.")
+                field("Vendor No."; Rec."Vendor No.")
                 {
                     ApplicationArea = All;
                     Editable = false;
@@ -67,21 +67,21 @@ page 50310 "Relatedparty Sales Inv Rec."
     {
         area(Processing)
         {
-            action("Create a Sales Invoice")
+            action("Create a Purchase Invoice")
             {
                 ApplicationArea = Basic, Suite;
-                Caption = 'Create a Sales Invoice';
+                Caption = 'Create a Purchase Invoice';
                 Image = Invoice;
                 PromotedCategory = Process;
                 Promoted = true;
                 trigger OnAction()
                 begin
-                    RelatepartyMgtCU.GenerateICSalesInvoice();
+                    FunderMgtCU.GenerateICPurchaseInvoice();
                 end;
             }
         }
     }
 
     var
-        RelatepartyMgtCU: Codeunit RelatepartyMgtCU;
+        FunderMgtCU: Codeunit FunderMgtCU;
 }

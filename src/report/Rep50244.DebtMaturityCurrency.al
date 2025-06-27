@@ -54,34 +54,34 @@ report 50244 "Debt Maturity Currency"
         }
     }
 
-    requestpage
-    {
+    // requestpage
+    // {
 
-        layout
-        {
-            area(Content)
-            {
-                group(GroupName)
-                {
-                    // field(Name; SourceExpression)
-                    // {
+    //     layout
+    //     {
+    //         area(Content)
+    //         {
+    //             group(GroupName)
+    //             {
+    //                 // field(Name; SourceExpression)
+    //                 // {
 
-                    // }
-                }
-            }
-        }
+    //                 // }
+    //             }
+    //         }
+    //     }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
+    //     actions
+    //     {
+    //         area(processing)
+    //         {
+    //             action(LayoutName)
+    //             {
 
-                }
-            }
-        }
-    }
+    //             }
+    //         }
+    //     }
+    // }
 
     rendering
     {

@@ -37,6 +37,14 @@ page 50281 "Funder Loan List"
                 {
                     ApplicationArea = All;
                 }
+                field(PlacementDate; Rec.PlacementDate)
+                {
+                    ApplicationArea = All;
+                }
+                field(MaturityDate; Rec.MaturityDate)
+                {
+                    ApplicationArea = All;
+                }
                 field(Currency; Rec.Currency)
                 {
                     ApplicationArea = All;
@@ -49,8 +57,15 @@ page 50281 "Funder Loan List"
                 field(InterestRate; Rec.InterestRate)
                 {
                     ApplicationArea = All;
-                    Caption = 'Interest Rate';
+                    Caption = 'Interest Rate(%)';
                 }
+                // field(Status; Rec.Status)
+                // {
+                //     ApplicationArea = All;
+                // }
+
+
+
                 field(Status; Rec.Status)
                 {
                     ApplicationArea = All;

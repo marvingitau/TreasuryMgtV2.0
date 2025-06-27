@@ -156,7 +156,7 @@ table 50231 Portfolio
         field(71; Category; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = " ","Bank Loan",Institutional,Individual,"Asset Term Manager","Medium Term Notes","Bank Overdraft";
+            OptionMembers = " ","Bank Loan",Institutional,Individual,"Asset Term Manager","Medium Term Notes","Bank Overdraft","Relatedparty";
             // TableRelation = "Portfolio Fee Setup".Code;
             // trigger OnValidate()
             // var

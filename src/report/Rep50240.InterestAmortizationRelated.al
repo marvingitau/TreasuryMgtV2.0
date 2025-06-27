@@ -59,16 +59,7 @@ report 50240 "Interest Amortization Related"
             }
         }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
 
-                }
-            }
-        }
     }
 
     rendering

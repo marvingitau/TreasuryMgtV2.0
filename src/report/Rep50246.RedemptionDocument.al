@@ -85,36 +85,36 @@ report 50246 "Redemption Document"
 
         }
     }
+    /*
+        requestpage
+        {
+            // AboutTitle = 'Teaching tip title';
+            // AboutText = 'Teaching tip content';
+            layout
+            {
+                area(Content)
+                {
+                    group(General)
+                    {
+                        field(No; LoanNo)
+                        {
+                            TableRelation = "Funder Loan"."No.";
+                        }
+                    }
+                }
+            }
 
-    // requestpage
-    // {
-    //     // AboutTitle = 'Teaching tip title';
-    //     // AboutText = 'Teaching tip content';
-    //     layout
-    //     {
-    //         area(Content)
-    //         {
-    //             group(General)
-    //             {
-    //                 field(No; LoanNo)
-    //                 {
-    //                     TableRelation = "Funder Loan"."No.";
-    //                 }
-    //             }
-    //         }
-    //     }
+            actions
+            {
+                area(processing)
+                {
+                    action(LayoutName)
+                    {
 
-    //     actions
-    //     {
-    //         area(processing)
-    //         {
-    //             action(LayoutName)
-    //             {
-
-    //             }
-    //         }
-    //     }
-    // }
+                    }
+                }
+            }
+        }*/
 
     rendering
     {

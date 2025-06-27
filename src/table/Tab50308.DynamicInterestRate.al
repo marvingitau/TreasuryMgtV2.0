@@ -1,7 +1,8 @@
-table 50293 "Interest Rate Change"
+table 50308 "Dynamic Interest Rate"
 {
     DataClassification = ToBeClassified;
-
+    LookupPageId = "Dynamic Intr. Rate";
+    DrillDownPageId = "Dynamic Intr. Rate";
     fields
     {
         field(1; LineNo; Integer)
@@ -43,7 +44,7 @@ table 50293 "Interest Rate Change"
             DataClassification = ToBeClassified;
             trigger OnValidate()
             var
-                _interestRates: Record "Interest Rate Change";
+                _interestRates: Record "Dynamic Interest Rate";
                 _recordCount: Integer;
                 _loop: Integer;
             begin
@@ -52,7 +53,7 @@ table 50293 "Interest Rate Change"
                 Active := true;
                 _interestRates.Reset();
                 _interestRates.SetFilter(LineNo, '<>%1', 0);
-                _interestRates.SetFilter("Inter. Rate Group Name", '=%1', "Inter. Rate Group Name");
+                // _interestRates.SetFilter("Inter. Rate Group Name", '=%1', "Inter. Rate Group Name");
 
                 _recordCount := _interestRates.Count();
                 if _interestRates.find('-') then begin

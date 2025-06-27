@@ -1,4 +1,4 @@
-report 50284 "Overdraft Interest Posting"
+report 50286 "OD Interest Posting"
 {
     UsageCategory = ReportsAndAnalysis;
     ApplicationArea = All;
@@ -57,23 +57,12 @@ report 50284 "Overdraft Interest Posting"
                 // ***************** Create interest
                 _interestRate_Active := TrsyMgt.GetInterestRateSchedule(LoanTbl."No.", Today, 'FUNDER_REPORT');
                 _durationDate := (_maturityDate - _placementDate);
-                // _absoluteBalance := Abs("Closing Bal." - "Opening Bal.");
-                _absoluteBalance := Abs("Closing Bal.");
+                _absoluteBalance := Abs("Closing Bal." - "Opening Bal.");
+
                 if _absoluteBalance <= 0 then
                     CurrReport.Skip();
 
-                if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"30/360" then begin
-                    _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (30 / 360);
-                end else if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"Actual/360" then begin
-                    _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (_durationDate / 360);
-                end else if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"Actual/364" then begin
-                    _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (_durationDate / 364);
-                end else if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"Actual/365" then begin
-                    _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (_durationDate / 365);
-                end
-                else if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"30/365" then begin
-                    _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (30 / 365);
-                end;
+
 
                 _witHldTaxAmount := 0;
                 if LoanTbl.TaxStatus = LoanTbl.TaxStatus::Taxable then begin
@@ -82,18 +71,14 @@ report 50284 "Overdraft Interest Posting"
                 end;
 
 
-                if (_calculatedInterest > 0) then //LoanTbl.EnableGLPosting = true
-                    begin
-
-                    FunderMgt.DirectGLPosting('interest', LoanTbl."Interest Expense", _withholdingAcc, _calculatedInterest, _witHldTaxAmount, 'Overdraft Interest Amount', "Loan No.", LoanTbl."Interest Payable", LoanTbl.Currency, '', _docNo, 'Bank Ref. No.', FunderTbl."Shortcut Dimension 1 Code");
+                if ("Calculated Interest" > 0) then //LoanTbl.EnableGLPosting = true
+                begin
+                    FunderMgt.DirectGLPosting('interest', LoanTbl."Interest Expense", _withholdingAcc, "Calculated Interest", "Calculated Witholding Amount", 'Overdraft Interest Amount', "Loan No.", LoanTbl."Interest Payable", LoanTbl.Currency, '', _docNo, 'Bank Ref. No.', FunderTbl."Shortcut Dimension 1 Code");
+                    "Overdraft Ledger Entries".Processed := true;
+                    "Overdraft Ledger Entries".Modify();
                 end
-                else
-                    CurrReport.Skip();
 
-                "Overdraft Ledger Entries"."Calculated Interest" := _calculatedInterest;
-                "Overdraft Ledger Entries"."Calculated Witholding Amount" := _witHldTaxAmount;
-                "Overdraft Ledger Entries".Processed := true;
-                "Overdraft Ledger Entries".Modify();
+
             end;
         }
     }

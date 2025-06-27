@@ -21,18 +21,19 @@ page 50288 "Roll over"
                 field(RollOverType; Rec.RollOverType)
                 {
                     ApplicationArea = All;
+                    Visible = false;
 
                 }
                 field("Rollover Date"; Rec."Rollover Date")
                 {
                     ApplicationArea = All;
-                    Enabled = Rec.RollOverType = Rec.RollOverType::"Full Rollover";
+                    // Enabled = Rec.RollOverType = Rec.RollOverType::"Full Rollover";
                 }
 
                 field(PlacementMaturity; Rec.PlacementMaturity)
                 {
                     ApplicationArea = All;
-                    // Editable = false;
+                    // Visible = false;
                     trigger OnValidate()
                     begin
                         FunderLoan.Reset();
@@ -45,11 +46,31 @@ page 50288 "Roll over"
 
                     end;
                 }
+                field(Principal; Rec.Principal)
+                {
+                    ApplicationArea = All;
+                    Editable = (Rec.PlacementMaturity = Rec.PlacementMaturity::Principal) or (Rec.PlacementMaturity = Rec.PlacementMaturity::"Principal + Interest");
+                    trigger OnValidate()
+                    begin
+                        Rec.Amount := Rec.Principal + Rec.AccruedInterest;
+                    end;
+                }
+                field(AccruedInterest; Rec.AccruedInterest)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Interest';
+                    Editable = (Rec.PlacementMaturity = Rec.PlacementMaturity::Interest) or (Rec.PlacementMaturity = Rec.PlacementMaturity::"Principal + Interest");
+
+                    trigger OnValidate()
+                    begin
+                        Rec.Amount := Rec.Principal + Rec.AccruedInterest;
+                    end;
+                }
                 field(Amount; Rec.Amount)
                 {
                     ApplicationArea = All;
                     Caption = 'Amount To Rollover';
-                    // Editable = AmountEnabled;
+                    Editable = false;
                 }
             }
         }
@@ -74,7 +95,7 @@ page 50288 "Roll over"
                     GFilter: Codeunit GlobalFilters;
                     ROTbl: Record "Roll over Tbl";
                 begin
-                    funderMgt.DuplicateRecord(Rec.Line);
+                    funderMgt.DuplicateRecordB(Rec.Line);
                 end;
             }
         }
@@ -82,64 +103,75 @@ page 50288 "Roll over"
 
     trigger OnInit()
     begin
-        if Rec.IsEmpty() then begin
-            LoanID := GFilter.GetGlobalLoanFilter();
-            FunderLoan.Reset();
-            FunderLoan.SetRange("No.", LoanID);
-            if not FunderLoan.Find('-') then
-                Error('Funder Loan No %1 Not found', LoanID);
-            if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::Interest then begin
-                Rec.PlacementMaturity := FunderLoan.PlacementMaturity::Interest;
-                FunderLoan.CalcFields("Outstanding Interest");
-                Rec.Amount := FunderLoan."Outstanding Interest";
-            end;
-            if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::Principal then begin
-                Rec.PlacementMaturity := FunderLoan.PlacementMaturity::Principal;
-                FunderLoan.CalcFields(OutstandingAmntDisbLCY);
-                Rec.Amount := FunderLoan.OutstandingAmntDisbLCY;
-            end;
-            if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::"Principal + Interest" then begin
-                Rec.PlacementMaturity := FunderLoan.PlacementMaturity::"Principal + Interest";
-                FunderLoan.CalcFields(OutstandingAmntDisbLCY);
-                Rec.Amount := FunderLoan.OutstandingAmntDisbLCY;
-                FunderLoan.CalcFields("Outstanding Interest");
-                Rec.Amount := Rec.Amount + FunderLoan."Outstanding Interest";
-            end;
-            if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::Terminate then
-                Rec.PlacementMaturity := FunderLoan.PlacementMaturity::Terminate;
-
-            Rec."Loan No." := LoanID;
-
-            Rec.Insert();
-        end else begin
-            LoanID := GFilter.GetGlobalLoanFilter();
-            FunderLoan.Reset();
-            FunderLoan.SetRange("No.", LoanID);
-            if not FunderLoan.Find('-') then
-                Error('Loan No registered');
-            if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::Interest then begin
-                Rec.PlacementMaturity := FunderLoan.PlacementMaturity::Interest;
-                FunderLoan.CalcFields("Outstanding Interest");
-                Rec.Amount := FunderLoan."Outstanding Interest";
-            end;
-            if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::Principal then begin
-                Rec.PlacementMaturity := FunderLoan.PlacementMaturity::Principal;
-                FunderLoan.CalcFields(OutstandingAmntDisbLCY);
-                Rec.Amount := FunderLoan.OutstandingAmntDisbLCY;
-            end;
-            if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::"Principal + Interest" then begin
-                Rec.PlacementMaturity := FunderLoan.PlacementMaturity::"Principal + Interest";
-                FunderLoan.CalcFields(OutstandingAmntDisbLCY);
-                Rec.Amount := FunderLoan.OutstandingAmntDisbLCY;
-                FunderLoan.CalcFields("Outstanding Interest");
-                Rec.Amount := Rec.Amount + FunderLoan."Outstanding Interest";
-            end;
-            if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::Terminate then
-                Rec.PlacementMaturity := FunderLoan.PlacementMaturity::Terminate;
-
-            Rec."Loan No." := LoanID;
-            Rec.Modify();
+        // if Rec.IsEmpty() then begin
+        LoanID := GFilter.GetGlobalLoanFilter();
+        FunderLoan.Reset();
+        FunderLoan.SetRange("No.", LoanID);
+        if not FunderLoan.Find('-') then
+            Error('Funder Loan No %1 Not found', LoanID);
+        /*if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::Interest then begin
+            Rec.PlacementMaturity := FunderLoan.PlacementMaturity::Interest;
+            FunderLoan.CalcFields("Outstanding Interest");
+            Rec.Amount := FunderLoan."Outstanding Interest";
         end;
+        if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::Principal then begin
+            Rec.PlacementMaturity := FunderLoan.PlacementMaturity::Principal;
+            FunderLoan.CalcFields(OutstandingAmntDisbLCY);
+            Rec.Amount := FunderLoan.OutstandingAmntDisbLCY;
+        end;
+        if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::"Principal + Interest" then begin
+            Rec.PlacementMaturity := FunderLoan.PlacementMaturity::"Principal + Interest";
+            FunderLoan.CalcFields(OutstandingAmntDisbLCY);
+            Rec.Amount := FunderLoan.OutstandingAmntDisbLCY;
+            FunderLoan.CalcFields("Outstanding Interest");
+            Rec.Amount := Rec.Amount + FunderLoan."Outstanding Interest";
+        end;
+        if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::Terminate then
+            Rec.PlacementMaturity := FunderLoan.PlacementMaturity::Terminate;
+        */
+        FunderLoan.CalcFields(OutstandingAmntDisbLCY);
+        Rec.Principal := FunderLoan.OutstandingAmntDisbLCY;
+        FunderLoan.CalcFields("Outstanding Interest");
+        Rec.AccruedInterest := Rec.Amount + FunderLoan."Outstanding Interest";
+        Rec.Amount := FunderLoan.OutstandingAmntDisbLCY + FunderLoan."Outstanding Interest";
+        Rec."Loan No." := LoanID;
+        Rec."Rollover Date" := Today();
+        Rec.Insert();
+        // end else begin
+        //     LoanID := GFilter.GetGlobalLoanFilter();
+        //     FunderLoan.Reset();
+        //     FunderLoan.SetRange("No.", LoanID);
+        //     if not FunderLoan.Find('-') then
+        //         Error('Loan No registered');
+        //     /*if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::Interest then begin
+        //         Rec.PlacementMaturity := FunderLoan.PlacementMaturity::Interest;
+        //         FunderLoan.CalcFields("Outstanding Interest");
+        //         Rec.Amount := FunderLoan."Outstanding Interest";
+        //     end;
+        //     if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::Principal then begin
+        //         Rec.PlacementMaturity := FunderLoan.PlacementMaturity::Principal;
+        //         FunderLoan.CalcFields(OutstandingAmntDisbLCY);
+        //         Rec.Amount := FunderLoan.OutstandingAmntDisbLCY;
+        //     end;
+        //     if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::"Principal + Interest" then begin
+        //         Rec.PlacementMaturity := FunderLoan.PlacementMaturity::"Principal + Interest";
+        //         FunderLoan.CalcFields(OutstandingAmntDisbLCY);
+        //         Rec.Amount := FunderLoan.OutstandingAmntDisbLCY;
+        //         FunderLoan.CalcFields("Outstanding Interest");
+        //         Rec.Amount := Rec.Amount + FunderLoan."Outstanding Interest";
+        //     end;
+        //     if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::Terminate then
+        //         Rec.PlacementMaturity := FunderLoan.PlacementMaturity::Terminate;
+        //     */
+        //     FunderLoan.CalcFields(OutstandingAmntDisbLCY);
+        //     Rec.Principal := FunderLoan.OutstandingAmntDisbLCY;
+        //     FunderLoan.CalcFields("Outstanding Interest");
+        //     Rec.AccruedInterest := Rec.Amount + FunderLoan."Outstanding Interest";
+        //     Rec.Amount := FunderLoan.OutstandingAmntDisbLCY + FunderLoan."Outstanding Interest";
+        //     Rec."Loan No." := LoanID;
+        //     Rec."Rollover Date" := Today();
+        //     Rec.Modify();
+        // end;
 
     end;
 

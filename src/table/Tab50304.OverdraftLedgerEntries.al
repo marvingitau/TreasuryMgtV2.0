@@ -25,12 +25,32 @@ table 50304 "Overdraft Ledger Entries"
         field(22; "Opening Bal."; Decimal)
         {
             DataClassification = ToBeClassified;
+            trigger OnValidate()
+            begin
+                "Balance Difference" := "Closing Bal." - "Opening Bal.";
+            end;
         }
         field(23; "Closing Bal."; Decimal)
         {
             DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                ODLedger: Record "Overdraft Ledger Entries";
+            begin
+                ODLedger.Reset();
+                ODLedger.SetRange("Twin Record ID", "Loan No.");
+                if ODLedger.Find('-') then begin
+                    ODLedger."Opening Bal." := "Closing Bal.";
+                    ODLedger.Modify();
+                end;
+                "Balance Difference" := "Closing Bal." - "Opening Bal.";
+            end;
         }
         field(25; "Calculated Interest"; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(26; "Calculated Witholding Amount"; Decimal)
         {
             DataClassification = ToBeClassified;
         }
@@ -52,6 +72,10 @@ table 50304 "Overdraft Ledger Entries"
         {
             DataClassification = ToBeClassified;
             TableRelation = "Bank Account"."No.";
+        }
+        field(50; "Twin Record ID"; Code[20])
+        {
+            DataClassification = ToBeClassified;
         }
 
     }

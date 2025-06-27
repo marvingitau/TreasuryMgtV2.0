@@ -62,21 +62,13 @@ report 50248 "Intre. Accru & Cap"
                     field(No; LoanID)
                     {
                         TableRelation = "Funder Loan"."No.";
+                        ApplicationArea = All;
                     }
                 }
             }
         }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
 
-                }
-            }
-        }
     }
 
     rendering

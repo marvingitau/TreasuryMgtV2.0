@@ -62,16 +62,7 @@ report 50241 "Payment Amortization Related"
             }
         }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
 
-                }
-            }
-        }
     }
 
     rendering

@@ -1041,7 +1041,7 @@ table 50230 Funders
         }
         field(3000; FunderType; Option)
         {
-            OptionMembers = Individual,"Joint Application",Corporate,Institutional,"Bank Loan","Bank Overdraft";
+            OptionMembers = Individual,"Joint Application",Corporate,Institutional,"Bank Loan","Bank Overdraft",Relatedparty;
             DataClassification = ToBeClassified;
         }
         field(3010; CompanyNo; Text[250])

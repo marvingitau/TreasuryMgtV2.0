@@ -194,8 +194,9 @@ codeunit 50243 RelatepartyMgtCU
                     funderLegderEntry1.Amount := -witHldInterest;
                     funderLegderEntry1."Amount(LCY)" := -witHldInterest;
                     funderLegderEntry1.Insert();
-                    if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
-                        DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
+
+                    // if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
+                    //     DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
                     //Commit();
 
                     funderLegderEntry2.Init(); //
@@ -436,9 +437,10 @@ codeunit 50243 RelatepartyMgtCU
                 funderLegderEntry1.Amount := -witHldInterest;
                 funderLegderEntry1."Amount(LCY)" := -witHldInterest;
                 funderLegderEntry1.Insert();
-                if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
-                    DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
-                //Commit();
+
+                // if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
+                //     DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
+                // //Commit();
 
                 funderLegderEntry2.Init(); //
                 funderLegderEntry2."Entry No." := NextEntryNo + 2;
@@ -677,9 +679,10 @@ codeunit 50243 RelatepartyMgtCU
                 funderLegderEntry1.Amount := -witHldInterest;
                 funderLegderEntry1."Amount(LCY)" := -witHldInterest;
                 funderLegderEntry1.Insert();
-                if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
-                    DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
-                //Commit();
+
+                // if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
+                //     DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
+                // //Commit();
 
                 funderLegderEntry3.Init();
                 funderLegderEntry3."Entry No." := NextEntryNo + 2;
@@ -939,9 +942,10 @@ codeunit 50243 RelatepartyMgtCU
                 funderLegderEntry1.Amount := -witHldInterest;
                 funderLegderEntry1."Amount(LCY)" := -witHldInterest;
                 funderLegderEntry1.Insert();
-                if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
-                    DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
-                //Commit();
+
+                // if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
+                //     DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
+                // //Commit();
 
 
                 Message('Interest  Calculated (partial)');
@@ -1085,7 +1089,7 @@ codeunit 50243 RelatepartyMgtCU
                     witHldInterest := (funderLoan.Withldtax / 100) * monthlyInterest;
                 end;
 
-                exit(monthlyInterest);
+                exit(monthlyInterest - witHldInterest);
             end;
 
         end;
@@ -1651,8 +1655,8 @@ codeunit 50243 RelatepartyMgtCU
                         SalesInvoiceLine.Validate("Unit Price", AccruedInterestAmount);
                         SalesInvoiceLine.Validate(Quantity, 1);
                         if SalesInvoiceLine.Insert(true) then begin
-                            SalesInvoiceLine.Validate("Gen. Prod. Posting Group", 'WITHHOLDING');
-                            SalesInvoiceLine.Validate("VAT Bus. Posting Group", 'DOMESTIC');
+                            // SalesInvoiceLine.Validate("Gen. Prod. Posting Group", 'WITHHOLDING');
+                            // SalesInvoiceLine.Validate("VAT Bus. Posting Group", 'DOMESTIC');
                             SalesInvoiceLine.Modify()
                         end;
                     end;
@@ -1662,18 +1666,18 @@ codeunit 50243 RelatepartyMgtCU
                     RelatedSelectedLoans.Processed := true;
                     RelatedSelectedLoans.Modify();
 
-                    // Allow modification before posting
-                    OnBeforePostSalesInvoiceWithGLLines(SalesInvoiceHeader);
+                    // // Allow modification before posting
+                    // OnBeforePostSalesInvoiceWithGLLines(SalesInvoiceHeader);
 
-                    // Post the invoice
-                    Commit();
-                    if not SalesPost.Run(SalesInvoiceHeader) then
-                        Error('Error posting sales invoice: %1', GetLastErrorText());
+                    // // Post the invoice
+                    // Commit();
+                    // if not SalesPost.Run(SalesInvoiceHeader) then
+                    //     Error('Error posting sales invoice: %1', GetLastErrorText());
 
-                    // Raise event after posting
-                    OnAfterSalesInvoiceWithGLLinesPosted(SalesInvoiceHeader);
+                    // // Raise event after posting
+                    // OnAfterSalesInvoiceWithGLLinesPosted(SalesInvoiceHeader);
 
-                    Message('Sales Invoice %1 has been created and posted successfully.', SalesInvoiceHeader."No.");
+                    // Message('Sales Invoice %1 has been created and posted successfully.', SalesInvoiceHeader."No.");
 
                 end;
                 Looper += 1;

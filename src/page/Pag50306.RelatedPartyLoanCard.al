@@ -1028,6 +1028,8 @@ page 50306 "RelatedParty Loan Card"
         //             isCurrencyVisible := false;
         //     end;
         // end;
+
+        /*
         if Rec.InterestRateType = Rec.InterestRateType::"Floating Rate" then begin
             Rec.InterestRate := Rec."Reference Rate" + Rec.Margin;
             Rec.Modify();
@@ -1035,6 +1037,8 @@ page 50306 "RelatedParty Loan Card"
         end
         else
             isFloatRate := false;
+        */
+
         //  Rec."Document Number" := TrsyMgt.GenerateDocumentNumber();
         if Rec.SecurityType = Rec.SecurityType::"Senior secured" then begin
             isSecureLoanActive := true;

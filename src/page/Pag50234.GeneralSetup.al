@@ -216,7 +216,17 @@ page 50234 "General Setup"
                 Promoted = true;
                 PromotedCategory = Process;
                 PromotedIsBig = true;
-                RunObject = page "Intr. Rate Change";
+                RunObject = page "Dynamic Intr. Rate";
+            }
+
+            action("Funder Loan Categories")
+            {
+                Caption = 'Funder Loan Categories';
+                Image = InsertTravelFee;
+                Promoted = true;
+                PromotedCategory = Category4;
+                PromotedIsBig = true;
+                RunObject = page "Funder Loan Categories";
             }
         }
     }

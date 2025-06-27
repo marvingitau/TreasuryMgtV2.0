@@ -90,6 +90,10 @@ page 50238 "Trsy Journal"
                     ApplicationArea = All;
                     ShowMandatory = true;
                 }
+                field("Enable GL Posting"; Rec."Enable GL Posting")
+                {
+                    ApplicationArea = All;
+                }
                 field("Shortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
                 {
                     ApplicationArea = All;
@@ -120,6 +124,9 @@ page 50238 "Trsy Journal"
                     Image = PostOrder;
                     ShortCutKey = 'F9';
                     ToolTip = 'Finalize the document or journal by posting the amounts and quantities to the related accounts in your company books.';
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    PromotedIsBig = true;
 
                     trigger OnAction()
                     var

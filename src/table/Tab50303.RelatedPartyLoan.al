@@ -17,34 +17,34 @@ table 50303 "RelatedParty Loan"
             Caption = 'Record No.';
             trigger OnValidate()
             var
-                Funder: Record Funders;
-                Portfolio: Record Portfolio;
+                RelatedParty: Record RelatedParty;
+                Portfolio: Record "Portfolio RelatedParty";
             begin
-                Funder.Reset();
-                Funder.SetRange("No.", "Funder No.");
-                if Funder.Find('-') then begin
-                    Name := Funder.Name;
-                    if Funder."Payables Account" = '' then begin
+                RelatedParty.Reset();
+                RelatedParty.SetRange("No.", "Funder No.");
+                if RelatedParty.Find('-') then begin
+                    Name := RelatedParty.Name;
+                    if RelatedParty."Payables Account" = '' then begin
                         Error('Payable A/c Missing');
                         exit;
                     end;
-                    if Funder."Interest Expense" = '' then begin
+                    if RelatedParty."Interest Expense" = '' then begin
                         Error('Interest Expense A/c Missing');
                         exit;
                     end;
-                    if Funder."Interest Payable" = '' then begin
+                    if RelatedParty."Interest Payable" = '' then begin
                         Error('Interest Payable A/c Missing');
                         exit;
                     end;
-                    "Payables Account" := Funder."Payables Account";
+                    "Payables Account" := RelatedParty."Payables Account";
                     Rec.Validate("Payables Account");
-                    "Interest Expense" := Funder."Interest Expense";
+                    "Interest Expense" := RelatedParty."Interest Expense";
                     Rec.Validate("Interest Expense");
-                    "Interest Payable" := Funder."Interest Payable";
+                    "Interest Payable" := RelatedParty."Interest Payable";
                     Rec.Validate("Interest Payable");
 
                     Portfolio.Reset();
-                    Portfolio.SetRange("No.", Funder.Portfolio);
+                    Portfolio.SetRange("No.", RelatedParty.Portfolio);
                     if Portfolio.Find('-') then begin
                         if Portfolio.Category = Portfolio.Category::"Bank Loan" then
                             Category := 'Bank Loan';
@@ -52,13 +52,20 @@ table 50303 "RelatedParty Loan"
                             Category := 'Individual';
                         if Portfolio.Category = Portfolio.Category::Institutional then
                             Category := 'Institutional';
+                        // if Portfolio.Category = Portfolio.Category::"Bank Overdraft" then
+                        //     Category := 'Bank Overdraft';
+                        if Portfolio.Category = Portfolio.Category::"Medium Term Notes" then
+                            Category := 'Medium Term Notes';
+                        if Portfolio.Category = Portfolio.Category::Relatedparty then
+                            Category := 'Relatedparty';
+
 
                         // Category := Portfolio.Category;
                         Category_line_No := Portfolio.Category_Line_No;
                         Rec.Validate(Category);
                     end;
 
-                    InvstPINNo := Funder.KRA;
+                    InvstPINNo := RelatedParty.KRA;
                 end;
             end;
         }
@@ -435,7 +442,7 @@ table 50303 "RelatedParty Loan"
                     funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
                     funderLegderEntry."Remaining Amount" := "Original Disbursed Amount";
                     if FundSource = '' then
-                        funderLegderEntry."Balancing Acc" := GenSetup."Opening  Balance Acc";
+                        funderLegderEntry."Bal. Account No." := GenSetup."Opening  Balance Acc";
                     funderLegderEntry.Insert();
                     // Commit();
                     if (EnableGLPosting = true) then
@@ -487,7 +494,7 @@ table 50303 "RelatedParty Loan"
                                 funderLegderEntry."Amount(LCY)" := -_ConvertedCurrency;
                                 funderLegderEntry."Remaining Amount" := _rolloveredPrincipal;
                                 if FundSource = '' then
-                                    funderLegderEntry."Balancing Acc" := GenSetup."Opening  Balance Acc";
+                                    funderLegderEntry."Bal. Account No." := GenSetup."Opening  Balance Acc";
                                 funderLegderEntry.Insert();
                                 if (EnableGLPosting = true) then
                                     RelatedpartyMgt.DirectGLPosting('init', principleAcc, -_rolloveredPrincipal, 'Original Amount ::Patial Principal Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code")
@@ -551,7 +558,7 @@ table 50303 "RelatedParty Loan"
                                 funderLegderEntry."Amount(LCY)" := -(_rolloveredInterest + _rolloveredPrincipal);
                                 funderLegderEntry."Remaining Amount" := -(_rolloveredInterest + _rolloveredPrincipal);
                                 if FundSource = '' then
-                                    funderLegderEntry."Balancing Acc" := GenSetup."Opening  Balance Acc";
+                                    funderLegderEntry."Bal. Account No." := GenSetup."Opening  Balance Acc";
                                 funderLegderEntry.Insert();
                                 if (EnableGLPosting = true) then
                                     RelatedpartyMgt.DirectGLPosting('init', principleAcc, -(_rolloveredInterest + _rolloveredPrincipal), 'Original Amount ::Patial Principal+Interest Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code")
@@ -590,7 +597,7 @@ table 50303 "RelatedParty Loan"
                             funderLegderEntry."Amount(LCY)" := -_ConvertedCurrency;
                             funderLegderEntry."Remaining Amount" := _rolloveredPrincipal;
                             if FundSource = '' then
-                                funderLegderEntry."Balancing Acc" := GenSetup."Opening  Balance Acc";
+                                funderLegderEntry."Bal. Account No." := GenSetup."Opening  Balance Acc";
                             funderLegderEntry.Insert();
                             if (EnableGLPosting = true) then
                                 RelatedpartyMgt.DirectGLPosting('init', principleAcc, -_rolloveredPrincipal, 'Original Amount ::Full Rollover Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code");

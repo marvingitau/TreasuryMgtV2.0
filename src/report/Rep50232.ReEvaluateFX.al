@@ -126,16 +126,7 @@ report 50232 ReEvaluateFX
             }
         }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
 
-                }
-            }
-        }
     }
 
     rendering

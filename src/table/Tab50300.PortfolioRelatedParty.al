@@ -156,7 +156,7 @@ table 50300 "Portfolio RelatedParty"
         field(71; Category; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = " ","Bank Loan",Institutional,Individual,"Asset Term Manager","Medium Term Notes";
+            OptionMembers = " ","Bank Loan",Institutional,Individual,"Asset Term Manager","Medium Term Notes",Relatedparty;
             // TableRelation = "Portfolio Fee Setup".Code;
             // trigger OnValidate()
             // var

@@ -92,6 +92,8 @@ table 50295 "Disbur. Tranched Loan"
                 _disburTrachEntry: Record "Disbur. Tranched Entry";
                 _feeChargeAmount: Decimal;
                 _portfolioFeeSetup: Record "Portfolio Fee Setup";
+
+                _withHoldingAc: Code[20];
             begin
                 if not (Status = Status::Approved) then
                     exit;
@@ -111,8 +113,10 @@ table 50295 "Disbur. Tranched Loan"
                     _ConvertedCurrency := "Tranche Amount";
                 _docNo := TrsyMgt.GenerateDocumentNumber();
 
+                GenSetup.Get();
                 _bankAccount := "Bank Account";
                 _loanAccount := _funderLoan."Payables Account";
+                _withHoldingAc := GenSetup.FunderWithholdingAcc;
 
                 //Update interest Rate if Applicable
                 if "Interest Rate" <> 0 then begin
@@ -137,15 +141,22 @@ table 50295 "Disbur. Tranched Loan"
                 funderLegderEntry."Document No." := _docNo;
                 funderLegderEntry."Bank Ref. No." := "Bank Reference No";
                 funderLegderEntry.Category := _funderLoan.Category; // Funder Loan Category
-                                                                    // funderLegderEntry."Transaction Type" := funderLegderEntry."Transaction Type"::"Original Amount";
                 funderLegderEntry.Description := _funderLoan."No." + ' ' + _funderLoan.Name + '-' + "Bank Reference No" + '-' + Format(_funderLoan.PlacementDate) + Format(_funderLoan.MaturityDate) + ' Tranch_Original Amount ';
                 funderLegderEntry."Currency Code" := _funderLoan.Currency;
+
                 funderLegderEntry.Amount := "Tranche Amount";
                 funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
                 funderLegderEntry."Remaining Amount" := "Tranche Amount";
+
+                funderLegderEntry."Bal. Account No." := _loanAccount;
+                funderLegderEntry."Bal. Account Type" := funderLegderEntry."Bal. Account Type"::"G/L Account";
+                funderLegderEntry."Account No." := _bankAccount;
+                funderLegderEntry."Account Type" := funderLegderEntry."Account Type"::"Bank Account";
+
+
                 funderLegderEntry.Insert();
                 if _funderLoan.EnableGLPosting = true then
-                    FunderMgt.DirectGLPosting('init', _loanAccount, Rec."Tranche Amount", 'Tranch Amount', "Loan No.", _bankAccount, _funderLoan.Currency, '', '', "Bank Reference No", _funders."Shortcut Dimension 1 Code");
+                    FunderMgt.DirectGLPosting('init', _loanAccount, _withHoldingAc, Rec."Tranche Amount", 0, 'Tranch Amount', "Loan No.", _bankAccount, _funderLoan.Currency, '', '', "Bank Reference No", _funders."Shortcut Dimension 1 Code");
 
                 _trache.Reset();
                 _trache.SetRange(_trache."Loan No.", "Loan No.");
@@ -169,7 +180,7 @@ table 50295 "Disbur. Tranched Loan"
                     repeat
                         _feeChargeAmount := (_disburTrachEntry."Fee %" / 100) * "Tranche Amount";
                         if _funderLoan.EnableGLPosting = true then
-                            FunderMgt.DirectGLPosting('tranch-fee', _disburTrachEntry.GLAccount, _feeChargeAmount, 'Tranch  Fee Amount', "Loan No.", _disburTrachEntry.BankAccount, _funderLoan.Currency, '', '', "Bank Reference No", _funders."Shortcut Dimension 1 Code");
+                            FunderMgt.DirectGLPosting('tranch-fee', _disburTrachEntry.GLAccount, _withHoldingAc, _feeChargeAmount, 0, 'Tranch  Fee Amount', "Loan No.", _disburTrachEntry.BankAccount, _funderLoan.Currency, '', '', "Bank Reference No", _funders."Shortcut Dimension 1 Code");
 
                         _disburTrachEntry.utilized := true;
                         _disburTrachEntry.Modify();

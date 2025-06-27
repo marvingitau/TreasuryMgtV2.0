@@ -69,34 +69,34 @@ report 50243 "Debt Maturity Category"
         }
     }
 
-    requestpage
-    {
+    // requestpage
+    // {
 
-        layout
-        {
-            area(Content)
-            {
-                group(GroupName)
-                {
-                    // field(Name; SourceExpression)
-                    // {
+    //     layout
+    //     {
+    //         area(Content)
+    //         {
+    //             group(GroupName)
+    //             {
+    //                 // field(Name; SourceExpression)
+    //                 // {
 
-                    // }
-                }
-            }
-        }
+    //                 // }
+    //             }
+    //         }
+    //     }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
+    //     actions
+    //     {
+    //         area(processing)
+    //         {
+    //             action(LayoutName)
+    //             {
 
-                }
-            }
-        }
-    }
+    //             }
+    //         }
+    //     }
+    // }
 
     rendering
     {

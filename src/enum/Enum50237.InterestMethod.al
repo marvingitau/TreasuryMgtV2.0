@@ -18,4 +18,8 @@ enum 50237 InterestMethod
     {
         Caption = 'Actual/364';
     }
+    value(4; "30/365")
+    {
+        Caption = '30/365';
+    }
 }

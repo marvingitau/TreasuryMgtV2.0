@@ -564,16 +564,7 @@ report 50281 "Related Rem. On Intr. Due"
             }
         }
 
-        actions
-        {
-            area(processing)
-            {
-                action(LayoutName)
-                {
 
-                }
-            }
-        }
     }
 
     rendering

@@ -40,6 +40,14 @@ table 50290 "Redemption Tbl"
         {
             DataClassification = ToBeClassified;
         }
+        field(40; ActualInterest; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(41; ActualPrincipal; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
         field(45; FloatIntr; Decimal)
         {
             DataClassification = ToBeClassified;

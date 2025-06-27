@@ -61,6 +61,14 @@ table 50291 "Redemption Log Tbl"
         {
             DataClassification = ToBeClassified;
         }
+        field(37; CurrentIntrest; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(38; ActualPrincipal; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
 
         field(40; "Reference No."; Code[150])
         {
