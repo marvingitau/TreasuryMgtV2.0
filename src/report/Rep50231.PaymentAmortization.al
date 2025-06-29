@@ -519,8 +519,8 @@ report 50231 "Payment Amortization"
                         _currentMonthInLoop := CalcDate('<CM>', placementDate);
                     end
                     else if (monthCounter = NoOfMonths) then begin
-                        // _currentMonthInLoop := CalcDate('<CM>', maturityDate);
-                        _currentMonthInLoop := maturityDate;
+                        _currentMonthInLoop := CalcDate('<CM>', maturityDate);
+                        // _currentMonthInLoop := maturityDate;
                     end
                     else begin
                         _currentMonthInLoop := CalcDate('<CM>', CalcDate('<' + Format(monthCounter) + 'M>', placementDate));
@@ -528,14 +528,20 @@ report 50231 "Payment Amortization"
                     end;
 
                     DaysInMonth := DATE2DMY(_currentMonthInLoop, 1);
+
                     if (monthCounter = 0) then begin
                         //Start Date
-                        DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 0; //Remaining to End month
+                        if CalcDate('<CM>', placementDate) <> placementDate then // Is placement End of Month, if not, on the diff add 1
+                            DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 1
+                        else
+                            DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 0;
+
+                        // DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 0; //Remaining to End month
                         _outstandingAmount := _principle - _dailyPrincipal;
                     end;
                     if (monthCounter = NoOfMonths) then begin
                         //End Date
-                        DaysInMonth := maturityDate - CalcDate('<-CM>', maturityDate) + 1;
+                        DaysInMonth := maturityDate - CalcDate('<-CM>', maturityDate);
                         _amortization := _principle;
                         _outstandingAmount := 0;
                         _totalPayment := _principle;
@@ -552,10 +558,13 @@ report 50231 "Payment Amortization"
                         monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInMonth / 364);
                     end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/365" then begin
                         monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInMonth / 365);
+                    end
+                    else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"30/365" then begin
+                        monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 365);
                     end;
 
 
-                    if (dueDate <> 0D) and (dueDate > _currentMonthInLoop) then begin
+                    if (dueDate <> 0D) and (dueDate > _currentMonthInLoop) and (dueDate <> _currentMonthInLoop) then begin
                         //FirstDueAccumulator.Init();
 
                         _secondStep := true;
@@ -1137,7 +1146,7 @@ report 50231 "Payment Amortization"
              */
             if ((_dueDateInfluence = true) and (_skipWeekendInfluence = true)) then begin
 
-                NoOfBiann := BiannualPeriodsBetweenDueDateEffect(dueDate, maturityDate) + 0;
+                NoOfBiann := Count6MonthPeriods(dueDate, maturityDate) + 0;
                 if NoOfBiann = 0 then
                     NoOfBiann := 1; //ENSURE RIGHT SQEW IS TAKEN CARE 0F
 
@@ -1285,7 +1294,7 @@ report 50231 "Payment Amortization"
             **      ENSURE RIGHT SQEW IS TAKEN CARE IF
             */
             if ((_dueDateInfluence = true) and (_skipWeekendInfluence = false)) then begin
-                NoOfBiann := BiannualPeriodsBetweenDueDateEffect(dueDate, maturityDate) + 0;
+                NoOfBiann := Count6MonthPeriods(dueDate, maturityDate) + 0;
                 if NoOfBiann = 0 then
                     NoOfBiann := 1; //ENSURE RIGHT SQEW IS TAKEN CARE IF
 
@@ -1590,7 +1599,7 @@ report 50231 "Payment Amortization"
             **      ENSURE RIGHT SQEW IS TAKEN CARE IF
             */
             if ((_dueDateInfluence = true) and (_skipWeekendInfluence = true)) then begin
-                NoOfAnnual := AnnualPeriodsBetween(dueDate, maturityDate) + 0;
+                NoOfAnnual := CountExact12MonthPeriods(dueDate, maturityDate) + 1;
                 if NoOfAnnual = 0 then
                     NoOfAnnual := 1;//ENSURE RIGHT SQEW IS TAKEN CARE 0Fs
 
@@ -1738,7 +1747,7 @@ report 50231 "Payment Amortization"
             */
 
             if ((_dueDateInfluence = true) and (_skipWeekendInfluence = false)) then begin
-                NoOfAnnual := AnnualPeriodsBetween(dueDate, maturityDate) + 0;
+                NoOfAnnual := CountExact12MonthPeriods(dueDate, maturityDate) + 1;
                 if NoOfAnnual = 0 then
                     NoOfAnnual := 1;//ENSURE RIGHT SQEW IS TAKEN CARE 0Fs
 
@@ -1758,7 +1767,7 @@ report 50231 "Payment Amortization"
                         DaysInAnnual := _currentAnnualInLoop - _previousAnnualInLoop;
                         _outstandingAmount := _principle - (_dailyPrincipal * 2);
                     end
-                    else if AnnualCounter = NoOfAnnual then begin
+                    else if (AnnualCounter = NoOfAnnual) then begin
                         _currentAnnualInLoop := maturityDate;
                         _previousAnnualInLoop := (CALCDATE('<+' + Format((AnnualCounter - 1) * 12) + 'M>', dueDate));
                         DaysInAnnual := maturityDate - _previousAnnualInLoop;
@@ -1787,6 +1796,9 @@ report 50231 "Payment Amortization"
                         monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInAnnual / 364);
                     end else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"Actual/365" then begin
                         monthlyInterest := ((_interestRate_Active / 100) * _principle) * (DaysInAnnual / 365);
+                    end
+                    else if FunderLoanTbl.InterestMethod = FunderLoanTbl.InterestMethod::"30/365" then begin
+                        monthlyInterest := ((_interestRate_Active / 100) * _principle) * (30 / 365);
                     end;
 
                     if (dueDate <> 0D) and (dueDate = _currentAnnualInLoop) then begin
@@ -2469,6 +2481,115 @@ report 50231 "Payment Amortization"
         exit(ClosestStartOfBiannual);
     end;
 
+    /// <summary>
+    /// Simplified version that counts each standard biannual period (June 30/Dec 31) between dates
+    /// </summary>
+    procedure CountBiannualPeriodsSimple(StartDate: Date; EndDate: Date): Integer
+    var
+        StartYear, EndYear : Integer;
+        TotalPeriods: Integer;
+    begin
+        if (StartDate = 0D) or (EndDate = 0D) then
+            exit(0);
+
+        StartYear := Date2DMY(StartDate, 3);
+        EndYear := Date2DMY(EndDate, 3);
+        /*
+                // Calculate base number of periods (2 per year)
+                TotalPeriods := (EndYear - StartYear) * 2;
+
+                // Adjust for start/end periods
+                if Date2DMY(StartDate, 2) <= 6 then
+                    TotalPeriods += 1; // Starts in first half
+                if Date2DMY(EndDate, 2) >= 7 then
+                    TotalPeriods += 1; // Ends in second half
+        */
+        TotalPeriods := (EndDate - StartDate) div 6;
+        exit(TotalPeriods);
+    end;
+
+
+    /// <summary>
+    /// Counts how many complete or partial 6-month periods fit between two dates.
+    /// </summary>
+    /// <param name="StartDate">The starting date</param>
+    /// <param name="EndDate">The ending date</param>
+    /// <returns>Number of 6-month periods between dates</returns>
+    procedure Count6MonthPeriods(StartDate: Date; EndDate: Date): Integer
+    var
+        CurrentDate: Date;
+        PeriodsCounted: Integer;
+    begin
+        if (StartDate = 0D) or (EndDate = 0D) or (StartDate > EndDate) then
+            exit(0);
+
+        PeriodsCounted := 0;
+        CurrentDate := StartDate;
+
+        while CurrentDate <= EndDate do begin
+            PeriodsCounted += 1;
+
+            // Exit if adding another 6 months would exceed end date
+            if CalcDate('<6M>', CurrentDate) > EndDate then
+                break;
+
+            CurrentDate := CalcDate('<6M>', CurrentDate);
+        end;
+
+        exit(PeriodsCounted);
+    end;
+
+    /// <summary>
+    /// Calculates the number of biannual periods between two dates.
+    /// </summary>
+    /// <param name="StartDate">The starting date</param>
+    /// <param name="EndDate">The ending date</param>
+    /// <param name="CountPartialPeriods">Set to true to count partial half-years as periods</param>
+    /// <returns>The number of biannual periods between the dates</returns>
+    procedure GetNumberOfBiannualPeriods(StartDate: Date; EndDate: Date; CountPartialPeriods: Boolean) Result: Integer
+    var
+        CurrentDate: Date;
+        BiannualEndDate1: Date;
+        BiannualEndDate2: Date;
+        Year: Integer;
+    begin
+        if (StartDate = 0D) or (EndDate = 0D) or (StartDate > EndDate) then
+            exit(0);
+
+        Result := 0;
+        CurrentDate := StartDate;
+
+        while CurrentDate <= EndDate do begin
+            Year := Date2DMY(CurrentDate, 3);
+
+            // Calculate standard biannual end dates for the current year
+            BiannualEndDate1 := DMY2Date(30, 6, Year);  // First half-year end
+            BiannualEndDate2 := DMY2Date(31, 12, Year); // Second half-year end
+
+            // Check which biannual period we're in
+            if CurrentDate <= BiannualEndDate1 then begin
+                // First half of year
+                if CountPartialPeriods or (CurrentDate = DMY2Date(1, 1, Year)) then begin
+                    Result += 1;
+                    CurrentDate := BiannualEndDate1 + 1;
+                end else begin
+                    if EndDate <= BiannualEndDate1 then
+                        exit(Result + 1);
+                    CurrentDate := BiannualEndDate1 + 1;
+                end;
+            end else begin
+                // Second half of year
+                if CountPartialPeriods or (CurrentDate = BiannualEndDate1 + 1) then begin
+                    Result += 1;
+                    CurrentDate := BiannualEndDate2 + 1;
+                end else begin
+                    if EndDate <= BiannualEndDate2 then
+                        exit(Result + 1);
+                    CurrentDate := BiannualEndDate2 + 1;
+                end;
+            end;
+        end;
+    end;
 
     procedure BiannualPeriodsBetween(StartDate: Date; EndDate: Date): Integer
     var
@@ -2608,6 +2729,36 @@ report 50231 "Payment Amortization"
         NumDays := EndOfBiannual - StartOfBiannual + 1;
 
         exit(NumDays);
+    end;
+
+    /// <summary>
+    /// Counts how many full 12-month periods fit between StartDate and EndDate without exceeding EndDate.
+    /// </summary>
+    /// <param name="StartDate">Initial date</param>
+    /// <param name="EndDate">Cutoff date</param>
+    /// <returns>Number of complete 12-month periods</returns>
+    procedure CountExact12MonthPeriods(StartDate: Date; EndDate: Date): Integer
+    var
+        CurrentDate: Date;
+        PeriodCount: Integer;
+        NextDate: Date;
+    begin
+        if (StartDate = 0D) or (EndDate = 0D) or (StartDate > EndDate) then
+            exit(0);
+
+        PeriodCount := 0;
+        CurrentDate := StartDate;
+
+        while true do begin
+            NextDate := CalcDate('<12M>', CurrentDate); // Add 12 months
+
+            // Stop if the next period exceeds EndDate
+            if NextDate > EndDate then
+                exit(PeriodCount);
+
+            PeriodCount += 1;
+            CurrentDate := NextDate;
+        end;
     end;
 
     procedure AnnualPeriodsBetween(StartDate: Date; EndDate: Date): Integer

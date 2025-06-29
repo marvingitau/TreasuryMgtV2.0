@@ -156,6 +156,7 @@ report 50230 "Interest Amortization"
         _dueDateInfluence: Boolean; //This indicates if calculation will follow due date as the starting and subsequent period date will be seeded by it.
         _skipWeekendInfluence: Boolean;
         _dailyPrincipal: Decimal;
+        DueDateCalcPeriodEq: Boolean;
     begin
         // Filters := FunderLoanTbl.GetFilter("No.");
         // ReportFlag.Reset();
@@ -184,6 +185,7 @@ report 50230 "Interest Amortization"
 
         _principle := 0;
         _interestRate_Active := 0;
+        DueDateCalcPeriodEq := false;
 
         _dueDateInfluence := FunderLoanTbl.EnableDynamicPeriod;
         _skipWeekendInfluence := FunderLoanTbl.EnableWeekDayReporting;
@@ -469,6 +471,10 @@ report 50230 "Interest Amortization"
 
             end;
 
+            /*
+            **
+            **      ENSURE BALANCE OF DAYS IS TAKEN CARE 0F
+            */
             if ((_dueDateInfluence = false) and (_skipWeekendInfluence = false)) then begin
                 NoOfMonths := MonthsBetween(placementDate, maturityDate) + 0;
                 for monthCounter := 0 to NoOfMonths do begin
@@ -477,7 +483,8 @@ report 50230 "Interest Amortization"
                         _currentMonthInLoop := CalcDate('<CM>', placementDate);
                     end
                     else if (monthCounter = NoOfMonths) then begin
-                        _currentMonthInLoop := CalcDate('<CM>', maturityDate);
+                        // _currentMonthInLoop := CalcDate('<CM>', maturityDate);
+                        _currentMonthInLoop := maturityDate;
                     end
                     else begin
                         QuarterCounterRem := monthCounter mod 12;
@@ -490,24 +497,21 @@ report 50230 "Interest Amortization"
 
                     if (monthCounter = 0) then begin
                         //Start Date
-                        if FunderLoanTbl."Inclusive Counting Interest" = true then
+                        if CalcDate('<CM>', placementDate) <> placementDate then // Is placement End of Month, if not, on the diff add 1
                             DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 1
                         else
                             DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 0;
-                        // DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 1;
 
-                        // if IsJanuaryFirst(placementDate) = true then
-                        //     DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 0 //Remaining to End month
+                        //If Placement is equal to duedate <<< If this condition future me add it :) >>>
+
+                        // if dueDate = placementDate then
+                        //     DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 1
                         // else
                         //     DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 0;
+
                     end;
                     if (monthCounter = NoOfMonths) then begin
                         //End Date
-
-                        /*if FunderLoanTbl."Add Day to Start Period" = true then
-                            DaysInMonth := maturityDate - CalcDate('<-CM>', maturityDate) + 0
-                        else
-                            DaysInMonth := maturityDate - CalcDate('<-CM>', maturityDate) + 1;*/
                         DaysInMonth := maturityDate - CalcDate('<-CM>', maturityDate);
                     end;
 
@@ -531,8 +535,8 @@ report 50230 "Interest Amortization"
                         _withHoldingTax_Amnt := (monthlyInterest * _withHoldingTax_Percent / 100)
                     end;
 
-                    if (dueDate <> 0D) and (dueDate > _currentMonthInLoop) then begin
-                        //FirstDueAccumulator.Init();
+                    if (dueDate <> 0D) and (dueDate > _currentMonthInLoop) and (dueDate <> _currentMonthInLoop) then begin
+
                         _secondStep := true;
                         FirstDueAccumulator.Line := QuarterCounter + 1;
                         FirstDueAccumulator.DueDate := _currentMonthInLoop;
@@ -542,11 +546,9 @@ report 50230 "Interest Amortization"
                         FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
                         FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
                         FirstDueAccumulator.LoopCount := monthCounter;
-                        if FunderLoanTbl."Inclusive Counting Interest" = true then // if due date is on the middle of the period
-                            FirstDueAccumulator.NumberofDays := _currentMonthInLoop - FunderLoanTbl.PlacementDate + 1
-                        else // if due date is similar to the current period (Period in Loop)
-                            FirstDueAccumulator.NumberofDays := _currentMonthInLoop - FunderLoanTbl.PlacementDate;
+                        FirstDueAccumulator.NumberofDays := DaysInMonth;
                         FirstDueAccumulator.Insert();
+
                     end else begin
                         FirstDueAccumulator.Reset();
                         FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
@@ -860,9 +862,13 @@ report 50230 "Interest Amortization"
 
             end;
 
+            /*
+            **
+            **      ENSURE BALANCE OF DAYS IS TAKEN CARE 0F
+            */
             if ((_dueDateInfluence = false) and (_skipWeekendInfluence = false)) then begin
 
-                NoOfQuarter := QuartersBetween(placementDate, maturityDate) + 1; // No of Quarters
+                NoOfQuarter := QuartersBetween(placementDate, maturityDate) + 0; // No of Quarters
 
                 // StatingQuarterEndDate := GetClosestQuarterEndDate(placementDate);
                 StatingQuarterStartDate := GetClosestQuarterStartDate(placementDate);
@@ -873,7 +879,7 @@ report 50230 "Interest Amortization"
                     if QuarterCounter = 0 then begin
                         // _currentQuarterInLoop := GetStartOfQuarter(placementDate);
                         _currentQuarterInLoop := GetEndOfQuarter(placementDate);
-                        if FunderLoanTbl."Inclusive Counting Interest" = true then
+                        if _currentQuarterInLoop <> placementDate then
                             DaysInQuarter := (_currentQuarterInLoop - placementDate) + 1
                         else
                             DaysInQuarter := (_currentQuarterInLoop - placementDate) + 0;
@@ -886,12 +892,7 @@ report 50230 "Interest Amortization"
                     // end
                     else if QuarterCounter = NoOfQuarter then begin
                         _currentQuarterInLoop := GetStartOfQuarter(maturityDate);
-
-                        // if FunderLoanTbl."Add Day to Start Period" = true then
-                        //     DaysInQuarter := (maturityDate - _currentQuarterInLoop + 1) - 1
-                        // else
-                        DaysInQuarter := maturityDate - _currentQuarterInLoop + 1;
-
+                        DaysInQuarter := maturityDate - _currentQuarterInLoop;
                         _currentQuarterInLoop := GetEndOfQuarter(maturityDate);
                         if maturityDate < _currentQuarterInLoop then
                             _currentQuarterInLoop := maturityDate
@@ -908,11 +909,9 @@ report 50230 "Interest Amortization"
                         // else
                         DaysInQuarter := GetDaysInQuarter(_currentQuarterInLoop);
 
-                        if QuarterCounterRem = 0 then
-                            QuarterCounterRem := 4;
+
                     end;
-                    //Get quarter date. - sub the current date for days.
-                    //Add to the next quarter
+
 
                     _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentQuarterInLoop, 'FUNDER_REPORT');
 
@@ -945,7 +944,7 @@ report 50230 "Interest Amortization"
                         FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
                         FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
                         FirstDueAccumulator.LoopCount := QuarterCounter;
-                        FirstDueAccumulator.NumberofDays := _currentQuarterInLoop - FunderLoanTbl.PlacementDate;
+                        FirstDueAccumulator.NumberofDays := DaysInQuarter;
                         FirstDueAccumulator.Insert();
                     end else begin
                         FirstDueAccumulator.Reset();
@@ -954,17 +953,20 @@ report 50230 "Interest Amortization"
                         FirstDueAccumulator.CalcSums(Interest);
                         FirstDueAccumulator.CalcSums(NetInterest);
                         FirstDueAccumulator.CalcSums(WithHldTaxAmt);
+                        FirstDueAccumulator.CalcSums(NumberofDays);
 
                         if FirstDueAccumulator.Count > 0 then begin
                             _sumInterest := FirstDueAccumulator.Interest;
                             _sumNetInterest := FirstDueAccumulator.NetInterest;
                             _sumWtholding := FirstDueAccumulator.WithHldTaxAmt;
+                            _sumNumberOfDays := FirstDueAccumulator.NumberofDays;
                             FirstDueAccumulator.Reviewed := true;
                             FirstDueAccumulator.Modify();
                         end else begin
                             _sumInterest := 0;
                             _sumNetInterest := 0;
                             _sumWtholding := 0;
+                            _sumNumberOfDays := 0;
                         end;
 
 
@@ -974,11 +976,11 @@ report 50230 "Interest Amortization"
                         Loan.WithHldTaxAmt := _withHoldingTax_Amnt + _sumWtholding;
                         Loan.NetInterest := (monthlyInterest - _withHoldingTax_Amnt) + _sumNetInterest;
                         Loan.LoopCount := QuarterCounter;
-                        // if (dueDate <> 0D) and (dueDate > _currentQuarterInLoop) then begin
+
                         if _secondStep = true then begin
-                            Loan.NumberofDays := dueDate - FunderLoanTbl.PlacementDate;
-                            Loan.DueDate := dueDate;
-                            Loan.CalculationDate := dueDate;
+                            Loan.NumberofDays := _sumNumberOfDays + DaysInQuarter;
+                            Loan.DueDate := _currentQuarterInLoop;
+                            Loan.CalculationDate := _currentQuarterInLoop;
                             _secondStep := false;
                         end else begin
                             Loan.NumberofDays := DaysInQuarter;
@@ -1235,42 +1237,61 @@ report 50230 "Interest Amortization"
 
             end;
 
+            /*
+            **
+            **      ENSURE BALANCE OF DAYS IS TAKEN CARE 0F
+            */
             if ((_dueDateInfluence = false) and (_skipWeekendInfluence = false)) then begin
-                NoOfBiann := BiannualPeriodsBetween(placementDate, maturityDate) + 1; // No of Annual
-                StatingBiannEndDate := GetClosestBiannualEndDate(placementDate);
+                NoOfBiann := CountBiannualPeriodsCrossed(placementDate, maturityDate) + 0; // No of Annual
+                StatingBiannEndDate := GetBiannualEndDate(placementDate);
                 StatingBiannStartDate := GetClosestBiannualStartDate(placementDate);
-                for BiannCounter := 1 to NoOfBiann do begin
+                //What happens if Due date is equal to calculated end of period
+                for BiannCounter := 0 to NoOfBiann do begin
+                    if dueDate = CALCDATE('<+' + Format((BiannCounter) * 6) + 'M>', StatingBiannEndDate) then begin
+                        NoOfBiann := NoOfBiann + 0;
+                        DueDateCalcPeriodEq := true;
+                    end;
+                end;
+
+                for BiannCounter := 0 to NoOfBiann do begin
                     _currentBiannInLoop := 0D;
                     DaysInBiann := 0;
-                    // if BiannCounter = 0 then begin
-                    //     _currentBiannInLoop := GetStartOfBiannual(placementDate);
-                    //     DaysInBiann := _currentBiannInLoop - placementDate;
-                    // end
-                    // else 
-                    if BiannCounter = 1 then begin
+                    if BiannCounter = 0 then begin
+                        // _currentBiannInLoop := GetStartOfBiannual(placementDate);
                         _currentBiannInLoop := GetEndOfBiannual(placementDate);
-                        DaysInBiann := _currentBiannInLoop - placementDate + 0;
+                        if GetEndOfBiannual(placementDate) <> placementDate then
+                            DaysInBiann := _currentBiannInLoop - placementDate + 1
+                        else
+                            DaysInBiann := _currentBiannInLoop - placementDate;
+
+
                     end
+                    // else 
+                    // if BiannCounter = 1 then begin
+                    //     _currentBiannInLoop := GetEndOfBiannual(placementDate);
+                    //     DaysInBiann := _currentBiannInLoop - placementDate + 0;
+                    // end 
                     else if BiannCounter = NoOfBiann then begin
                         _currentBiannInLoop := GetStartOfBiannual(maturityDate);
-                        DaysInBiann := maturityDate - _currentBiannInLoop + 1;
-                        // _currentBiannInLoop := maturityDate;
-                        _currentBiannInLoop := GetEndOfBiannual(maturityDate);
-
-
+                        DaysInBiann := maturityDate - _currentBiannInLoop;
+                        // _currentBiannInLoop := GetEndOfBiannual(maturityDate);
+                        _currentBiannInLoop := (maturityDate);
                     end
                     else begin
-                        _currentBiannInLoop := CALCDATE('<+' + Format(BiannCounter * 6) + 'M>', StatingBiannStartDate);
+                        _currentBiannInLoop := CALCDATE('<+' + Format((BiannCounter + 0) * 6) + 'M>', StatingBiannEndDate);
+                        if (DueDateCalcPeriodEq) then
+                            // _currentBiannInLoop := CALCDATE('<+' + Format((BiannCounter + 1) * 6) + 'M>', StatingBiannEndDate);
+
                         BiannCounterRem := BiannCounter mod 2;
                         if BiannCounterRem = 0 then
                             BiannCounterRem := 2;
                         if BiannCounterRem = 2 then
-                            DaysInBiann := GetDaysInBiannual(BiannCounterRem, DATE2DMY(_currentBiannInLoop, 3)) - 1
+                            DaysInBiann := GetDaysInBiannual(BiannCounterRem, DATE2DMY(_currentBiannInLoop, 3))
                         else
                             DaysInBiann := GetDaysInBiannual(BiannCounterRem, DATE2DMY(_currentBiannInLoop, 3));
                     end;
-                    //Get quarter date. - sub the current date for days.
-                    //Add to the next quarter
+
+
                     _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentBiannInLoop, 'FUNDER_REPORT');
 
 
@@ -1291,8 +1312,8 @@ report 50230 "Interest Amortization"
                         _withHoldingTax_Amnt := (monthlyInterest * _withHoldingTax_Percent / 100)
                     end;
 
-                    if (dueDate <> 0D) and (dueDate > _currentBiannInLoop) then begin
-                        //FirstDueAccumulator.Init();
+                    if (dueDate <> 0D) and (dueDate > _currentBiannInLoop) and (dueDate <> _currentBiannInLoop) then begin
+
                         _secondStep := true;
                         FirstDueAccumulator.Line := QuarterCounter + 1;
                         FirstDueAccumulator.DueDate := _currentBiannInLoop;
@@ -1302,25 +1323,29 @@ report 50230 "Interest Amortization"
                         FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
                         FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
                         FirstDueAccumulator.LoopCount := BiannCounter;
-                        FirstDueAccumulator.NumberofDays := _currentBiannInLoop - FunderLoanTbl.PlacementDate;
+                        FirstDueAccumulator.NumberofDays := DaysInBiann;
                         FirstDueAccumulator.Insert();
-                    end else begin
+                    end
+                    else begin
                         FirstDueAccumulator.Reset();
                         FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
                         FirstDueAccumulator.SetRange(Reviewed, false);
                         FirstDueAccumulator.CalcSums(Interest);
                         FirstDueAccumulator.CalcSums(NetInterest);
                         FirstDueAccumulator.CalcSums(WithHldTaxAmt);
+                        FirstDueAccumulator.CalcSums(NumberofDays);
 
                         if FirstDueAccumulator.Count > 0 then begin
                             _sumInterest := FirstDueAccumulator.Interest;
                             _sumNetInterest := FirstDueAccumulator.NetInterest;
                             _sumWtholding := FirstDueAccumulator.WithHldTaxAmt;
+                            _sumNumberOfDays := FirstDueAccumulator.NumberofDays;
                             FirstDueAccumulator.Reviewed := true;
                             FirstDueAccumulator.Modify();
                         end else begin
                             _sumInterest := 0;
                             _sumNetInterest := 0;
+                            _sumNumberOfDays := 0;
                             _sumWtholding := 0;
                         end;
 
@@ -1330,10 +1355,9 @@ report 50230 "Interest Amortization"
                         Loan.WithHldTaxAmt := _withHoldingTax_Amnt + _sumWtholding;
                         Loan.NetInterest := (monthlyInterest - _withHoldingTax_Amnt) + _sumNetInterest;
                         Loan.LoopCount := BiannCounter;
-                        // Loan.NumberofDays := DaysInBiann;
-                        // if (dueDate <> 0D) and (dueDate > _currentBiannInLoop) then begin
+
                         if _secondStep = true then begin
-                            Loan.NumberofDays := _currentBiannInLoop - FunderLoanTbl.PlacementDate;
+                            Loan.NumberofDays := _sumNumberOfDays + DaysInBiann;
                             Loan.DueDate := _currentBiannInLoop;
                             Loan.CalculationDate := _currentBiannInLoop;
                             _secondStep := false;
@@ -1585,40 +1609,54 @@ report 50230 "Interest Amortization"
                 end;
 
             end;
-
+            /*
+            **
+            **      ENSURE BALANCE OF DAYS IS TAKEN CARE 0F
+            */
             if ((_dueDateInfluence = false) and (_skipWeekendInfluence = false)) then begin
-                NoOfAnnual := AnnualPeriodsBetween(placementDate, maturityDate) + 1; // No of Quarters
-                StatingAnnualEndDate := GetClosestAnnualEndDate(placementDate);
-                for AnnualCounter := 1 to NoOfAnnual do begin
+                NoOfAnnual := CountAnnualPeriodsCrossed(placementDate, maturityDate) + 0;
+                StatingAnnualEndDate := GetAnnualEndDate(placementDate);
+                for AnnualCounter := 0 to NoOfAnnual do begin
+                    if dueDate = CALCDATE('<+' + Format(AnnualCounter) + 'Y>', StatingAnnualEndDate) then begin
+                        DueDateCalcPeriodEq := true;
+                        // if AnnualCounter = 0 then
+                        //     NoOfAnnual := NoOfAnnual - 1;
+                    end;
+                end;
+                for AnnualCounter := 0 to NoOfAnnual do begin
                     _currentAnnualInLoop := 0D;
                     DaysInAnnual := 0;
-                    // if AnnualCounter = 0 then begin
-                    //     _currentAnnualInLoop := GetStartOfYear(placementDate);
-                    //     DaysInAnnual := _currentAnnualInLoop - placementDate + 1;
-                    // end
-                    // else
-                    if AnnualCounter = 1 then begin
+                    if AnnualCounter = 0 then begin
                         _currentAnnualInLoop := GetEndOfYear(placementDate);
-                        if FunderLoanTbl."Inclusive Counting Interest" = true then
+
+                        if _currentAnnualInLoop <> placementDate then // Is placement End of Year, if not, on the diff add 1
                             DaysInAnnual := _currentAnnualInLoop - placementDate + 1
                         else
                             DaysInAnnual := _currentAnnualInLoop - placementDate
                     end
+                    // else
+                    // if AnnualCounter = 1 then begin
+                    //     _currentAnnualInLoop := GetEndOfYear(placementDate);
+                    //     if FunderLoanTbl."Inclusive Counting Interest" = true then
+                    //         DaysInAnnual := _currentAnnualInLoop - placementDate + 1
+                    //     else
+                    //         DaysInAnnual := _currentAnnualInLoop - placementDate
+                    // end
                     else if AnnualCounter = NoOfAnnual then begin
                         _currentAnnualInLoop := GetStartOfYear(maturityDate);
-                        // if FunderLoanTbl."Add Day to Start Period" = true then
-                        //     DaysInAnnual := maturityDate - _currentAnnualInLoop
-                        // else
-                        DaysInAnnual := maturityDate - _currentAnnualInLoop + 1;
-                        _currentAnnualInLoop := GetEndOfYear(maturityDate);
-                        // _currentAnnualInLoop := maturityDate;
+                        DaysInAnnual := maturityDate - _currentAnnualInLoop;
+                        // _currentAnnualInLoop := GetEndOfYear(maturityDate);
+                        _currentAnnualInLoop := (maturityDate);
+
                     end
                     else begin
-                        _currentAnnualInLoop := CALCDATE('<+' + Format(AnnualCounter) + 'Y>', StatingAnnualEndDate);
+                        if DueDateCalcPeriodEq then begin
+                            _currentAnnualInLoop := CALCDATE('<+' + Format((AnnualCounter + 0)) + 'Y>', StatingAnnualEndDate);
+                        end else
+                            _currentAnnualInLoop := CALCDATE('<+' + Format(AnnualCounter) + 'Y>', StatingAnnualEndDate);
                         DaysInAnnual := GetDaysInYear(DATE2DMY(_currentAnnualInLoop, 3))
                     end;
-                    //Get quarter date. - sub the current date for days.
-                    //Add to the next quarter
+
 
                     _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentAnnualInLoop, 'FUNDER_REPORT');
 
@@ -1640,8 +1678,8 @@ report 50230 "Interest Amortization"
                         _withHoldingTax_Amnt := (monthlyInterest * _withHoldingTax_Percent / 100)
                     end;
 
-                    if (dueDate <> 0D) and (dueDate > _currentAnnualInLoop) then begin
-                        //FirstDueAccumulator.Init();
+                    if (dueDate <> 0D) and (dueDate > _currentAnnualInLoop) and (dueDate <> _currentAnnualInLoop) then begin
+
                         _secondStep := true;
                         FirstDueAccumulator.Line := QuarterCounter + 1;
                         FirstDueAccumulator.DueDate := _currentAnnualInLoop;
@@ -1651,26 +1689,30 @@ report 50230 "Interest Amortization"
                         FirstDueAccumulator.WithHldTaxAmt := _withHoldingTax_Amnt;
                         FirstDueAccumulator.NetInterest := monthlyInterest - _withHoldingTax_Amnt;
                         FirstDueAccumulator.LoopCount := AnnualCounter;
-                        FirstDueAccumulator.NumberofDays := _currentAnnualInLoop - FunderLoanTbl.PlacementDate;
+                        FirstDueAccumulator.NumberofDays := DaysInAnnual;
                         FirstDueAccumulator.Insert();
-                    end else begin
+                    end
+                    else begin
                         FirstDueAccumulator.Reset();
                         FirstDueAccumulator.SetFilter(Line, '<>%1', 0);
                         FirstDueAccumulator.SetRange(Reviewed, false);
                         FirstDueAccumulator.CalcSums(Interest);
                         FirstDueAccumulator.CalcSums(NetInterest);
                         FirstDueAccumulator.CalcSums(WithHldTaxAmt);
+                        FirstDueAccumulator.CalcSums(NumberofDays);
 
                         if FirstDueAccumulator.Count > 0 then begin
                             _sumInterest := FirstDueAccumulator.Interest;
                             _sumNetInterest := FirstDueAccumulator.NetInterest;
                             _sumWtholding := FirstDueAccumulator.WithHldTaxAmt;
+                            _sumNumberOfDays := FirstDueAccumulator.NumberofDays;
                             FirstDueAccumulator.Reviewed := true;
                             FirstDueAccumulator.Modify();
                         end else begin
                             _sumInterest := 0;
                             _sumNetInterest := 0;
                             _sumWtholding := 0;
+                            _sumNumberOfDays := 0;
                         end;
 
 
@@ -1683,9 +1725,9 @@ report 50230 "Interest Amortization"
                         // Loan.NumberofDays := DaysInAnnual;
                         // if (dueDate <> 0D) and (dueDate > _currentAnnualInLoop) then begin
                         if _secondStep = true then begin
-                            Loan.NumberofDays := dueDate - FunderLoanTbl.PlacementDate;
-                            Loan.DueDate := dueDate;
-                            Loan.CalculationDate := dueDate;
+                            Loan.NumberofDays := DaysInAnnual + _sumNumberOfDays;
+                            Loan.DueDate := _currentAnnualInLoop;
+                            Loan.CalculationDate := _currentAnnualInLoop;
                             _secondStep := false;
                         end else begin
                             Loan.NumberofDays := DaysInAnnual;
@@ -2107,6 +2149,41 @@ report 50230 "Interest Amortization"
         exit(ClosestEndOfQuarter);
     end;
 
+    /// <summary>
+    /// Counts how many standard biannual periods (June 30 and December 31) are passed between two dates.
+    /// </summary>
+    /// <param name="StartDate">The starting date</param>
+    /// <param name="EndDate">The ending date</param>
+    /// <returns>Number of biannual periods crossed</returns>
+    procedure CountBiannualPeriodsCrossed(StartDate: Date; EndDate: Date): Integer
+    var
+        CurrentYear, EndYear : Integer;
+        BiannualDates: List of [Date];
+        PeriodCount: Integer;
+        CurrentDate: Date;
+    begin
+        if (StartDate = 0D) or (EndDate = 0D) or (StartDate > EndDate) then
+            exit(0);
+
+        PeriodCount := 0;
+        CurrentYear := Date2DMY(StartDate, 3);
+        EndYear := Date2DMY(EndDate, 3);
+
+        // Generate all biannual dates in the range
+        for CurrentYear := CurrentYear to EndYear do begin
+            BiannualDates.Add(DMY2Date(30, 6, CurrentYear));  // June 30
+            BiannualDates.Add(DMY2Date(31, 12, CurrentYear)); // December 31
+        end;
+
+        // Count how many biannual dates fall between StartDate and EndDate
+        foreach CurrentDate in BiannualDates do begin
+            if (CurrentDate > StartDate) and (CurrentDate <= EndDate) then
+                PeriodCount += 1;
+        end;
+
+        exit(PeriodCount);
+    end;
+
     procedure BiannualPeriodsBetween(StartDate: Date; EndDate: Date): Integer
     var
         StartYear: Integer;
@@ -2131,6 +2208,35 @@ report 50230 "Interest Amortization"
         TotalBiannualPeriods := (EndYear - StartYear) * 2 + (EndBiannual - StartBiannual);
 
         exit(TotalBiannualPeriods);
+    end;
+
+    /// <summary>
+    /// Returns the next biannual end date (June 30 or December 31) for a given date.
+    /// </summary>
+    /// <param name="InputDate">Any date</param>
+    /// <returns>The next June 30 or December 31 after the input date</returns>
+    procedure GetBiannualEndDate(InputDate: Date): Date
+    var
+        Day, Month, Year : Integer;
+        June30: Date;
+        Dec31: Date;
+    begin
+        if InputDate = 0D then
+            exit(0D); // Return blank date if input is blank
+
+        Day := Date2DMY(InputDate, 1);
+        Month := Date2DMY(InputDate, 2);
+        Year := Date2DMY(InputDate, 3);
+
+        June30 := DMY2Date(30, 6, Year);
+        Dec31 := DMY2Date(31, 12, Year);
+
+        if InputDate <= June30 then
+            exit(June30)
+        else if InputDate <= Dec31 then
+            exit(Dec31)
+        else
+            exit(DMY2Date(30, 6, Year + 1)); // If after Dec 31, return next June 30
     end;
 
     procedure GetClosestBiannualEndDate(PassedDate: Date): Date
@@ -2218,6 +2324,48 @@ report 50230 "Interest Amortization"
         exit(NumDays);
     end;
 
+    /// <summary>
+    /// Counts how many December 31 year-end dates occur between two dates.
+    /// </summary>
+    /// <param name="StartDate">The starting date</param>
+    /// <param name="EndDate">The ending date</param>
+    /// <returns>Number of December 31 dates crossed</returns>
+    procedure CountAnnualPeriodsCrossed(StartDate: Date; EndDate: Date): Integer
+    var
+        CurrentYear, EndYear : Integer;
+        YearEndDate: Date;
+        PeriodCount: Integer;
+    begin
+        if (StartDate = 0D) or (EndDate = 0D) or (StartDate > EndDate) then
+            exit(0);
+
+        PeriodCount := 0;
+        CurrentYear := Date2DMY(StartDate, 3);
+        EndYear := Date2DMY(EndDate, 3);
+
+        // Check each year in the range
+        for CurrentYear := CurrentYear to EndYear do begin
+            YearEndDate := DMY2Date(31, 12, CurrentYear);
+
+            // Count if December 31 is between StartDate and EndDate (**inclusive of EndDate if it's Dec 31)
+            if (YearEndDate > StartDate) and (YearEndDate < EndDate) then
+                PeriodCount += 1;
+        end;
+
+        exit(PeriodCount);
+    end;
+
+    /// <summary>
+    /// Simplified version that counts each calendar year touched by the date range
+    /// </summary>
+    procedure CountAnnualPeriodsSimple(StartDate: Date; EndDate: Date): Integer
+    begin
+        if (StartDate = 0D) or (EndDate = 0D) or (StartDate > EndDate) then
+            exit(0);
+
+        exit(Date2DMY(EndDate, 3) - Date2DMY(StartDate, 3) + 0);
+    end;
+
     procedure AnnualPeriodsBetween(StartDate: Date; EndDate: Date): Integer
     var
         StartYear: Integer;
@@ -2236,6 +2384,22 @@ report 50230 "Interest Amortization"
             TotalAnnualPeriods := TotalAnnualPeriods - 1;
 
         exit(TotalAnnualPeriods);
+    end;
+
+    /// <summary>
+    /// Returns the December 31 year-end date for a given date.
+    /// </summary>
+    /// <param name="InputDate">Any date</param>
+    /// <returns>December 31 of the input date's year</returns>
+    procedure GetAnnualEndDate(InputDate: Date): Date
+    var
+        Year: Integer;
+    begin
+        if InputDate = 0D then
+            exit(0D); // Return blank date if input is blank
+
+        Year := Date2DMY(InputDate, 3); // Extract year
+        exit(DMY2Date(31, 12, Year));   // Return Dec 31 of that year
     end;
 
     procedure GetClosestAnnualEndDate(PassedDate: Date): Date
