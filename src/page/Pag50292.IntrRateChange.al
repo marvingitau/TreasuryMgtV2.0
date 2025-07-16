@@ -41,7 +41,7 @@ page 50292 "Intr. Rate Change"
                 {
                     Caption = 'Current Interest';
                     ApplicationArea = All;
-
+                    Visible = false;
                 }
                 field(Enabled; Rec.Enabled)
                 {

@@ -30,6 +30,14 @@ page 50245 "Funder Ben. Trus."
                 field(DOB; Rec.DOB)
                 {
                     ApplicationArea = All;
+                    trigger OnValidate()
+                    begin
+
+                        if Rec.Type <> Rec.Type::Beneficiary then
+                            // 18 years = 6570 days (365.25 * 18)
+                            if not (Today() - Rec.DOB >= 6570) then
+                                Error('DOB is below 18 yrs');
+                    end;
                 }
                 field("Identification Doc."; Rec."Identification Doc.")
                 {
@@ -46,6 +54,12 @@ page 50245 "Funder Ben. Trus."
                     ApplicationArea = All;
                     Caption = 'Passport No.';
                     Enabled = Rec."Identification Doc." = Rec."Identification Doc."::Passport;
+                }
+                field("Birth Cert. Number"; Rec."Birth Cert. Number")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Birth certificate No.';
+                    Enabled = Rec."Identification Doc." = Rec."Identification Doc."::"Birth Certificate";
                 }
                 field(PhoneNo; Rec.PhoneNo)
                 {

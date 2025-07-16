@@ -10,5 +10,6 @@ enum 50242 "Trsy Jnl Account Type"
     value(10; "Allocation Account") { Caption = 'Allocation Account'; }
     value(20; Funder) { Caption = 'Funder'; }
     value(21; Debtor) { Caption = 'Debtor'; }
+    value(22; Relatedparty) { Caption = 'Relatedparty'; }
 
 }

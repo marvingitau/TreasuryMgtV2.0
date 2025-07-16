@@ -4,7 +4,7 @@ page 50237 FunderLedgerEntry
     ApplicationArea = All;
     UsageCategory = Lists;
     SourceTable = FunderLedgerEntry;
-    Caption = 'Treasury Ledger Entry';
+    Caption = 'Funder Ledger Entry';
     // Editable = false;
     // DeleteAllowed = false;
     // InsertAllowed = false;

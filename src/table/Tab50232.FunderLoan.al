@@ -63,11 +63,12 @@ table 50232 "Funder Loan"
                             Category := 'Medium Term Notes';
                         if Portfolio.Category = Portfolio.Category::"Asset Term Manager" then
                             Category := 'Asset Term Manager';
-                        // if Portfolio.Category = Portfolio.Category::Relatedparty then
-                        //     Category := 'Relatedparty';
+                        if Portfolio.Category = Portfolio.Category::Relatedparty then
+                            Category := 'Relatedparty';
 
 
-                        // Category := Portfolio.Category;
+                        "Portfolio No." := Portfolio."No.";
+                        "Portfolio Name" := Portfolio.Code;
                         Category_line_No := Portfolio.Category_Line_No;
                         Rec.Validate(Category);
 
@@ -116,6 +117,8 @@ table 50232 "Funder Loan"
             trigger OnValidate()
             begin
                 if (PlacementDate <> 0D) and (MaturityDate <> 0D) then begin
+                    if Today - PlacementDate < 0 then
+                        Error('Date cannot be in the future');
                     LoanDurationDays := (MaturityDate - PlacementDate);
                 end
 
@@ -186,11 +189,14 @@ table 50232 "Funder Loan"
         field(509; "Withldtax"; Decimal)
         {
             DataClassification = ToBeClassified;
-            Caption = 'Withholding tax applied (%)';
+            // Caption = 'Withholding tax applied (%)';
             trigger OnValidate()
             begin
-                NetInterestRate := ((100 - Withldtax) / 100) * InterestRate;
-                InterestRate := NetInterestRate / ((100 - Withldtax) / 100);
+                // if InterestRate < 0 then
+                //     NetInterestRate := ((100 - Withldtax) / 100) * InterestRate;
+                // if NetInterestRate < 0 then
+                //     InterestRate := NetInterestRate / ((100 - Withldtax) / 100);
+
             end;
         }
         field(510; "TaxStatus"; Enum TaxStatus)
@@ -300,6 +306,19 @@ table 50232 "Funder Loan"
             Caption = 'Remove WeekEnd Reporting';
             InitValue = false;
         }
+
+        field(611; EnableDynamicPeriod_AmortCap; Boolean)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Enable Dynamic Period Reporting';
+            InitValue = false;
+        }
+        field(612; EnableWeekDayRep_AmortCap; Boolean)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Remove WeekEnd Reporting';
+            InitValue = false;
+        }
         // field(523; Portfolio; Code[100])
         // {
         //     DataClassification = ToBeClassified;
@@ -380,6 +399,9 @@ table 50232 "Funder Loan"
             trigger OnValidate()
             var
                 funderLegderEntry: Record FunderLedgerEntry;
+                funderLegderEntry1: Record FunderLedgerEntry;
+                funderLegderEntry2: Record FunderLedgerEntry;
+                funderLegderEntry3: Record FunderLedgerEntry;
                 looper: Record FunderLedgerEntry;
                 NextEntryNo: Integer;
                 FunderMgt: Codeunit FunderMgtCU;
@@ -411,6 +433,10 @@ table 50232 "Funder Loan"
                 _funder.SetRange("No.", "Funder No.");
                 if not _funder.Find('-') then
                     Error('Funder %1 not found _fl', "Funder No.");
+
+                if not (_funder.Status = _funder.Status::Approved) then
+                    Error('Funder %1 must be Approved', "Funder No.");
+
                 _portfolio.Reset();
                 _portfolio.SetRange("No.", _funder.Portfolio);
                 if not _portfolio.Find('-') then
@@ -421,8 +447,10 @@ table 50232 "Funder Loan"
                 /*if not venPostingGroup.Get("Posting Group") then
                     Error('Missing Posting Group: %1', "No.");*/
                 if EnableGLPosting = true then begin
-                    if FundSource = '' then
-                        Error('Funder Entry (Bank) Must have a value', FundSource);
+                    if Rollovered <> Rollovered::"Roll overed" then begin
+                        if FundSource = '' then
+                            Error('Funder Entry (Bank) Must have a value', FundSource);
+                    end;
                 end;
 
                 // principleAcc := venPostingGroup."Payables Account";
@@ -446,8 +474,8 @@ table 50232 "Funder Loan"
 
                     if "Original Disbursed Amount" = 0 then
                         Error('Original Disbursed Amount Required');
-                    if InterestRate = 0 then
-                        Error('Gross Interest rate (p.a) Required');
+                    // if InterestRate = 0 then
+                    //     Error('Gross Interest rate (p.a) Required');
 
 
                 end;
@@ -465,70 +493,71 @@ table 50232 "Funder Loan"
                     _ConvertedCurrencyInterest := "Rollovered Interest";
                 end;
 
-                funderLegderEntry.Reset();
-                funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Original Amount");
-                funderLegderEntry.SetRange(funderLegderEntry."Loan No.", "No.");
-                if funderLegderEntry.Find('-') then begin
-                    funderLegderEntry."Modification Date" := Today;
-                    funderLegderEntry."Modification User" := UserId;
-                    funderLegderEntry.Amount := DisbursedCurrency;
-                    funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
-                    funderLegderEntry."Remaining Amount" := DisbursedCurrency;
-                    funderLegderEntry.Modify();
+                if Rollovered <> Rollovered::"Roll overed" then begin
+                    funderLegderEntry.Reset();
+                    funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Original Amount");
+                    funderLegderEntry.SetRange(funderLegderEntry."Loan No.", "No.");
+                    if funderLegderEntry.Find('-') then begin
+                        funderLegderEntry."Modification Date" := Today;
+                        funderLegderEntry."Modification User" := UserId;
+                        funderLegderEntry.Amount := DisbursedCurrency;
+                        funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
+                        funderLegderEntry."Remaining Amount" := DisbursedCurrency;
+                        funderLegderEntry.Modify();
 
-                    //  Clear(ReversalEntry);
-                    //     if Rec.Reversed then
-                    //         ReversalEntry.AlreadyReversedEntry(Rec.TableCaption, Rec."Entry No.");
-                    //     // CheckEntryPostedFromJournal();
-                    //       Rec.TestField("No.");
-                    //     ReversalEntry.ReverseTransaction(Rec."No.")
-
-
-                end
-                else begin
-                    looper.LockTable();
-                    looper.Reset();
-                    if looper.FindLast() then
-                        NextEntryNo := looper."Entry No." + 1
-                    else
-                        NextEntryNo := 1;
-                    funderLegderEntry.Init();
-                    funderLegderEntry."Entry No." := NextEntryNo;
-                    funderLegderEntry."Funder No." := "Funder No.";
-                    funderLegderEntry."Funder Name" := Name;
-                    funderLegderEntry."Loan No." := "No.";
-                    funderLegderEntry."Loan Name" := "Loan Name";
-                    funderLegderEntry."Posting Date" := Today;
-                    funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::"Original Amount";
-                    funderLegderEntry."Document No." := _docNo;
-                    funderLegderEntry."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
-                    funderLegderEntry.Category := Category; // Funder Loan Category
-                    funderLegderEntry.Category_Line := Category_line_No; // Funder Loan Category
-                    // funderLegderEntry."Transaction Type" := funderLegderEntry."Transaction Type"::"Original Amount";
-                    //  _funderLoan."No." + ' ' + _funderLoan."No." + '-' + _funderLoan."Bank Ref. No." + '-' + Format(_funderLoan.PlacementDate) + Format(_funderLoan.MaturityDate) +
-                    funderLegderEntry.Description := "No." + ' ' + Name + '-' + "Bank Ref. No." + '-' + Format(PlacementDate) + ' ' + Format(MaturityDate);
-                    funderLegderEntry."Currency Code" := Currency;
-                    funderLegderEntry.Amount := "Original Disbursed Amount";
-                    funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
-                    funderLegderEntry."Remaining Amount" := "Original Disbursed Amount";
+                        //  Clear(ReversalEntry);
+                        //     if Rec.Reversed then
+                        //         ReversalEntry.AlreadyReversedEntry(Rec.TableCaption, Rec."Entry No.");
+                        //     // CheckEntryPostedFromJournal();
+                        //       Rec.TestField("No.");
+                        //     ReversalEntry.ReverseTransaction(Rec."No.")
 
 
-                    funderLegderEntry."Bal. Account No." := principleAcc;
-                    funderLegderEntry."Bal. Account Type" := funderLegderEntry."Bal. Account Type"::"G/L Account";
-                    if FundSource = '' then begin
-                        funderLegderEntry."Account No." := GenSetup."Opening  Balance Acc";
-                        funderLegderEntry."Account Type" := funderLegderEntry."Account Type"::"G/L Account";
-                    end else begin
-                        funderLegderEntry."Account No." := FundSource;
-                        funderLegderEntry."Account Type" := funderLegderEntry."Account Type"::"Bank Account";
+                    end
+                    else begin
+                        looper.LockTable();
+                        looper.Reset();
+                        if looper.FindLast() then
+                            NextEntryNo := looper."Entry No." + 1
+                        else
+                            NextEntryNo := 1;
+                        funderLegderEntry.Init();
+                        funderLegderEntry."Entry No." := NextEntryNo;
+                        funderLegderEntry."Funder No." := "Funder No.";
+                        funderLegderEntry."Funder Name" := Name;
+                        funderLegderEntry."Loan No." := "No.";
+                        funderLegderEntry."Loan Name" := "Loan Name";
+                        funderLegderEntry."Posting Date" := Today;
+                        funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::"Original Amount";
+                        funderLegderEntry."Document No." := _docNo;
+                        funderLegderEntry."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
+                        funderLegderEntry.Category := Category; // Funder Loan Category
+                        funderLegderEntry.Category_Line := Category_line_No; // Funder Loan Category
+                                                                             // funderLegderEntry."Transaction Type" := funderLegderEntry."Transaction Type"::"Original Amount";
+                                                                             //  _funderLoan."No." + ' ' + _funderLoan."No." + '-' + _funderLoan."Bank Ref. No." + '-' + Format(_funderLoan.PlacementDate) + Format(_funderLoan.MaturityDate) +
+                        funderLegderEntry.Description := "No." + ' ' + Name + '-' + "Bank Ref. No." + '-' + Format(PlacementDate) + ' ' + Format(MaturityDate);
+                        funderLegderEntry."Currency Code" := Currency;
+                        funderLegderEntry.Amount := "Original Disbursed Amount";
+                        funderLegderEntry."Amount(LCY)" := _ConvertedCurrency;
+                        funderLegderEntry."Remaining Amount" := "Original Disbursed Amount";
+
+
+                        funderLegderEntry."Bal. Account No." := principleAcc;
+                        funderLegderEntry."Bal. Account Type" := funderLegderEntry."Bal. Account Type"::"G/L Account";
+                        if FundSource = '' then begin
+                            funderLegderEntry."Account No." := GenSetup."Opening  Balance Acc";
+                            funderLegderEntry."Account Type" := funderLegderEntry."Account Type"::"G/L Account";
+                        end else begin
+                            funderLegderEntry."Account No." := FundSource;
+                            funderLegderEntry."Account Type" := funderLegderEntry."Account Type"::"Bank Account";
+                        end;
+
+                        funderLegderEntry.Insert();
+                        // Commit();
+                        if (EnableGLPosting = true) then
+                            FunderMgt.DirectGLPosting('init', principleAcc, withHoldingAcc, "Original Disbursed Amount", 0, 'Original Amount', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code")
                     end;
-
-                    funderLegderEntry.Insert();
-                    // Commit();
-                    if (EnableGLPosting = true) then
-                        FunderMgt.DirectGLPosting('init', principleAcc, withHoldingAcc, "Original Disbursed Amount", 0, 'Original Amount', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code")
                 end;
-
 
                 // ++++++++++++++++  CHECK ROLLOVER RECORD AND VALIDATE INTREST.
                 if Rollovered = Rollovered::"Roll overed" then begin
@@ -584,7 +613,7 @@ table 50232 "Funder Loan"
                                 end;
 
                                 funderLegderEntry.Insert();
-                                if (EnableGLPosting = true) then
+                                if (EnableGLPosting = true) and (Round(_rolloveredPrincipal, 1, '=') <> 0) then
                                     FunderMgt.DirectGLPosting('init', principleAcc, withHoldingAcc, -_rolloveredPrincipal, 0, 'Original Amount ::Patial Principal Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code")
                             end;
                             // Interest 
@@ -613,8 +642,16 @@ table 50232 "Funder Loan"
                                 funderLegderEntry.Amount := -_rolloveredInterest;
                                 funderLegderEntry."Amount(LCY)" := -_ConvertedCurrency;
                                 funderLegderEntry."Remaining Amount" := _rolloveredInterest;
+
+                                funderLegderEntry."Account No." := _funderLoan."Interest Expense";
+                                funderLegderEntry."Account Type" := funderLegderEntry."Account Type"::"G/L Account"; // Exp
+                                funderLegderEntry."Bal. Account No." := _funderLoan."Interest Payable";
+                                funderLegderEntry."Bal. Account Type" := funderLegderEntry."Bal. Account Type"::"G/L Account"; //Payable
+                                funderLegderEntry."Bal. Account No. 2" := withholdingAcc; // Wth
+                                funderLegderEntry."Bal. Account Type 2" := funderLegderEntry."Bal. Account Type"::"G/L Account"; //Wth
+
                                 funderLegderEntry.Insert();
-                                if (EnableGLPosting = true) then
+                                if (EnableGLPosting = true) and (Round(_rolloveredInterest, 1, '=') <> 0) then
                                     FunderMgt.DirectGLPosting('interest', principleAcc, withHoldingAcc, -_rolloveredInterest, 0, 'Original Amount ::Patial Interest Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code")
                             end;
                             // Principal + Interest
@@ -655,7 +692,7 @@ table 50232 "Funder Loan"
                                 end;
 
                                 funderLegderEntry.Insert();
-                                if (EnableGLPosting = true) then
+                                if (EnableGLPosting = true) and ((_rolloveredInterest + _rolloveredPrincipal) <> 0) then
                                     FunderMgt.DirectGLPosting('init', principleAcc, withHoldingAcc, -(_rolloveredInterest + _rolloveredPrincipal), 0, 'Original Amount ::Patial Principal+Interest Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code")
                             end;
                         end;
@@ -674,7 +711,7 @@ table 50232 "Funder Loan"
                                 NextEntryNo := looper."Entry No." + 1
                             else
                                 NextEntryNo := 1;
-
+                            //Remove Principal from Original Record
                             funderLegderEntry.Init();
                             funderLegderEntry."Entry No." := NextEntryNo;
                             funderLegderEntry."Funder No." := _funderLoan."Funder No.";
@@ -689,9 +726,9 @@ table 50232 "Funder Loan"
                             funderLegderEntry.Category_Line := Category_line_No; // Funder Loan Category
                             funderLegderEntry.Description := "No." + ' ' + Name + '-' + "Bank Ref. No." + '-' + Format(PlacementDate) + ' ' + Format(MaturityDate) + ' ::' + 'Full Rollover Offset';
                             funderLegderEntry."Currency Code" := Currency;
-                            funderLegderEntry.Amount := -_rolloveredPrincipal;
-                            funderLegderEntry."Amount(LCY)" := -_ConvertedCurrency;
-                            funderLegderEntry."Remaining Amount" := _rolloveredPrincipal;
+                            funderLegderEntry.Amount := -(_rolloveredPrincipal);
+                            funderLegderEntry."Amount(LCY)" := -(_ConvertedCurrency);
+                            funderLegderEntry."Remaining Amount" := (_rolloveredPrincipal);
 
                             funderLegderEntry."Bal. Account No." := principleAcc;
                             funderLegderEntry."Bal. Account Type" := funderLegderEntry."Bal. Account Type"::"G/L Account";
@@ -704,8 +741,47 @@ table 50232 "Funder Loan"
                             end;
 
                             funderLegderEntry.Insert();
-                            if (EnableGLPosting = true) then
-                                FunderMgt.DirectGLPosting('init', principleAcc, withHoldingAcc, -_rolloveredPrincipal, 0, 'Original Amount ::Full Rollover Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
+                            if (EnableGLPosting = true) and (Round(_rolloveredPrincipal, 1, '=') <> 0) then
+                                FunderMgt.DirectGLPosting('init-rollover', principleAcc, withHoldingAcc, -_rolloveredPrincipal, 0, 'Original Amount ::Full Rollover Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
+
+
+                            looper.LockTable();
+                            looper.Reset();
+                            if looper.FindLast() then
+                                NextEntryNo := looper."Entry No." + 2
+                            else
+                                NextEntryNo := 1;
+                            //Remove Interest from Original Record
+                            funderLegderEntry1.Init();
+                            funderLegderEntry1."Entry No." := NextEntryNo;
+                            funderLegderEntry1."Funder No." := _funderLoan."Funder No.";
+                            funderLegderEntry1."Funder Name" := _funderLoan.Name;
+                            funderLegderEntry1."Loan No." := _funderLoan."No.";
+                            funderLegderEntry1."Loan Name" := _funderLoan."Loan Name";
+                            funderLegderEntry1."Posting Date" := Today;
+                            funderLegderEntry1."Document Type" := funderLegderEntry1."Document Type"::"Reversed Interest";
+                            funderLegderEntry1."Document No." := _docNo;
+                            funderLegderEntry1."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
+                            funderLegderEntry1.Category := Category; // Funder Loan Category
+                            funderLegderEntry1.Category_Line := Category_line_No; // Funder Loan Category
+                            funderLegderEntry1.Description := "No." + ' ' + Name + '-' + "Bank Ref. No." + '-' + Format(PlacementDate) + ' ' + Format(MaturityDate) + ' ::' + ' Rollover Intrest Offest';
+                            funderLegderEntry1."Currency Code" := Currency;
+                            funderLegderEntry1.Amount := -_rolloveredInterest;
+                            funderLegderEntry1."Amount(LCY)" := -_ConvertedCurrencyInterest;
+                            funderLegderEntry1."Remaining Amount" := _rolloveredInterest;
+
+                            funderLegderEntry1."Account No." := _funderLoan."Interest Expense";
+                            funderLegderEntry1."Account Type" := funderLegderEntry."Account Type"::"G/L Account"; // Exp
+                            funderLegderEntry1."Bal. Account No." := _funderLoan."Interest Payable";
+                            funderLegderEntry1."Bal. Account Type" := funderLegderEntry."Bal. Account Type"::"G/L Account"; //Payable
+                            funderLegderEntry1."Bal. Account No. 2" := withholdingAcc; // Wth
+                            funderLegderEntry1."Bal. Account Type 2" := funderLegderEntry."Bal. Account Type"::"G/L Account"; //Wth
+
+                            // if FundSource = '' then
+                            //     funderLegderEntry."Bal. Account No." := GenSetup."Opening  Balance Acc";
+                            funderLegderEntry1.Insert();
+                            if (EnableGLPosting = true) and (Round(_rolloveredInterest, 1, '=') <> 0) then
+                                FunderMgt.DirectGLPosting('reverse-interest', principleAcc, withHoldingAcc, -_rolloveredInterest, 0, 'Original Amount :: Rollover Interest Offset', "No.", interestAccPay, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
 
 
                             looper.LockTable();
@@ -715,28 +791,39 @@ table 50232 "Funder Loan"
                             else
                                 NextEntryNo := 1;
 
-                            funderLegderEntry.Init();
-                            funderLegderEntry."Entry No." := NextEntryNo;
-                            funderLegderEntry."Funder No." := _funderLoan."Funder No.";
-                            funderLegderEntry."Funder Name" := _funderLoan.Name;
-                            funderLegderEntry."Loan No." := _funderLoan."No.";
-                            funderLegderEntry."Loan Name" := _funderLoan."Loan Name";
-                            funderLegderEntry."Posting Date" := Today;
-                            funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::"Reversed Interest";
-                            funderLegderEntry."Document No." := _docNo;
-                            funderLegderEntry."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
-                            funderLegderEntry.Category := Category; // Funder Loan Category
-                            funderLegderEntry.Category_Line := Category_line_No; // Funder Loan Category
-                            funderLegderEntry.Description := "No." + ' ' + Name + '-' + "Bank Ref. No." + '-' + Format(PlacementDate) + ' ' + Format(MaturityDate) + ' ::' + ' Rollover Intrest Offest';
-                            funderLegderEntry."Currency Code" := Currency;
-                            funderLegderEntry.Amount := -_rolloveredInterest;
-                            funderLegderEntry."Amount(LCY)" := -_ConvertedCurrencyInterest;
-                            funderLegderEntry."Remaining Amount" := _rolloveredInterest;
-                            if FundSource = '' then
-                                funderLegderEntry."Bal. Account No." := GenSetup."Opening  Balance Acc";
-                            funderLegderEntry.Insert();
-                            if (EnableGLPosting = true) then
-                                FunderMgt.DirectGLPosting('reverse-interest', principleAcc, withHoldingAcc, -_rolloveredInterest, 0, 'Original Amount :: Rollover Interest Offset', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
+                            //Current Record Original Disbursed Amount + Interest auto-resolve
+                            funderLegderEntry2.Init();
+                            funderLegderEntry2."Entry No." := NextEntryNo;
+                            funderLegderEntry2."Funder No." := "Funder No.";
+                            funderLegderEntry2."Funder Name" := Name;
+                            funderLegderEntry2."Loan No." := "No.";
+                            funderLegderEntry2."Loan Name" := "Loan Name";
+                            funderLegderEntry2."Posting Date" := Today;
+                            funderLegderEntry2."Document Type" := funderLegderEntry2."Document Type"::"Original Amount";
+                            funderLegderEntry2."Document No." := _docNo;
+                            funderLegderEntry2."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
+                            funderLegderEntry2.Category := Category; // Funder Loan Category
+                            funderLegderEntry2.Category_Line := Category_line_No; // Funder Loan Category
+                            funderLegderEntry2.Description := "No." + ' ' + Name + '-' + "Bank Ref. No." + '-' + Format(PlacementDate) + ' ' + Format(MaturityDate) + ' ::' + 'Rollover New Value';
+                            funderLegderEntry2."Currency Code" := Currency;
+                            funderLegderEntry2.Amount := (_rolloveredPrincipal + _rolloveredInterest);
+                            funderLegderEntry2."Amount(LCY)" := (_ConvertedCurrency + _ConvertedCurrencyInterest);
+                            funderLegderEntry2."Remaining Amount" := (_rolloveredPrincipal + _rolloveredInterest);
+
+                            funderLegderEntry2."Bal. Account No." := principleAcc;
+                            funderLegderEntry2."Bal. Account Type" := funderLegderEntry2."Bal. Account Type"::"G/L Account";
+                            if FundSource = '' then begin
+                                funderLegderEntry2."Account No." := GenSetup."Opening  Balance Acc";
+                                funderLegderEntry2."Account Type" := funderLegderEntry2."Account Type"::"G/L Account";
+                            end else begin
+                                funderLegderEntry2."Account No." := FundSource;
+                                funderLegderEntry2."Account Type" := funderLegderEntry2."Account Type"::"Bank Account";
+                            end;
+
+                            funderLegderEntry2.Insert();
+                            if (EnableGLPosting = true) and (Round((_rolloveredPrincipal + _rolloveredInterest), 1, '=') <> 0) then
+                                FunderMgt.DirectGLPosting('init-rollover', principleAcc, withHoldingAcc, (_rolloveredPrincipal + _rolloveredInterest), 0, 'Amount :: Rollover New Values', "No.", FundSource, Currency, "Posting Group", _docNo, "Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
+
 
                             _funderLoan.State := _funderLoan.State::Active;
                             _funderLoan.Modify();// Dispose of the Loan Record
@@ -748,24 +835,27 @@ table 50232 "Funder Loan"
                     if funderLegderEntry.FindLast() then
                         NextEntryNo := funderLegderEntry."Entry No." + 2;
 
+                    //Accruing Interest from the rollovered interest
+                    /*if "Rollovered Interest" <> 0 then begin
+                        funderLegderEntry.Init();
+                        funderLegderEntry."Entry No." := NextEntryNo;
+                        funderLegderEntry."Funder No." := "Funder No.";
+                        funderLegderEntry."Funder Name" := Name;
+                        funderLegderEntry."Loan Name" := "Loan Name";
+                        funderLegderEntry."Loan No." := "No.";
+                        funderLegderEntry."Posting Date" := Today;
+                        funderLegderEntry.Category := Category; // Funder Loan Category
+                        funderLegderEntry."Document No." := _docNo;
+                        funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
+                        funderLegderEntry.Description := "No." + ' ' + Name + ' ' + _portfolio.Code + '-' + "Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>');
+                        funderLegderEntry.Amount := "Rollovered Interest";
+                        funderLegderEntry."Amount(LCY)" := "Rollovered Interest";
+                        funderLegderEntry."Remaining Amount" := "Rollovered Interest";
+                        funderLegderEntry.Insert();
+                        if (EnableGLPosting = true) and (Round("Rollovered Interest", 1, '=') <> 0) then
+                            FunderMgt.DirectGLPosting('interest', principleAcc, withHoldingAcc, "Rollovered Interest", 0, 'Interest', "No.", interestAccPay, '', '', '', "Bank Ref. No.", _funder."Shortcut Dimension 1 Code");//GROSS Interest
 
-                    funderLegderEntry.Init();
-                    funderLegderEntry."Entry No." := NextEntryNo;
-                    funderLegderEntry."Funder No." := "Funder No.";
-                    funderLegderEntry."Funder Name" := Name;
-                    funderLegderEntry."Loan Name" := "Loan Name";
-                    funderLegderEntry."Loan No." := "No.";
-                    funderLegderEntry."Posting Date" := Today;
-                    funderLegderEntry.Category := Category; // Funder Loan Category
-                    funderLegderEntry."Document No." := _docNo;
-                    funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
-                    funderLegderEntry.Description := "No." + ' ' + Name + ' ' + _portfolio.Code + '-' + "Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>');
-                    funderLegderEntry.Amount := "Rollovered Interest";
-                    funderLegderEntry."Amount(LCY)" := "Rollovered Interest";
-                    funderLegderEntry."Remaining Amount" := "Rollovered Interest";
-                    funderLegderEntry.Insert();
-                    if (EnableGLPosting = true) and ("Rollovered Interest" <> 0) then
-                        FunderMgt.DirectGLPosting('interest', principleAcc, withHoldingAcc, "Rollovered Interest", 0, 'Interest', "No.", interestAccPay, '', '', '', "Bank Ref. No.", _funder."Shortcut Dimension 1 Code");//GROSS Interest
+                    end;*/
 
                     Rollovered := Rollovered::Normal;
                     // "Rollovered Interest" := 0;
@@ -847,12 +937,18 @@ table 50232 "Funder Loan"
         field(940; PeriodicPaymentOfInterest; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = "","Monthly","Quarterly","Biannually","Annually";
+            OptionMembers = " ","Monthly","Quarterly","Biannually","Annually";
         }
         field(941; PeriodicPaymentOfPrincipal; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = "","Monthly","Quarterly","Biannually","Annually","Total at Due Date";
+            OptionMembers = " ","Monthly","Quarterly","Biannually","Annually","Total at Due Date";
+            //"Total at Due Date"
+        }
+        field(942; AmortCapPaymentOfPrincipal; Option)
+        {
+            DataClassification = ToBeClassified;
+            OptionMembers = " ","Monthly","Quarterly","Biannually","Annually";
             //"Total at Due Date"
         }
 
@@ -959,6 +1055,12 @@ table 50232 "Funder Loan"
                 // if PeriodicPaymentOfInterest = PeriodicPaymentOfInterest::Quarterly then
                 //     TreasuryCU.ValidateQuarterEndDate(SecondDueDate);
             end;
+        }
+        field(2832; ThirdDueDate; Date)
+        {
+            DataClassification = ToBeClassified;
+            // Used by Amoritized Capitalized
+
         }
         field(2835; LoanDurationDays; Integer)
         {
@@ -1120,7 +1222,19 @@ table 50232 "Funder Loan"
             InitValue = false;
         }
 
+        field(40223; "Add Day to Start Period"; Boolean)
+        {
+            DataClassification = ToBeClassified;
+        }
 
+        field(40225; "Portfolio No."; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(40227; "Portfolio Name"; Text[250])
+        {
+            DataClassification = ToBeClassified;
+        }
 
     }
 
@@ -1130,7 +1244,7 @@ table 50232 "Funder Loan"
         {
             Clustered = true;
         }
-        // key(FK; "Loan Name")
+        // key(FK; "No.")
         // {
         //     Unique = true;
         // }
@@ -1149,6 +1263,8 @@ table 50232 "Funder Loan"
         TreasuryCU: Codeunit "Treasury Mgt CU";
 
     trigger OnInsert()
+    var
+        _loan: Record "Funder Loan";
     begin
         GenSetup.Get(0);
         GenSetup.TestField("Funder Loan No.");
@@ -1157,6 +1273,11 @@ table 50232 "Funder Loan"
         if "Loan Name" = '' then
             "Loan Name" := NoSer.GetNextNo(GenSetup."Loan No.", 0D, true);
 
+        _loan.Reset();
+        _loan.SetRange(_loan."No.", "No.");
+        if _loan.Count() > 1 then begin
+            Error('Duplicate Record No. %1', "No.");
+        end;
         "Status" := "Status"::Open;
         // vPostingGroup.Reset();
         // vPostingGroup.SetRange(Code, "No.");

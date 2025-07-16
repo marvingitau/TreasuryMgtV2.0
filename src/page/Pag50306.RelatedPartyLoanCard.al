@@ -14,18 +14,18 @@ page 50306 "RelatedParty Loan Card"
                 field("No."; Rec."No.")
                 {
                     ApplicationArea = All;
-                    // Editable = false;
+                    Editable = false;
                 }
-                field("Funder No."; Rec."Funder No.")
+                field("Funder No."; Rec."RelatedParty No.")
                 {
                     ApplicationArea = All;
-                    // Editable = false;
+                    Editable = false;
                     Caption = 'RelatedParty No.';
                 }
                 field(Name; Rec.Name)
                 {
                     ApplicationArea = All;
-                    // Editable = false;
+                    Editable = false;
                     Caption = 'RelatedParty Name';
                 }
                 // field("Loan Name"; Rec."Loan Name")
@@ -38,6 +38,7 @@ page 50306 "RelatedParty Loan Card"
                 {
                     ApplicationArea = All;
                     ShowMandatory = true;
+                    Editable = EditStatus;
                     trigger OnValidate()
                     begin
                         if (Rec.PlacementDate <> 0D) and (Rec.MaturityDate <> 0D) then begin
@@ -49,6 +50,7 @@ page 50306 "RelatedParty Loan Card"
                 field(MaturityDate; Rec.MaturityDate)
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                     trigger OnValidate()
                     begin
                         if (Rec.PlacementDate <> 0D) and (Rec.MaturityDate <> 0D) then begin
@@ -68,15 +70,16 @@ page 50306 "RelatedParty Loan Card"
                 {
 
                     ApplicationArea = All;
-                    Caption = 'Receiving Bank Account';
+                    Caption = 'Paying Bank Account';
                     ShowMandatory = true;
+                    Editable = EditStatus;
                 }
                 field(Currency; Rec.Currency)
                 {
                     Caption = 'Currency';
                     // Visible = false;
                     ApplicationArea = All;
-                    Editable = false;
+                    Editable = EditStatus;
                     // Visible = isCurrencyVisible;
                     // ShowMandatory = isCurrencyVisible;
                     // ShowMandatory = true;
@@ -98,9 +101,11 @@ page 50306 "RelatedParty Loan Card"
                     ApplicationArea = All;
                     Caption = 'Bank Reference No.';
                     ShowMandatory = true;
+                    Editable = EditStatus;
                 }
                 group("G/L Mapping")
                 {
+                    Editable = EditStatus;
                     field("Payables Account"; Rec."Payables Account")
                     {
 
@@ -113,19 +118,22 @@ page 50306 "RelatedParty Loan Card"
 
                         ApplicationArea = All;
                         Editable = false;
+                        Caption = 'Interest Income';
                     }
                     field("Interest Payable"; Rec."Interest Payable")
                     {
 
                         ApplicationArea = All;
                         Editable = false;
+                        Caption = 'Interest Receivable';
                     }
                 }
                 field("Total Payed"; Rec."Total Payed")
                 {
                     ApplicationArea = All;
                     Enabled = Rec."Tranche Loan";
-                    Editable = not (Rec.Status = Rec.Status::Approved);
+                    Editable = EditStatus;
+                    // Editable = not (Rec.Status = Rec.Status::Approved);
                     ToolTip = 'This indicates the Total to Be Payed under Tranches Loan';
                     Caption = 'Total facility amount on Tranche loans';
 
@@ -133,13 +141,14 @@ page 50306 "RelatedParty Loan Card"
                 field("Original Disbursed Amount"; Rec."Original Disbursed Amount")
                 {
                     ApplicationArea = All;
-                    Editable = not (Rec.Status = Rec.Status::Approved);
+                    // Editable = not (Rec.Status = Rec.Status::Approved);
+                    Editable = EditStatus;
                     Caption = 'Original / First disbursement Amount';
                 }
                 // field(OrigAmntDisbLCY; Rec.OrigAmntDisbLCY)
                 // {
                 //     DrillDown = true;
-                //     DrillDownPageId = FunderLedgerEntry;
+                //     DrillDownPageId = RelatedLedgerEntry;
                 //     ApplicationArea = All;
                 //     Caption = 'Original Amount Disbursed';
                 // }
@@ -149,7 +158,7 @@ page 50306 "RelatedParty Loan Card"
                     // ApplicationArea = Basic, Suite;
                     // Importance = Promoted;
                     DrillDown = true;
-                    DrillDownPageId = FunderLedgerEntry;
+                    DrillDownPageId = RelatedLedgerEntry;
                     ApplicationArea = All;
                     Caption = 'Outstanding Amount';
                 }
@@ -158,19 +167,40 @@ page 50306 "RelatedParty Loan Card"
                     // ApplicationArea = Basic, Suite;
                     // Importance = Promoted;
                     DrillDown = true;
-                    DrillDownPageId = FunderLedgerEntry;
+                    DrillDownPageId = RelatedLedgerEntry;
                     ApplicationArea = All;
                     Caption = 'Outstanding Interest';
                 }
-
+                field("Withholding Tax Amount"; Rec."Withholding Tax Amount")
+                {
+                    DrillDown = true;
+                    DrillDownPageId = RelatedLedgerEntry;
+                    ApplicationArea = All;
+                    Caption = 'Withholding Amount';
+                }
                 field(InterestMethod; Rec.InterestMethod)
                 {
                     ApplicationArea = All;
                     ShowMandatory = true;
+                    Editable = EditStatus;
+                }
+                field(TaxStatus; Rec.TaxStatus)
+                {
+                    ApplicationArea = All;
+                    Editable = EditStatus;
+                    Caption = 'Tax status (Tax Exempt or Taxable)';
+                }
+
+                field(Withldtax; Rec.Withldtax)
+                {
+                    ApplicationArea = All;
+                    Editable = EditStatus;
+                    Caption = 'Withholding tax applied (%)';
                 }
                 field(InterestRateType; Rec.InterestRateType)
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                     ShowMandatory = true;
                     trigger OnValidate()
                     begin
@@ -181,22 +211,26 @@ page 50306 "RelatedParty Loan Card"
                         CurrPage.Update();
                     end;
                 }
+
                 field(InterestRate; Rec.InterestRate)
                 {
                     ApplicationArea = All;
                     ShowMandatory = true;
-                    Editable = not isFloatRate;
+                    // Editable = not isFloatRate;
+                    Editable = EditStatus and (not isFloatRate);
                     Caption = 'Gross Interest rate (p.a)';
                 }
                 field(NetInterestRate; Rec.NetInterestRate)
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                     Caption = 'Net Interest Rate';
                 }
                 group(FloatInterestFields)
                 {
                     Caption = 'Float Rate Related Fields';
                     ShowCaption = true;
+                    Editable = EditStatus;
                     field("Reference Rate"; Rec."Reference Rate")
                     {
                         ApplicationArea = All;
@@ -230,49 +264,90 @@ page 50306 "RelatedParty Loan Card"
                 field(GrossInterestamount; Rec.GrossInterestamount)
                 {
                     DrillDown = true;
-                    DrillDownPageId = FunderLedgerEntry;
+                    DrillDownPageId = RelatedLedgerEntry;
                     ToolTip = '';
                     ApplicationArea = Basic, Suite;
                     Caption = 'Gross Interest';
+
                 }
 
                 field(NetInterestamount; Rec.NetInterestamount)
                 {
                     DrillDown = true;
-                    DrillDownPageId = FunderLedgerEntry;
+                    DrillDownPageId = RelatedLedgerEntry;
                     ToolTip = '';
                     ApplicationArea = Basic, Suite;
                     Caption = 'Net Interest';
                 }
                 field(PeriodicPaymentOfInterest; Rec.PeriodicPaymentOfInterest)
                 {
+                    Editable = EditStatus;
                     Caption = '*Payment Period (Interest) ';
                     ApplicationArea = All;
                     trigger OnValidate()
                     begin
+                        //Check placement date for the interest amortization
+                        if Rec.PlacementDate = 0D then
+                            Error('Please populate Placement Date first.');
+                        if Rec.PeriodicPaymentOfInterest = Rec.PeriodicPaymentOfInterest::Monthly then begin
+                            Rec.FirstDueDate := TreasuryMgtCU.GetEndOfMonthDate(Rec.PlacementDate);
+                            // Rec."Inclusive Counting Interest" := false;
+                        end;
+                        if Rec.PeriodicPaymentOfInterest = Rec.PeriodicPaymentOfInterest::Quarterly then begin
+                            Rec.FirstDueDate := TreasuryMgtCU.GetQuarterClosingDate(Rec.PlacementDate);
+                            // Rec."Inclusive Counting Interest" := false;
+                        end;
+                        if Rec.PeriodicPaymentOfInterest = Rec.PeriodicPaymentOfInterest::Biannually then begin
+                            Rec.FirstDueDate := TreasuryMgtCU.GetBiannualClosingDate(Rec.PlacementDate);
+                            // Rec."Inclusive Counting Interest" := false;
+                        end;
+                        if Rec.PeriodicPaymentOfInterest = Rec.PeriodicPaymentOfInterest::Annually then begin
+                            Rec.FirstDueDate := TreasuryMgtCU.GetYearEndClosingDate(Rec.PlacementDate);
+                            // Rec."Inclusive Counting Interest" := false;
+                        end;
+
                         UpdateInterestPaymentVisibility();
 
                         // CurrPage.Update();
                     end;
 
+
                 }
 
                 field(PeriodicPaymentOfPrincipal; Rec.PeriodicPaymentOfPrincipal)
                 {
+                    Editable = EditStatus;
                     Caption = '*Payment Period (Principal) ';
                     ApplicationArea = All;
+                    trigger OnValidate()
+                    begin
+                        //Check placement date for the interest amortization
+                        if Rec.PlacementDate = 0D then
+                            Error('Please populate Placement Date first.');
+                        if Rec.MaturityDate = 0D then
+                            Error('Please populate Maturity Date first.');
+
+                        if Rec.PeriodicPaymentOfPrincipal = Rec.PeriodicPaymentOfPrincipal::Monthly then begin
+                            Rec.SecondDueDate := TreasuryMgtCU.GetEndOfMonthDate(Rec.PlacementDate);
+                        end;
+                        if Rec.PeriodicPaymentOfPrincipal = Rec.PeriodicPaymentOfPrincipal::Quarterly then begin
+                            Rec.SecondDueDate := TreasuryMgtCU.GetQuarterClosingDate(Rec.PlacementDate);
+                        end;
+                        if Rec.PeriodicPaymentOfPrincipal = Rec.PeriodicPaymentOfPrincipal::Biannually then begin
+                            Rec.SecondDueDate := TreasuryMgtCU.GetBiannualClosingDate(Rec.PlacementDate);
+                        end;
+                        if Rec.PeriodicPaymentOfPrincipal = Rec.PeriodicPaymentOfPrincipal::Annually then begin
+                            Rec.SecondDueDate := TreasuryMgtCU.GetYearEndClosingDate(Rec.PlacementDate);
+                        end;
+                        if Rec.PeriodicPaymentOfPrincipal = Rec.PeriodicPaymentOfPrincipal::"Total at Due Date" then begin
+                            Rec.SecondDueDate := Rec.MaturityDate;
+                        end;
+
+                    end;
 
                 }
 
-                field(TaxStatus; Rec.TaxStatus)
-                {
-                    ApplicationArea = All;
-                }
 
-                field(Withldtax; Rec.Withldtax)
-                {
-                    ApplicationArea = All;
-                }
                 // field(InvestmentTenor; Rec.InvestmentTenor)
                 // {
                 //     ApplicationArea = All;
@@ -280,10 +355,12 @@ page 50306 "RelatedParty Loan Card"
                 // }
                 field(InvstPINNo; Rec.InvstPINNo)
                 {
+                    Editable = EditStatus;
                     ApplicationArea = All;
                 }
                 field("Enable GL Posting"; Rec.EnableGLPosting)
                 {
+                    Editable = EditStatus;
                     ApplicationArea = All;
                 }
                 // field("Tranche Loan"; Rec."Tranche Loan")
@@ -295,6 +372,7 @@ page 50306 "RelatedParty Loan Card"
 
                 field(Category; Rec.Category)
                 {
+
                     ApplicationArea = All;
                     Editable = false;
                 }
@@ -310,6 +388,7 @@ page 50306 "RelatedParty Loan Card"
                 field(SecurityType; Rec.SecurityType)
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                     trigger OnValidate()
                     begin
                         if Rec.SecurityType = Rec.SecurityType::"Senior secured" then begin
@@ -326,36 +405,42 @@ page 50306 "RelatedParty Loan Card"
                 field("Secured Loan"; Rec."Secured Loan")
                 {
                     ApplicationArea = All;
-                    Editable = isSecureLoanActive;
+                    Editable = EditStatus and isSecureLoanActive;
+                    // Editable = isSecureLoanActive;
 
                 }
                 field("Secured Loan Other"; Rec."Secured Loan Other")
                 {
                     ApplicationArea = All;
-                    Editable = isSecureLoanActive;
+                    // Editable = isSecureLoanActive;
+                    Editable = EditStatus and isSecureLoanActive;
                     Caption = 'Secure Loan Other Option';
 
                 }
                 field("UnSecured Loan"; Rec."UnSecured Loan")
                 {
                     ApplicationArea = All;
-                    Editable = isUnsecureLoanActive;
+                    // Editable = isUnsecureLoanActive;
+                    Editable = EditStatus and isUnsecureLoanActive;
 
                 }
 
                 field(FormofSec; Rec.FormofSec)
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
                 }
                 field(PlacementMaturity; Rec.PlacementMaturity)
                 {
                     Caption = 'Placement Maturity Term';
                     ApplicationArea = All;
+                    Editable = EditStatus;
                 }
                 field(Status; Rec.Status)
                 {
                     ApplicationArea = All;
                     // Editable = false;
+                    Editable = EditStatus;
                 }
                 field(State; Rec.State)
                 {
@@ -367,7 +452,9 @@ page 50306 "RelatedParty Loan Card"
                 }
                 group("Rollover Details")
                 {
+                    Editable = EditStatus;
                     Visible = IsRollovered;
+
                     field(Rollovered; Rec.Rollovered)
                     {
                         ApplicationArea = All;
@@ -390,43 +477,127 @@ page 50306 "RelatedParty Loan Card"
 
 
             }
-            group("Amortized Interest Advanced Settings")
+            // group("Amortized Interest Advanced Settings")
+            // {
+            //     //     // Visible = EnableInterestPaymentVisibility;
+            //     field(FirstDueDate; Rec.FirstDueDate)
+            //     {
+            //         Caption = 'Interest Due Date';
+            //         ApplicationArea = All;
+
+            //     }
+            //     field(SecondDueDate; Rec.SecondDueDate)
+            //     {
+            //         Caption = 'Payment Due Date';
+            //         ApplicationArea = All;
+
+            //     }
+            // }
+            group("Intrest Amortization Settings") //Amortized Interest Advanced
             {
+                Editable = EditStatus;
+                Visible = not isOverdraftLoan;
                 //     // Visible = EnableInterestPaymentVisibility;
                 field(FirstDueDate; Rec.FirstDueDate)
                 {
                     Caption = 'Interest Due Date';
                     ApplicationArea = All;
+                    // Editable = EditStatus;
+                    ShowMandatory = true;
 
                 }
+
+                field("Enable Dynamic Period"; Rec.EnableDynamicPeriod)
+                {
+                    ApplicationArea = All;
+                    // Editable = EditStatus;
+                }
+                field("Enable WeekDay Reporting"; Rec.EnableWeekDayReporting)
+                {
+                    ApplicationArea = All;
+                    // Editable = EditStatus;
+                }
+
+                // field("Inclusive Counting Interest"; Rec."Inclusive Counting Interest")
+                // {
+                //     Caption = 'Inclusive counting';
+                //     ToolTip = 'Including both start and end dates';
+                //     ApplicationArea = All;
+                //     Visible = false;
+
+
+                // }
+            }
+
+            group("Payment Amortization Settings") //Amortized Interest Advanced
+            {
+                Editable = EditStatus;
+                Visible = not isOverdraftLoan;
+                //     // Visible = EnableInterestPaymentVisibility;
+                // field(FirstDueDate; Rec.FirstDueDate)
+                // {
+                //     Caption = 'Interest Due Date';
+                //     ApplicationArea = All;
+                //     Editable = EditStatus;
+                //     ShowMandatory = true;
+
+                // }
                 field(SecondDueDate; Rec.SecondDueDate)
                 {
-                    Caption = 'Payment Due Date';
+                    Caption = 'Principal Payment Due Date';
                     ApplicationArea = All;
+                    // Editable = EditStatus;
+                    ShowMandatory = true;
 
                 }
+
+                field("Enable Dynamic Period P"; Rec.EnableDynamicPeriod_Payment)
+                {
+                    ApplicationArea = All;
+                    // Editable = EditStatus;
+                }
+                field("Enable WeekDay Reporting P"; Rec.EnableWeekDayReporting_Payment)
+                {
+                    ApplicationArea = All;
+                    // Editable = EditStatus;
+                }
+                // field("Add Day to End Period"; Rec."Add Day to Start Period")
+                // {
+                //     Caption = 'Add One (1) day to Start Date';
+                //     ApplicationArea = All;
+                //     // Editable = EditStatus;
+
+
+                // }
+
             }
+
+
             group(Encumbrance)
             {
+                Editable = EditStatus;
                 Visible = EncumberanceView;
 
-                field("Encumbrance Input"; Rec."Encumbrance Input")
-                {
-                    ApplicationArea = All;
-                }
-                field("Total Asset Value"; Rec."Total Asset Value")
-                {
-                    ApplicationArea = All;
-                    Editable = false;
-                }
                 field("Encumbrance Percentage"; Rec."Encumbrance Percentage")
                 {
                     ApplicationArea = All;
+                    Editable = EditStatus;
+                }
+                field("Encumbrance Input"; Rec."Encumbrance Input")
+                {
+                    ApplicationArea = All;
                     Editable = false;
                 }
+                // field("Total Asset Value"; Rec."Total Asset Value")
+                // {
+                //     ApplicationArea = All;
+                //     Editable = false;
+                // }
+
             }
             group("Loan Repayment")
             {
+                Editable = EditStatus;
                 Visible = LoanRepaymentView;
 
                 field("Repayment Frequency"; Rec."Repayment Frequency")
@@ -472,10 +643,10 @@ page 50306 "RelatedParty Loan Card"
             {
                 Caption = 'Process Funder Loan';
                 Image = Interaction;
-                action("Funder Ledger Entry")
+                action("Related Ledger Entry")
                 {
                     ApplicationArea = Basic, Suite;
-                    Caption = 'Funder Ledger';
+                    Caption = 'Relatedparty Ledger';
                     Image = LedgerEntries;
                     PromotedCategory = Process;
                     Promoted = true;
@@ -483,11 +654,11 @@ page 50306 "RelatedParty Loan Card"
                     //RunPageLink = "Funder No." = FIELD("No.");
                     trigger OnAction()
                     var
-                        funderLedgerEntry: Record FunderLedgerEntry;
+                        RelatedLedgerEntry: Record RelatedLedgerEntry;
                     begin
-                        funderLedgerEntry.SETRANGE(funderLedgerEntry."Loan No.", Rec."No.");
-                        funderLedgerEntry.SetFilter(funderLedgerEntry."Document Type", '<>%1', funderLedgerEntry."Document Type"::"Remaining Amount");
-                        PAGE.RUN(PAGE::FunderLedgerEntry, funderLedgerEntry);
+                        RelatedLedgerEntry.SETRANGE(RelatedLedgerEntry."Loan No.", Rec."No.");
+                        RelatedLedgerEntry.SetFilter(RelatedLedgerEntry."Document Type", '<>%1', RelatedLedgerEntry."Document Type"::"Remaining Amount");
+                        PAGE.RUN(PAGE::RelatedLedgerEntry, RelatedLedgerEntry);
 
                     end;
                 }
@@ -501,9 +672,9 @@ page 50306 "RelatedParty Loan Card"
                     ToolTip = 'Compute Interest ';
                     trigger OnAction()
                     var
-                        funderMgt: Codeunit RelatepartyMgtCU;
+                        relatedMgt: Codeunit RelatepartyMgtCU;
                     begin
-                        funderMgt.CalculateInterest(Rec."No.");
+                        relatedMgt.CalculateInterest(Rec."No.");
                     end;
                 }
                 action("Rollover Record")
@@ -514,6 +685,7 @@ page 50306 "RelatedParty Loan Card"
                     PromotedCategory = Process;
                     Caption = 'Rollover Record';
                     ToolTip = 'Rollover Record';
+                    Visible = false;
                     trigger OnAction()
                     var
                         funderMgt: Codeunit FunderMgtCU;
@@ -537,6 +709,7 @@ page 50306 "RelatedParty Loan Card"
                     PromotedCategory = Process;
                     Caption = 'Redemption Record';
                     ToolTip = 'Redemption Record';
+                    Visible = false;
                     trigger OnAction()
                     var
                         RD: Page "Relatedparty Redemption";
@@ -620,8 +793,8 @@ page 50306 "RelatedParty Loan Card"
                         // Interest Value, Method and Principal
                         if Rec."Original Disbursed Amount" = 0 then
                             Error('Original Disbursed Amount Required');
-                        if Rec.InterestRate = 0 then
-                            Error('Gross Interest rate (p.a) Required');
+                        // if Rec.InterestRate = 0 then
+                        //     Error('Gross Interest rate (p.a) Required');
 
                         RecRef.GetTable(Rec);
                         if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
@@ -678,6 +851,7 @@ page 50306 "RelatedParty Loan Card"
                     Promoted = true;
                     PromotedCategory = Process;
                     // PromotedIsBig = true;
+                    Visible = false;
                     trigger OnAction()
                     var
                         EmailingCU: Codeunit "Treasury Emailing";
@@ -820,53 +994,48 @@ page 50306 "RelatedParty Loan Card"
 
             group(Reports)
             {
-                // action("Amortized Interest")
-                // {
-                //     ApplicationArea = All;
-                //     Caption = 'Amortized Interest';
-                //     Image = Report2;
-                //     // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
-                //     Promoted = true;
-                //     PromotedCategory = Report;
-                //     PromotedIsBig = true;
-                //     // RunObject = report "Interest Amortization";
-                //     trigger OnAction()
-                //     var
-                //         _funderLoan: Record "Funder Loan";
-                //     begin
-                //         _funderLoan.Reset();
-                //         _funderLoan.SetRange("No.", Rec."No.");
-                //         Report.Run(Report::"Interest Amortization", true, false, _funderLoan);
-                //     end;
+                action("Amortized Interest")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Amortized Interest';
+                    Image = Report2;
+                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
+                    // RunObject = report "Interest Amortization";
+                    trigger OnAction()
+                    var
+                        _relatedLoan: Record "RelatedParty Loan";
+                    begin
+                        _relatedLoan.Reset();
+                        _relatedLoan.SetRange("No.", Rec."No.");
+                        Report.Run(Report::"Interest Amortization Related", true, false, _relatedLoan);
+                    end;
 
-
-
-                // }
-                // action("Amortized Payment")
-                // {
-                //     ApplicationArea = All;
-                //     Caption = 'Amortized Payment';
-                //     Image = Report;
-                //     // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
-                //     Promoted = true;
-                //     PromotedCategory = Report;
-                //     PromotedIsBig = true;
-                //     RunObject = report "Payment Amortization";
-                //     trigger OnAction()
-                //     var
-                //         _funderLoan: Record "Funder Loan";
-                //     begin
-                //         _funderLoan.Reset();
-                //         _funderLoan.SetRange("No.", Rec."No.");
-                //         // Report.Run(50230, true, false, _funderLoan);
-                //     end;
-                // }
+                }
+                action("Amortized Payment")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Amortized Payment';
+                    Image = Report;
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
+                    trigger OnAction()
+                    var
+                        _relatedLoan: Record "RelatedParty Loan";
+                    begin
+                        _relatedLoan.Reset();
+                        _relatedLoan.SetRange("No.", Rec."No.");
+                        Report.Run(Report::"Payment Amortization Related", true, false, _relatedLoan);
+                    end;
+                }
                 action("Loan Repayment Schedule")
                 {
                     ApplicationArea = All;
                     Caption = 'Loan Repayment';
                     Image = Replan;
-                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
                     Promoted = true;
                     PromotedCategory = Report;
                     PromotedIsBig = true;
@@ -878,26 +1047,26 @@ page 50306 "RelatedParty Loan Card"
                         Report.Run(Report::"Related Loan Rep. Sch.", true, false, Rec);
                     end;
                 }
-                // action("Capitalize Interest")
-                // {
-                //     ApplicationArea = All;
-                //     Caption = 'Capitalize Interest';
-                //     Image = Report;
-                //     // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
-                //     Promoted = true;
-                //     PromotedCategory = Report;
-                //     PromotedIsBig = true;
-                //     // RunObject = report "Capitalize Interest";
-                //     trigger OnAction()
-                //     var
-                //         LoanRec: Record "Funder Loan";
-                //         Capitalizarp: Report "Capitalize Interest";
-                //     begin
-                //         LoanRec.SetRange("No.", Rec."No.");
-                //         Capitalizarp.SetTableView(LoanRec);
-                //         Capitalizarp.Run();
-                //     end;
-                // }
+                action("Capitalize Interest")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Capitalize Interest';
+                    Image = Report;
+                    // ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                    Promoted = true;
+                    PromotedCategory = Report;
+                    PromotedIsBig = true;
+                    // RunObject = report "Capitalize Interest";
+                    trigger OnAction()
+                    var
+                        LoanRec: Record "RelatedParty Loan";
+                        Capitalizarp: Report "Related Capitalize Interest";
+                    begin
+                        LoanRec.SetRange("No.", Rec."No.");
+                        Capitalizarp.SetTableView(LoanRec);
+                        Capitalizarp.Run();
+                    end;
+                }
                 // action("ReEvaluateFX")
                 // {
                 //     ApplicationArea = All;
@@ -911,11 +1080,11 @@ page 50306 "RelatedParty Loan Card"
                 //     trigger OnAction()
                 //     var
                 //         // Report:Report ReEvaluateFX;
-                //         _funderLoan: Record "Funder Loan";
+                //         _relatedLoan: Record "Funder Loan";
                 //     begin
-                //         _funderLoan.Reset();
-                //         _funderLoan.SetRange("No.", Rec."No.");
-                //         Report.Run(Report::ReEvaluateFX, true, false, _funderLoan);
+                //         _relatedLoan.Reset();
+                //         _relatedLoan.SetRange("No.", Rec."No.");
+                //         Report.Run(Report::ReEvaluateFX, true, false, _relatedLoan);
 
                 //     end;
                 // }
@@ -949,6 +1118,7 @@ page 50306 "RelatedParty Loan Card"
                     Promoted = true;
                     PromotedCategory = Report;
                     PromotedIsBig = true;
+                    Visible = false;
                     trigger OnAction()
                     var
                         InvestConfRp: Report "Investment Confirmation";
@@ -970,10 +1140,11 @@ page 50306 "RelatedParty Loan Card"
                     PromotedCategory = Report;
                     // RunObject = report "Investment Confirmation";
                     PromotedIsBig = true;
+                    Visible = false;
                     trigger OnAction()
                     var
                         RedemptionDoc: Report "Redemption Document";
-                        LoanRec: Record "Funder Loan";
+                        LoanRec: Record "RelatedParty Loan";
                     // ReportFlag: Record "Report Flags";
                     begin
                         LoanRec.SetRange("No.", Rec."No.");
@@ -996,9 +1167,9 @@ page 50306 "RelatedParty Loan Card"
         isUnsecureLoanActive := true;
         isFloatRate := false;
 
-        _funderNo := GlobalFilters.GetGlobalFilter();
-        if _funderNo <> '' then begin
-            if RelatedPartyTbl.Get(_funderNo) then begin
+        _relatedPartyNo := GlobalFilters.GetGlobalFilter();
+        if _relatedPartyNo <> '' then begin
+            if RelatedPartyTbl.Get(_relatedPartyNo) then begin
                 if RelatedPartyTbl.FunderType = RelatedPartyTbl.FunderType::Individual then begin
                     if RelatedPartyTbl."Mailing Address" = '' then begin
                         Error('Email Required');
@@ -1018,12 +1189,12 @@ page 50306 "RelatedParty Loan Card"
             Error('Region/Country must have atleast one entry');
             exit;
         end;
-        _funderNo := GlobalFilters.GetGlobalFilter();
-        if not RelatedPartyTbl.Get(_funderNo) then
+        _relatedPartyNo := GlobalFilters.GetGlobalFilter();
+        if not RelatedPartyTbl.Get(_relatedPartyNo) then
             exit;
         // Error('Relatedparty not found');
-        // if _funderNo <> '' then begin
-        //     if RelatedPartyTbl.Get(_funderNo) then begin
+        // if _relatedPartyNo <> '' then begin
+        //     if RelatedPartyTbl.Get(_relatedPartyNo) then begin
         //         if RelatedPartyTbl.FunderType = RelatedPartyTbl.FunderType::Local then
         //             isCurrencyVisible := false;
         //     end;
@@ -1144,13 +1315,13 @@ page 50306 "RelatedParty Loan Card"
         FilterVal: Text[30];
     begin
 
-        if _funderNo <> '' then begin
+        if _relatedPartyNo <> '' then begin
             // GenSetup.Get(1);
             // GenSetup.TestField("Funder Loan No.");
             // if Rec."No." = '' then
             //     Rec."No." := NoSer.GetNextNo(GenSetup."Funder Loan No.", 0D, true);
-            Rec."Funder No." := _funderNo;
-            Rec.Validate("Funder No.");
+            Rec."RelatedParty No." := _relatedPartyNo;
+            Rec.Validate("RelatedParty No.");
             // Rec.Insert();
         end;
 
@@ -1175,7 +1346,7 @@ page 50306 "RelatedParty Loan Card"
 
     trigger OnAfterGetRecord()
     begin
-
+        isOverdraftLoan := Rec.Category = UpperCase('Bank Overdraft')
     end;
 
     trigger OnQueryClosePage(CloseAction: Action): Boolean
@@ -1201,7 +1372,7 @@ page 50306 "RelatedParty Loan Card"
     local procedure FieldEditProp()
     var
     begin
-        EditStatus := not (Rec.Status = Rec.Status::Approved);
+        EditStatus := (Rec.Status = Rec.Status::Open) or (Rec.Status = Rec.Status::Rejected);
     end;
 
     local procedure RolloveredChecker()
@@ -1213,10 +1384,11 @@ page 50306 "RelatedParty Loan Card"
     var
         myInt: Integer;
         GenSetup: Record "Treasury General Setup";
+        TreasuryMgtCU: Codeunit "Treasury Mgt CU";
         NoSer: Codeunit "No. Series";
         GlobalFilters: Codeunit GlobalFilters;
-        isCurrencyVisible, isSecureLoanActive, isUnsecureLoanActive, isFloatRate : Boolean;
-        _funderNo: Text[30];
+        isCurrencyVisible, isSecureLoanActive, isUnsecureLoanActive, isFloatRate, isOverdraftLoan : Boolean;
+        _relatedPartyNo: Text[30];
         RelatedPartyTbl: Record RelatedParty;
 
         OpenApprovalEntriesExistCurrUser, OpenApprovalEntriesExist, CanCancelApprovalForRecord

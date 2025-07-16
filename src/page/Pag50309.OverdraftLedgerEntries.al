@@ -60,6 +60,7 @@ page 50309 "Overdraft Ledger Entries"
                 field(Closed; Rec.Closed)
                 {
                     ApplicationArea = All;
+                    Visible = false;
                 }
                 field(Processed; Rec.Processed)
                 {

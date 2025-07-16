@@ -26,7 +26,7 @@ page 50302 "Portfolio List RelalatedParty"
                 {
                     ApplicationArea = All;
                 }
-                field(ProgramSize; Rec.ProgramSize)
+                field("Actual Program Size"; Rec."Actual Program Size")
                 {
                     ApplicationArea = All;
                     Caption = 'Program Size';
@@ -48,33 +48,33 @@ page 50302 "Portfolio List RelalatedParty"
                 //     end;
 
                 // }
-                field(BeginDate; Rec.BeginDate)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Begin Date';
-                }
-                field(ProgramTerm; Rec.ProgramTerm)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Program Term (Year)';
-                }
-                field(EndTerm; Rec.EndTerm)
-                {
-                    ApplicationArea = All;
-                    Caption = 'End Term';
-                }
-                field("Fee Applicable"; Rec."Fee Applicable")
-                {
-                    ApplicationArea = All;
-                }
-                field("Interest Rate Applicable"; Rec."Interest Rate Applicable")
-                {
-                    ApplicationArea = All;
-                }
-                field("Physical Address"; Rec."Physical Address")
-                {
-                    ApplicationArea = All;
-                }
+                // field(BeginDate; Rec.BeginDate)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Begin Date';
+                // }
+                // field(ProgramTerm; Rec.ProgramTerm)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Program Term (Year)';
+                // }
+                // field(EndTerm; Rec.EndTerm)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'End Term';
+                // }
+                // field("Fee Applicable"; Rec."Fee Applicable")
+                // {
+                //     ApplicationArea = All;
+                // }
+                // field("Interest Rate Applicable"; Rec."Interest Rate Applicable")
+                // {
+                //     ApplicationArea = All;
+                // }
+                // field("Physical Address"; Rec."Physical Address")
+                // {
+                //     ApplicationArea = All;
+                // }
                 // field(Value; Rec.Value)
                 // {
                 //     ApplicationArea = All;

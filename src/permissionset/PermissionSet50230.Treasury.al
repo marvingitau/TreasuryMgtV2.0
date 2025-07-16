@@ -194,5 +194,14 @@ permissionset 50230 Treasury
         page "Relatedparty Sales Inv Rec." = X,
         tabledata "Dynamic Interest Rate" = RIMD,
         table "Dynamic Interest Rate" = X,
-        page "Dynamic Intr. Rate" = X;
+        page "Dynamic Intr. Rate" = X,
+        report "OD Interest Calculation" = X,
+        report "OD Interest Posting" = X,
+        tabledata TreasuryLogs = RIMD,
+        table TreasuryLogs = X,
+        report "Funder Capitalization Schedule" = X,
+        report "Funder Interest Calc. Cron" = X,
+        report "Payment Amortization B" = X,
+        report "Related Intr. Calc. Cron" = X,
+        report "Update Loan Data" = X;
 }

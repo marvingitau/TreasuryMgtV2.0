@@ -31,7 +31,14 @@ page 50273 RelatedLedgerEntry
                     ApplicationArea = All;
                     Caption = 'Related Name';
                 }
-
+                field(Description; Rec.Description)
+                {
+                    ApplicationArea = All;
+                }
+                field("Document No."; Rec."Document No.")
+                {
+                    ApplicationArea = All;
+                }
                 field("Document Type"; Rec."Document Type")
                 {
                     ApplicationArea = All;
@@ -68,14 +75,39 @@ page 50273 RelatedLedgerEntry
                 //     Caption = 'Remain Amount(LCY)';
                 // }
 
-                field(Description; Rec.Description)
+                field("Account Type"; Rec."Account Type")
                 {
+                    Caption = 'Account Type';
                     ApplicationArea = All;
                 }
-                field("Document No."; Rec."Document No.")
+                field("Account No."; Rec."Account No.")
                 {
+                    Caption = 'Account No.';
                     ApplicationArea = All;
                 }
+                field("Bal. Account Type"; Rec."Bal. Account Type")
+                {
+                    Caption = 'Bal. Account Type';
+                    ApplicationArea = All;
+                }
+                field("Bal. Account No."; Rec."Bal. Account No.")
+                {
+                    Caption = 'Bal. Account No.';
+                    ApplicationArea = All;
+                }
+                field("Bal. Account Type 2"; Rec."Bal. Account Type 2")
+                {
+                    Caption = 'Bal. Account Type 2';
+                    ApplicationArea = All;
+                }
+                field("Bal. Account No. 2"; Rec."Bal. Account No. 2")
+                {
+                    Caption = 'Bal. Account No. 2';
+                    ApplicationArea = All;
+                }
+
+
+
                 field(GloabalDimCode1; Rec."Shortcut Dimension 1 Code")
                 {
                     ApplicationArea = Dimensions;

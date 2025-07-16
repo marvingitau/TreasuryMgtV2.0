@@ -239,6 +239,11 @@ table 50234 FunderLedgerEntry
         {
             DataClassification = ToBeClassified;
         }
+        field(57; "Document Date"; Date)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Document Date';
+        }
 
         field(49900; "Shortcut Dimension 1 Code"; Code[50])
         {

@@ -62,6 +62,10 @@ table 50287 "Intr- Amort Partial"
         {
             DataClassification = ToBeClassified;
         }
+        field(201; PrincipalValue; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
     }
 
     keys

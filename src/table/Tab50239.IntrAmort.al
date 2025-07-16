@@ -58,6 +58,10 @@ table 50239 "Intr- Amort"
         {
             DataClassification = ToBeClassified;
         }
+        field(202; PrincipalValue; Decimal)
+        {
+            DataClassification = ToBeClassified;
+        }
     }
 
     keys

@@ -279,11 +279,8 @@ codeunit 50231 FunderMgtCU
         _funder: Record Funders;
         _portfolio: Record Portfolio;
     begin
-        //Interest Rate Type (Fixed/Float)
-        //Interest Rate value
-        //***Interest Method
-        // (Annual Rate / 12) * Principal
-        //Funder Ldger Entry
+
+
         latestRemainingAmount := 0;
         funderLoan.Reset();
         funderLoan.SetRange(funderLoan."No.", FunderLoanNo);
@@ -310,6 +307,16 @@ codeunit 50231 FunderMgtCU
             if not _portfolio.Find('-') then
                 Error('Portfolio %1 not found _fl', _funder.Portfolio);
 
+            funderLegderEntry3.Reset();
+            funderLegderEntry3.SetRange("Funder No.", funder."No.");
+            funderLegderEntry3.SetRange(funderLegderEntry3."Loan No.", funderLoan."No.");
+            funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::Interest);
+            funderLegderEntry3.SetRange(funderLegderEntry3."Posting Date", CALCDATE('<+CM>', Today));
+            if funderLegderEntry3.Find('-') then begin
+                Message('Interest Calculate Already');
+                exit;
+            end;
+
 
             //Fixed Interest Type
             if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") OR (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
@@ -325,11 +332,28 @@ codeunit 50231 FunderMgtCU
 
 
                 if _interestComputationTimes = 0 then begin
+
+                    if CALCDATE('<+CM>', Today) = CALCDATE('<+CM>', funderLoan.PlacementDate) then begin
+                        endMonthDate := CALCDATE('<+CM>', Today);
+                        remainingDays := endMonthDate - funderLoan.PlacementDate + 1;
+                    end;
+                    if CALCDATE('<+CM>', Today) <> CALCDATE('<+CM>', funderLoan.PlacementDate) then begin
+                        endMonthDate := CALCDATE('<+CM>', Today);
+                        remainingDays := CALCDATE('<CM>', Today) - CALCDATE('<-CM>', Today) + 1
+                    end;
+                    if CALCDATE('<+CM>', funderLoan.MaturityDate) = CALCDATE('<+CM>', Today) then begin
+                        endMonthDate := funderLoan.MaturityDate;
+                        remainingDays := funderLoan.MaturityDate - CALCDATE('<-CM>', funderLoan.MaturityDate) + 1
+                    end;
+
+                end
+                else begin
                     endMonthDate := CALCDATE('<+CM>', Today);
-                    remainingDays := endMonthDate - funderLoan.PlacementDate + 0;
-                end else begin
-                    endMonthDate := CALCDATE('<+CM>', Today);
-                    remainingDays := CALCDATE('<CM>', Today) - CALCDATE('<-CM>', Today) + 0
+                    remainingDays := CALCDATE('<CM>', Today) - CALCDATE('<-CM>', Today) + 1;
+                    if CALCDATE('<+CM>', funderLoan.MaturityDate) = CALCDATE('<+CM>', Today) then begin // If its last period of calculation
+                        endMonthDate := funderLoan.MaturityDate;
+                        remainingDays := funderLoan.MaturityDate - CALCDATE('<-CM>', funderLoan.MaturityDate) + 1
+                    end;
                     // remainingDays := (endMonthDate - Today) + 1;
                 end;
 
@@ -421,7 +445,8 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry."Funder Name" := funder.Name;
                 funderLegderEntry."Loan Name" := _loanName;
                 funderLegderEntry."Loan No." := _loanNo;
-                funderLegderEntry."Posting Date" := Today;
+                funderLegderEntry."Posting Date" := CALCDATE('<+CM>', Today);
+                funderLegderEntry."Document Date" := Today;
                 funderLegderEntry."Document No." := _docNo;
                 funderLegderEntry."External Document No." := _docNo + ' Interest ' + Format(Today, 0, '<Month Text> <Year4>');
                 funderLegderEntry."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
@@ -455,19 +480,20 @@ codeunit 50231 FunderMgtCU
                 funderLegderEntry1."Loan Name" := _loanName;
                 funderLegderEntry1."Loan No." := _loanNo;
                 funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
-                funderLegderEntry1."Posting Date" := Today;
+                funderLegderEntry1."Posting Date" := CALCDATE('<CM>', Today);
+                funderLegderEntry1."Document Date" := Today;
                 funderLegderEntry1.Category := funderLoan.Category; // Funder Loan Category
                 funderLegderEntry1."Document No." := _docNo;
-                funderLegderEntry."External Document No." := _docNo + ' Withhlding ' + Format(Today, 0, '<Month Text> <Year4>');
+                funderLegderEntry1."External Document No." := _docNo + ' Withhlding ' + Format(Today, 0, '<Month Text> <Year4>');
                 funderLegderEntry1."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
                 funderLegderEntry1.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + ' - ' + funderLoan."Bank Ref. No." + ' - ' + Format(Today, 0, '<Month Text> <Year4>') + ' Withholding Calculation';
                 funderLegderEntry1.Amount := -witHldInterest;
                 funderLegderEntry1."Amount(LCY)" := -witHldInterest;
 
-                funderLegderEntry."Bal. Account No." := withholdingAcc;
-                funderLegderEntry."Bal. Account Type" := funderLegderEntry."Bal. Account Type"::"G/L Account";
-                funderLegderEntry."Account No." := interestAccPayable;
-                funderLegderEntry."Account Type" := funderLegderEntry."Account Type"::"G/L Account";
+                funderLegderEntry1."Bal. Account No." := withholdingAcc;
+                funderLegderEntry1."Bal. Account Type" := funderLegderEntry."Bal. Account Type"::"G/L Account";
+                funderLegderEntry1."Account No." := interestAccPayable;
+                funderLegderEntry1."Account Type" := funderLegderEntry."Account Type"::"G/L Account";
 
                 funderLegderEntry1.Insert();
 
@@ -1201,15 +1227,15 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Currency Code" := Currency;
             JournalEntry.Validate("Currency Code");
 
-            JournalEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Original Principal';
+            JournalEntry.Description := CopyStr(funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Original Principal', 1, 100);
             JournalEntry."Account Type" := JournalEntry."Account Type"::"Bank Account";
             JournalEntry."Account No." := BankAc;
             JournalEntry.Amount := Round(Amount, 0.01, '=');
             JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
             JournalEntry."Bal. Account No." := GLAcc;
             JournalEntry.Validate(Amount);
-
-            GLPost.RunWithCheck(JournalEntry);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
 
         end;
         if (Origin = 'interest') then begin
@@ -1231,13 +1257,13 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Currency Code" := Currency;
             JournalEntry.Validate("Currency Code");
 
-            JournalEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Accrual _Intr. Expens';
+            JournalEntry.Description := CopyStr(funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Accrual _Intr. Expens', 1, 100);
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Account No." := GLAcc; // Inter. Exp Acc
             JournalEntry.Amount := Round(Amount, 0.01, '=');
             JournalEntry.Validate(Amount);
-
-            GLPost.RunWithCheck(JournalEntry);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
 
             JournalEntry.Init();
             JournalEntry."Journal Template Name" := 'GENERAL';
@@ -1256,13 +1282,13 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Currency Code" := Currency;
             JournalEntry.Validate("Currency Code");
 
-            JournalEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Accrual _Intr. Payable';
+            JournalEntry.Description := CopyStr(funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Accrual _Intr. Payable', 1, 100);
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Account No." := BankAc; // Interest Payable.
             JournalEntry.Amount := -(Round(Amount, 0.01, '=') - Round(WthholdingAmount, 0.01, '='));
             JournalEntry.Validate(Amount);
-
-            GLPost.RunWithCheck(JournalEntry);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
 
             if WthholdingAmount > 0 then begin
                 JournalEntry.Init();
@@ -1282,13 +1308,13 @@ codeunit 50231 FunderMgtCU
                 JournalEntry."Currency Code" := Currency;
                 JournalEntry.Validate("Currency Code");
 
-                JournalEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Accrual _Wtholding';
+                JournalEntry.Description := CopyStr(funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Accrual _Wtholding', 1, 100);
                 JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
                 JournalEntry."Account No." := withholdingAcc;
                 JournalEntry.Amount := -Round(WthholdingAmount, 0.01, '=');
                 JournalEntry.Validate(Amount);
-
-                GLPost.RunWithCheck(JournalEntry);
+                if JournalEntry.Amount <> 0 then
+                    GLPost.RunWithCheck(JournalEntry);
             end;
 
         end;
@@ -1311,13 +1337,14 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Currency Code" := Currency;
             JournalEntry.Validate("Currency Code");
 
-            JournalEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Reversal _Intr. Expens';
+            JournalEntry.Description := CopyStr(funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Reversal _Intr. Expens', 1, 100);
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Account No." := GLAcc; // Intr. Expen Ac
             JournalEntry.Amount := -Round(Amount, 0.01, '=');
             JournalEntry.Validate(Amount);
 
-            GLPost.RunWithCheck(JournalEntry);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
 
             JournalEntry.Init();
             JournalEntry."Journal Template Name" := 'GENERAL';
@@ -1336,13 +1363,14 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Currency Code" := Currency;
             JournalEntry.Validate("Currency Code");
 
-            JournalEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Reverse Intr _Intr. Payab';
+            JournalEntry.Description := CopyStr(funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Reverse Intr _Intr. Payab', 1, 100);
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Account No." := BankAc; // Interest Payable.
             JournalEntry.Amount := (Round(Amount, 0.01, '=') - Round(WthholdingAmount, 0.01, '='));
             JournalEntry.Validate(Amount);
 
-            GLPost.RunWithCheck(JournalEntry);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
 
             JournalEntry.Init();
             JournalEntry."Journal Template Name" := 'GENERAL';
@@ -1361,13 +1389,13 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Currency Code" := Currency;
             JournalEntry.Validate("Currency Code");
 
-            JournalEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Reverse Intr. Witholding';
+            JournalEntry.Description := CopyStr(funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Reverse Intr. Witholding', 1, 100);
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Account No." := withholdingAcc;
             JournalEntry.Amount := Round(WthholdingAmount, 0.01, '=');
             JournalEntry.Validate(Amount);
-
-            GLPost.RunWithCheck(JournalEntry);
+            if WthholdingAmount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
         end;
 
         if (Origin = 'interest-payment') then begin
@@ -1388,15 +1416,15 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Currency Code" := Currency;
             JournalEntry.Validate("Currency Code");
 
-            JournalEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Payment';
+            JournalEntry.Description := CopyStr(funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Payment', 1, 100);
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Account No." := GLAcc;
             JournalEntry.Amount := Round(Amount, 0.01, '=');
             JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
             JournalEntry."Bal. Account No." := BankAc;
             JournalEntry.Validate(Amount);
-
-            GLPost.RunWithCheck(JournalEntry);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
 
         end;
         if Origin = 'redemption' then begin
@@ -1417,15 +1445,15 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Currency Code" := Currency;
             JournalEntry.Validate("Currency Code");
 
-            JournalEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Full Principal Redemption';
+            JournalEntry.Description := CopyStr(funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Full Principal Redemption', 1, 100);
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Account No." := GLAcc;
             JournalEntry.Amount := Round(Amount, 0.01, '=');
             JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
             JournalEntry."Bal. Account No." := BankAc;
             JournalEntry.Validate(Amount);
-
-            GLPost.RunWithCheck(JournalEntry);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
         end;
         if Origin = 'partial-redemption' then begin
             JournalEntry.Init();
@@ -1445,15 +1473,15 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Currency Code" := Currency;
             JournalEntry.Validate("Currency Code");
 
-            JournalEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Partial Principal Redemption';
+            JournalEntry.Description := CopyStr(funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Partial Principal Redemption', 1, 100);
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Account No." := GLAcc;
             JournalEntry.Amount := Round(Amount, 0.01, '=');
             JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
             JournalEntry."Bal. Account No." := BankAc;
             JournalEntry.Validate(Amount);
-
-            GLPost.RunWithCheck(JournalEntry);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
         end;
         if Origin = 'tranch-fee' then begin
             JournalEntry.Init();
@@ -1473,15 +1501,44 @@ codeunit 50231 FunderMgtCU
             JournalEntry."Currency Code" := Currency;
             JournalEntry.Validate("Currency Code");
 
-            JournalEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Tranch fee';
+            JournalEntry.Description := CopyStr(funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Tranch fee', 1, 100);
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Account No." := GLAcc;
             JournalEntry.Amount := Round(Amount, 0.01, '=');
             JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
             JournalEntry."Bal. Account No." := BankAc;
             JournalEntry.Validate(Amount);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
+        end;
+        if (Origin = 'init-rollover') then begin
+            JournalEntry.Init();
+            JournalEntry."Journal Template Name" := 'GENERAL';
+            JournalEntry."Journal Batch Name" := 'TREASURY';
+            JournalEntry."Line No." := NextEntryNo;
+            JournalEntry.Entry_ID := NextEntryNo;
+            JournalEntry."External Document No." := ExtDocNo;
+            JournalEntry."Posting Date" := Today;
+            JournalEntry.Creation_Date := Today;
+            JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
+            JournalEntry.Validate("Shortcut Dimension 1 Code");
+            if DocNo <> '' then
+                JournalEntry."Document No." := DocNo
+            else
+                JournalEntry."Document No." := FunderLoanNo + Format(Today);
+            JournalEntry."Currency Code" := Currency;
+            JournalEntry.Validate("Currency Code");
 
-            GLPost.RunWithCheck(JournalEntry);
+            JournalEntry.Description := CopyStr(funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Original Principal', 1, 100);
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Account No." := GLAcc;
+            JournalEntry.Amount := Round(Amount, 0.01, '=');
+            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
+            JournalEntry."Bal. Account No." := GLAcc;
+            JournalEntry.Validate(Amount);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
+
         end;
 
 

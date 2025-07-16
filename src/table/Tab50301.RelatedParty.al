@@ -849,7 +849,7 @@ table 50301 "RelatedParty"
         }
         field(3000; FunderType; Option)
         {
-            OptionMembers = Individual,"Joint Application",Corporate,Institutional,"Bank Loan";
+            OptionMembers = Individual,"Joint Application",Corporate,Institutional,"Bank Loan",Relatedparty,"Bank Overdraft";
             DataClassification = ToBeClassified;
         }
         field(3009; "Coupa Ref No."; Text[250])

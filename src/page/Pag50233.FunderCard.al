@@ -33,6 +33,16 @@ page 50233 "Funder Card"
 
                         if _portfolio.Category = _portfolio.Category::"Bank Overdraft" then
                             Rec.FunderType := Rec.FunderType::"Bank Overdraft";
+
+                        if _portfolio.Category = _portfolio.Category::"Bank Loan" then
+                            Rec.FunderType := Rec.FunderType::"Bank Loan";
+                        if _portfolio.Category = _portfolio.Category::Individual then
+                            Rec.FunderType := Rec.FunderType::Individual;
+                        if _portfolio.Category = _portfolio.Category::Institutional then
+                            Rec.FunderType := Rec.FunderType::Institutional;
+                        if _portfolio.Category = _portfolio.Category::Relatedparty then
+                            Rec.FunderType := Rec.FunderType::Relatedparty;
+                        CurrPage.Update();
                     end;
                 }
                 field(Name; Rec.Name)
@@ -53,13 +63,7 @@ page 50233 "Funder Card"
                     end;
                 }
 
-                field(FundSource; Rec.FundSource)
-                {
-                    Caption = 'Receiving Bank Account';
-                    Editable = EditStatus;
-                    ApplicationArea = all;
-                    // ShowMandatory = true;
-                }
+
                 // field("Funder Type"; Rec."Funder Type")
                 // {
                 //     ApplicationArea = all;
@@ -67,7 +71,8 @@ page 50233 "Funder Card"
                 field(Status; Rec.Status)
                 {
                     ApplicationArea = all;
-                    Editable = not (Rec.Status = Rec.Status::Approved);
+                    Editable = false;
+                    // Editable = (Rec.Status = Rec.Status::Open);
                 }
             }
             group("G/L Mapping")
@@ -93,6 +98,14 @@ page 50233 "Funder Card"
                     ApplicationArea = All;
                     ShowMandatory = true;
                     Editable = EditStatus;
+                }
+                field(FundSource; Rec.FundSource)
+                {
+                    Caption = 'Receiving Bank Account';
+                    Editable = EditStatus;
+                    ApplicationArea = all;
+
+                    Enabled = Rec.FunderType = Rec.FunderType::"Bank Overdraft";
                 }
             }
 
@@ -156,7 +169,7 @@ page 50233 "Funder Card"
                         Caption = 'Passport No.';
                         // ShowMandatory = true;
                         Editable = EditStatus;
-                        Enabled = Rec."Identification Doc." = Rec."Identification Doc."::Passport;
+                        Enabled = (Rec."Identification Doc." = Rec."Identification Doc."::Passport);
                     }
 
                     field(IndNatureOfBusiness; Rec.IndNatureOfBusiness)
@@ -171,7 +184,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Occupation';
-                        Editable = Rec.IndNatureOfBusiness = Rec.IndNatureOfBusiness::"Self Employed";
+                        Editable = (Rec.IndNatureOfBusiness = Rec.IndNatureOfBusiness::"Self Employed") and EditStatus;
 
                     }
                     field(IndEmployer; Rec.IndEmployer)
@@ -179,7 +192,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Employer';
-                        Editable = Rec.IndNatureOfBusiness = Rec.IndNatureOfBusiness::Employed;
+                        Editable = (Rec.IndNatureOfBusiness = Rec.IndNatureOfBusiness::Employed) and EditStatus;
 
                     }
                     field(IndEmployerPosition; Rec.IndEmployerPosition)
@@ -187,7 +200,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Position';
-                        Editable = Rec.IndNatureOfBusiness = Rec.IndNatureOfBusiness::Employed;
+                        Editable = (Rec.IndNatureOfBusiness = Rec.IndNatureOfBusiness::Employed) and EditStatus;
 
                     }
                     field(IndEmployementOther; Rec.IndEmployementOther)
@@ -195,7 +208,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Other';
-                        Editable = Rec.IndNatureOfBusiness = Rec.IndNatureOfBusiness::Other;
+                        Editable = (Rec.IndNatureOfBusiness = Rec.IndNatureOfBusiness::Other) and EditStatus;
 
                     }
                     // field("VAT Number"; Rec."VAT Number")
@@ -342,6 +355,12 @@ page 50233 "Funder Card"
                 Visible = ShowJointFastTab;
                 group("Joint General")
                 {
+                    field(JointOneName; Rec.JointOneName)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Name';
+                        Editable = EditStatus;
+                    }
                     field("JointShortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
                     {
                         ApplicationArea = all;
@@ -385,7 +404,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Occupation';
-                        Editable = Rec.JointNatureOfBusiness = Rec.JointNatureOfBusiness::"Self Employed";
+                        Editable = (Rec.JointNatureOfBusiness = Rec.JointNatureOfBusiness::"Self Employed") and EditStatus;
 
                     }
                     field(JointEmployer; Rec.JointEmployer)
@@ -393,7 +412,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Employer';
-                        Editable = Rec.JointNatureOfBusiness = Rec.JointNatureOfBusiness::Employed;
+                        Editable = (Rec.JointNatureOfBusiness = Rec.JointNatureOfBusiness::Employed) and EditStatus;
 
                     }
                     field(JointEmployerPosition; Rec.JointEmployerPosition)
@@ -401,7 +420,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Position';
-                        Editable = Rec.JointNatureOfBusiness = Rec.JointNatureOfBusiness::Employed;
+                        Editable = (Rec.JointNatureOfBusiness = Rec.JointNatureOfBusiness::Employed) and EditStatus;
 
                     }
                     field(JointEmployementOther; Rec.JointEmployementOther)
@@ -409,7 +428,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Other';
-                        Editable = Rec.JointNatureOfBusiness = Rec.JointNatureOfBusiness::Other;
+                        Editable = (Rec.JointNatureOfBusiness = Rec.JointNatureOfBusiness::Other) and EditStatus;
 
                     }
                     // field(PersonalDetOccupation; Rec.PersonalDetOccupation)
@@ -538,6 +557,13 @@ page 50233 "Funder Card"
                 Visible = ShowJointFastTab;
                 group("Joint General 2")
                 {
+                    field(JointTwoName; Rec.JointTwoName)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Name';
+                        Editable = EditStatus;
+                    }
+
                     field("JointShortcut Dimension 1 Joint_2"; Rec."Short. Dim 1 Code_Joint 2")
                     {
                         ApplicationArea = all;
@@ -580,7 +606,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Occupation';
-                        Editable = Rec.JointNatureOfBusiness_J2 = Rec.JointNatureOfBusiness_J2::"Self Employed";
+                        Editable = (Rec.JointNatureOfBusiness_J2 = Rec.JointNatureOfBusiness_J2::"Self Employed") and EditStatus;
 
                     }
                     field(JointEmployer_J2; Rec.JointEmployer_J2)
@@ -588,7 +614,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Employer';
-                        Editable = Rec.JointNatureOfBusiness_J2 = Rec.JointNatureOfBusiness_J2::Employed;
+                        Editable = (Rec.JointNatureOfBusiness_J2 = Rec.JointNatureOfBusiness_J2::Employed) and EditStatus;
 
                     }
                     field(JointEmployerPosition_J2; Rec.JointEmployerPosition_J2)
@@ -596,7 +622,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Position';
-                        Editable = Rec.JointNatureOfBusiness_J2 = Rec.JointNatureOfBusiness_J2::Employed;
+                        Editable = (Rec.JointNatureOfBusiness_J2 = Rec.JointNatureOfBusiness_J2::Employed) and EditStatus;
 
                     }
                     field(JointEmployementOther_J2; Rec.JointEmployementOther_J2)
@@ -604,7 +630,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Other';
-                        Editable = Rec.JointNatureOfBusiness_J2 = Rec.JointNatureOfBusiness_J2::Other;
+                        Editable = (Rec.JointNatureOfBusiness_J2 = Rec.JointNatureOfBusiness_J2::Other) and EditStatus;
 
                     }
                     // field(PersonalDetOccupation_Joint2; Rec.PersonalDetOccupation_Joint2)
@@ -636,12 +662,14 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         Caption = 'Residential Address/Registered Office';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Joint Phone Number Joint2"; Rec."Phone Number Joint2")
                     {
                         ApplicationArea = All;
                         ExtendedDatatype = PhoneNo;
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Phone Number Joint2 B"; Rec."Phone Number Joint2 B")
                     {
@@ -649,6 +677,7 @@ page 50233 "Funder Card"
                         ExtendedDatatype = PhoneNo;
                         Caption = 'Phone 2';
                         ShowMandatory = true;
+                        Editable = EditStatus;
                     }
                     field("Joint Postal Address joint2"; Rec."Postal Address Joint2")
                     {
@@ -701,7 +730,7 @@ page 50233 "Funder Card"
                         ShowMandatory = true;
                         Editable = EditStatus;
                     }
-                    field(ContactDetailPhone_Joint2; Rec.ContactDetailPhone2)
+                    field(ContactDetailPhone_Joint2; Rec.ContactDetailPhone2_j2)
                     {
                         Caption = 'Phone 2';
                         ApplicationArea = All;
@@ -716,6 +745,13 @@ page 50233 "Funder Card"
                 Visible = ShowJointFastTab;
                 group("Joint General 3")
                 {
+                    field(JointThreeName; Rec.JointThreeName)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Name';
+                        Editable = EditStatus;
+                    }
+
                     field("JointShortcut Dimension 1 Joint_3"; Rec."Short. Dim 1 Code_Joint 3")
                     {
                         ApplicationArea = all;
@@ -782,7 +818,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Occupation';
-                        Editable = Rec.JointNatureOfBusiness_J3 = Rec.JointNatureOfBusiness_J3::"Self Employed";
+                        Editable = (Rec.JointNatureOfBusiness_J3 = Rec.JointNatureOfBusiness_J3::"Self Employed") and EditStatus;
 
                     }
                     field(JointEmployer_J3; Rec.JointEmployer_J3)
@@ -790,7 +826,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Employer';
-                        Editable = Rec.JointNatureOfBusiness_J3 = Rec.JointNatureOfBusiness_J3::Employed;
+                        Editable = (Rec.JointNatureOfBusiness_J3 = Rec.JointNatureOfBusiness_J3::Employed) and EditStatus;
 
                     }
                     field(JointEmployerPosition_J3; Rec.JointEmployerPosition_J3)
@@ -798,7 +834,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Position';
-                        Editable = Rec.JointNatureOfBusiness_J3 = Rec.JointNatureOfBusiness_J3::Employed;
+                        Editable = (Rec.JointNatureOfBusiness_J3 = Rec.JointNatureOfBusiness_J3::Employed) and EditStatus;
 
                     }
                     field(JointEmployementOther_J3; Rec.JointEmployementOther_J3)
@@ -806,7 +842,7 @@ page 50233 "Funder Card"
                         ApplicationArea = All;
                         // ShowMandatory = true;
                         Caption = 'Other';
-                        Editable = Rec.JointNatureOfBusiness_J3 = Rec.JointNatureOfBusiness_J3::Other;
+                        Editable = (Rec.JointNatureOfBusiness_J3 = Rec.JointNatureOfBusiness_J3::Other) and EditStatus;
 
                     }
                 }
@@ -888,7 +924,7 @@ page 50233 "Funder Card"
                         // ShowMandatory = true;
                         Editable = EditStatus;
                     }
-                    field(ContactDetailPhone_Joint3; Rec.ContactDetailPhone2)
+                    field(ContactDetailPhone_Joint3; Rec.ContactDetailPhone2_j3)
                     {
                         Caption = 'Phone 2';
                         ApplicationArea = All;
@@ -1513,16 +1549,18 @@ page 50233 "Funder Card"
                         CustomWorkflowMgmt: Codeunit "Funders Approval Mgt";
                         RecRef: RecordRef;
                     begin
-                        if Rec."Payables Account" = '' then
-                            Error('Principal Account Required');
+                        if Rec.FunderType <> Rec.FunderType::"Bank Overdraft" then
+                            if Rec."Payables Account" = '' then
+                                Error('Principal Account Required');
                         if Rec."Interest Expense" = '' then
                             Error('Interest Expense Account Required');
                         if Rec."Interest Payable" = '' then
                             Error('Interest Payable Account Required');
                         if Rec.Portfolio = '' then
                             Error('Portfolio Required');
-                        if Rec.FundSource = '' then
-                            Error('Receiving Bank Account Required');
+                        if Rec.FunderType = Rec.FunderType::"Bank Overdraft" then
+                            if Rec.FundSource = '' then
+                                Error('Receiving Bank Account Required');
 
                         RecRef.GetTable(Rec);
                         if CustomWorkflowMgmt.CheckApprovalsWorkflowEnabled(RecRef) then
@@ -1595,6 +1633,25 @@ page 50233 "Funder Card"
                     Page.Run(Page::"Portfolio Fee Setup", _portfolioFeeTbl);
                 end;
             }
+            action("attachment")
+            {
+                ApplicationArea = All;
+                Caption = 'Attachments';
+                Image = Attach;
+                ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                trigger OnAction()
+                var
+                    DocumentAttachmentDetails: Page "Document Attachment Details";
+                    RecRef: RecordRef;
+                begin
+                    RecRef.GetTable(Rec);
+                    DocumentAttachmentDetails.OpenForRecRef(RecRef);
+                    DocumentAttachmentDetails.RunModal();
+                end;
+            }
         }
         area(Reporting)
         {
@@ -1610,7 +1667,7 @@ page 50233 "Funder Card"
                     PromotedCategory = Report;
                     PromotedIsBig = true;
                     RunObject = report ReEvaluateFX;
-                    Enabled = false;
+                    Visible = false;
 
                 }
                 action("Capitalize Interest")
@@ -1623,28 +1680,10 @@ page 50233 "Funder Card"
                     PromotedCategory = Report;
                     PromotedIsBig = true;
                     RunObject = report "Capitalize Interest";
-                    // Enabled = false;
+                    Visible = false;
 
                 }
-                action("attachment")
-                {
-                    ApplicationArea = All;
-                    Caption = 'Attachments';
-                    Image = Attach;
-                    ToolTip = 'Add a file as an attachment. You can attach images as well as documents.';
-                    // Promoted = true;
-                    // PromotedCategory = Report;
-                    // PromotedIsBig = true;
-                    trigger OnAction()
-                    var
-                        DocumentAttachmentDetails: Page "Document Attachment Details";
-                        RecRef: RecordRef;
-                    begin
-                        RecRef.GetTable(Rec);
-                        DocumentAttachmentDetails.OpenForRecRef(RecRef);
-                        DocumentAttachmentDetails.RunModal();
-                    end;
-                }
+
             }
             group(Approval)
             {
@@ -1798,7 +1837,8 @@ page 50233 "Funder Card"
     local procedure FieldEditProp()
     var
     begin
-        EditStatus := not (Rec.Status = Rec.Status::Approved);
+        EditStatus := (Rec.Status = Rec.Status::Open) or (Rec.Status = Rec.Status::Rejected);
+
     end;
 
     var

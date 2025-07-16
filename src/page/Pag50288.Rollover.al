@@ -44,6 +44,18 @@ page 50288 "Roll over"
                             FunderLoan.Modify()
                         end;
 
+                        // if Rec.PlacementMaturity = Rec.PlacementMaturity::"Principal + Interest" then begin
+
+                        // end;
+                        // if Rec.PlacementMaturity = Rec.PlacementMaturity::Principal then begin
+                        //     Rec.AccruedInterest := 0;
+                        //     Rec.Validate(AccruedInterest);
+                        // end;
+                        // if Rec.PlacementMaturity = Rec.PlacementMaturity::Interest then begin
+                        //     Rec.Principal := 0;
+                        //     Rec.Validate(Principal);
+                        // end;
+
                     end;
                 }
                 field(Principal; Rec.Principal)
@@ -129,11 +141,30 @@ page 50288 "Roll over"
         if FunderLoan.PlacementMaturity = FunderLoan.PlacementMaturity::Terminate then
             Rec.PlacementMaturity := FunderLoan.PlacementMaturity::Terminate;
         */
+        // if Rec.PlacementMaturity = Rec.PlacementMaturity::"Principal + Interest" then begin
         FunderLoan.CalcFields(OutstandingAmntDisbLCY);
         Rec.Principal := FunderLoan.OutstandingAmntDisbLCY;
         FunderLoan.CalcFields("Outstanding Interest");
         Rec.AccruedInterest := Rec.Amount + FunderLoan."Outstanding Interest";
         Rec.Amount := FunderLoan.OutstandingAmntDisbLCY + FunderLoan."Outstanding Interest";
+        // end;
+        // if Rec.PlacementMaturity = Rec.PlacementMaturity::Principal then begin
+        //     FunderLoan.CalcFields(OutstandingAmntDisbLCY);
+        //     Rec.Principal := FunderLoan.OutstandingAmntDisbLCY;
+        //     // FunderLoan.CalcFields("Outstanding Interest");
+        //     Rec.AccruedInterest := 0;
+        //     Rec.Amount := FunderLoan.OutstandingAmntDisbLCY + 0;
+        // end;
+        // if Rec.PlacementMaturity = Rec.PlacementMaturity::Interest then begin
+        //     FunderLoan.CalcFields(OutstandingAmntDisbLCY);
+        //     Rec.Principal := 0;
+        //     FunderLoan.CalcFields("Outstanding Interest");
+        //     Rec.AccruedInterest := Rec.Amount + FunderLoan."Outstanding Interest";
+        //     Rec.Amount := 0 + FunderLoan."Outstanding Interest";
+        // end;
+
+
+
         Rec."Loan No." := LoanID;
         Rec."Rollover Date" := Today();
         Rec.Insert();

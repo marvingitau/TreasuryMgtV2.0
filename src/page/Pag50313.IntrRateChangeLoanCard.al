@@ -44,6 +44,7 @@ page 50313 "Intr. Rate Change Loan Card"
                 {
                     Caption = 'Current Interest';
                     ApplicationArea = All;
+                    Visible = false;
 
                 }
                 field(Enabled; Rec.Enabled)
@@ -51,6 +52,7 @@ page 50313 "Intr. Rate Change Loan Card"
                     Caption = 'Enabled';
                     ApplicationArea = All;
                     Enabled = false;
+                    Visible = false;
                 }
             }
         }
@@ -64,12 +66,30 @@ page 50313 "Intr. Rate Change Loan Card"
     {
         area(Processing)
         {
-            action(ActionName)
+            action(SelecteCurrent)
             {
-
+                ApplicationArea = Basic, Suite;
+                Caption = 'Pick Current as Current';
+                Image = Process;
+                PromotedCategory = Process;
+                Promoted = true;
                 trigger OnAction()
+                var
+                    _funderLoan: Record "Funder Loan";
+                    _loanNo: Code[20];
                 begin
-
+                    _loanNo := DelStr(LoanNoFilter, 1, 2);
+                    CurrPage.SetSelectionFilter(Rec);
+                    _funderLoan.Reset();
+                    _funderLoan.SetRange("No.", _loanNo);
+                    if not _funderLoan.Find('-') then
+                        Error('Funder Loan %1 not found', _loanNo);
+                    _funderLoan."Reference Rate" := Rec."New Interest Rate";
+                    // _funderLoan."Reference Rate Name" := Rec.Description;
+                    _funderLoan.InterestRate := _funderLoan."Reference Rate" + _funderLoan.Margin;
+                    _funderLoan.Validate(InterestRate);
+                    if _funderLoan.Modify() then
+                        Message('New Interest Selected');
                 end;
             }
         }
@@ -81,6 +101,7 @@ page 50313 "Intr. Rate Change Loan Card"
         CategoryFilter := Rec.GetFilter(Category);
         GroupIDFilter := Rec.GetFilter("Inter. Rate Group");
         GroupNameFilter := Rec.GetFilter("Inter. Rate Group Name");
+        LoanNoFilter := Rec.GetFilter("Loan No.");
 
         // CategoryFilter := Rec.GetFilter(Category);
         // Log all applied filters to the debug console
@@ -122,6 +143,7 @@ page 50313 "Intr. Rate Change Loan Card"
     var
         CategoryFilter: Text;
         GroupIDFilter: Code[20];
+        LoanNoFilter: Code[20];
         GroupNameFilter: Code[50];
 
 

@@ -43,6 +43,7 @@ page 50304 "RelatedParty Card"
                 field("Coupa Ref No."; Rec."Coupa Ref No.")
                 {
                     ApplicationArea = all;
+                    Editable = EditStatus;
                 }
                 // field("RelatedParty Type"; Rec."RelatedParty Type")
                 // {
@@ -70,6 +71,7 @@ page 50304 "RelatedParty Card"
                     ApplicationArea = All;
                     ShowMandatory = true;
                     Editable = EditStatus;
+                    Caption = 'Interest Income';
                 }
                 field("Interest Payable"; Rec."Interest Payable")
                 {
@@ -77,6 +79,7 @@ page 50304 "RelatedParty Card"
                     ApplicationArea = All;
                     ShowMandatory = true;
                     Editable = EditStatus;
+                    Caption = 'Interest Receivable';
                 }
             }
 
@@ -966,6 +969,7 @@ page 50304 "RelatedParty Card"
                 }
 
             }
+            /*
             group("Bank Details")
             {
 
@@ -1043,12 +1047,10 @@ page 50304 "RelatedParty Card"
                 {
                     ApplicationArea = All;
                 }
-                // field("Payment Terms"; Rec."Payment Terms")
-                // {
-                //     ApplicationArea = All;
-                // }
+              
 
             }
+            */
             /*group("Other Details")
             {
                 field("KYC Details"; Rec."KYC Details")
@@ -1118,14 +1120,14 @@ page 50304 "RelatedParty Card"
                 PromotedCategory = Process;
                 Promoted = true;
                 // RunObject = Page "RelatedParty Loans List";
-                //RunPageLink = "Funder No." = FIELD("No.");
+                //RunPageLink = "RelatedParty No." = FIELD("No.");
                 trigger OnAction()
                 var
-                    funderLedgerEntry: Record FunderLedgerEntry;
+                    relatedLedgerEntry: Record RelatedLedgerEntry;
                 begin
-                    funderLedgerEntry.SETRANGE(funderLedgerEntry."Funder No.", Rec."No.");
-                    funderLedgerEntry.SetFilter(funderLedgerEntry."Document Type", '<>%1', funderLedgerEntry."Document Type"::"Remaining Amount");
-                    PAGE.RUN(PAGE::FunderLedgerEntry, funderLedgerEntry);
+                    relatedLedgerEntry.SETRANGE(relatedLedgerEntry."RelatedParty No.", Rec."No.");
+                    relatedLedgerEntry.SetFilter(relatedLedgerEntry."Document Type", '<>%1', relatedLedgerEntry."Document Type"::"Remaining Amount");
+                    PAGE.RUN(PAGE::RelatedLedgerEntry, relatedLedgerEntry);
 
                 end;
             }
@@ -1144,7 +1146,7 @@ page 50304 "RelatedParty Card"
 
                 begin
                     btTbl.Reset();
-                    btTbl.SetRange("Funder No.", Rec."No.");
+                    btTbl.SetRange("RelatedParty No.", Rec."No.");
                     PAGE.Run(Page::"Funder Ben. Trus.", btTbl);
                 end;
 
@@ -1159,13 +1161,13 @@ page 50304 "RelatedParty Card"
                 PromotedCategory = Process;
                 Promoted = true;
                 // RunObject = Page "RelatedParty Loans List";
-                //RunPageLink = "Funder No." = FIELD("No.");
+                //RunPageLink = "RelatedParty No." = FIELD("No.");
 
                 trigger OnAction()
                 var
                     relatedPartyLoan: Record "RelatedParty Loan";
                 begin
-                    relatedPartyLoan.SETRANGE(relatedPartyLoan."Funder No.", Rec."No.");
+                    relatedPartyLoan.SETRANGE(relatedPartyLoan."RelatedParty No.", Rec."No.");
                     relatedPartyLoan.SETRANGE(relatedPartyLoan.Status, relatedPartyLoan.Status::Open);
                     PAGE.RUN(PAGE::"RelatedParty Loans List", relatedPartyLoan);
 
@@ -1179,12 +1181,12 @@ page 50304 "RelatedParty Card"
                 PromotedCategory = Process;
                 Promoted = true;
                 // RunObject = Page "RelatedParty Loans List";
-                //RunPageLink = "Funder No." = FIELD("No.");
+                //RunPageLink = "RelatedParty No." = FIELD("No.");
                 trigger OnAction()
                 var
                     relatedPartyLoan: Record "RelatedParty Loan";
                 begin
-                    relatedPartyLoan.SETRANGE(relatedPartyLoan."Funder No.", Rec."No.");
+                    relatedPartyLoan.SETRANGE(relatedPartyLoan."RelatedParty No.", Rec."No.");
                     relatedPartyLoan.SETRANGE(relatedPartyLoan.Status, relatedPartyLoan.Status::"Pending Approval");
                     PAGE.RUN(PAGE::"RelatedParty Loans List", relatedPartyLoan);
 
@@ -1198,12 +1200,12 @@ page 50304 "RelatedParty Card"
                 PromotedCategory = Process;
                 Promoted = true;
                 // RunObject = Page "RelatedParty Loans List";
-                //RunPageLink = "Funder No." = FIELD("No.");
+                //RunPageLink = "RelatedParty No." = FIELD("No.");
                 trigger OnAction()
                 var
                     relatedPartyLoan: Record "RelatedParty Loan";
                 begin
-                    relatedPartyLoan.SETRANGE(relatedPartyLoan."Funder No.", Rec."No.");
+                    relatedPartyLoan.SETRANGE(relatedPartyLoan."RelatedParty No.", Rec."No.");
                     relatedPartyLoan.SETRANGE(relatedPartyLoan.Status, relatedPartyLoan.Status::Approved);
                     PAGE.RUN(PAGE::"RelatedParty Loans List", relatedPartyLoan);
 
@@ -1228,8 +1230,9 @@ page 50304 "RelatedParty Card"
                         CustomWorkflowMgmt: Codeunit "Relatedparty Approval Mgt";
                         RecRef: RecordRef;
                     begin
-                        if Rec."Payables Account" = '' then
-                            Error('Principal Account Required');
+                        if Rec.FunderType <> Rec.FunderType::"Bank Overdraft" then
+                            if Rec."Payables Account" = '' then
+                                Error('Principal Account Required');
                         if Rec."Interest Expense" = '' then
                             Error('Interest Expense Account Required');
                         if Rec."Interest Payable" = '' then

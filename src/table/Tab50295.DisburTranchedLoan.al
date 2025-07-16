@@ -240,6 +240,10 @@ table 50295 "Disbur. Tranched Loan"
         if _funderLoan.Find('-') then begin
             "Total Payed" := _funderLoan."Total Payed";
             // "Bank Reference No" := _funderLoan."Bank Ref. No.";
+            "Maturity Date" := _funderLoan.MaturityDate;
+            "Interest Rate" := _funderLoan.InterestRate;
+            _funderLoan.CalcFields(OutstandingAmntDisbLCY);
+            "Tranche Amount" := _funderLoan."Total Payed" - _funderLoan.OutstandingAmntDisbLCY
         end;
 
     end;

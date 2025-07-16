@@ -203,48 +203,6 @@ report 50249 "Loan Repayment Schedule"
                 _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentMonthInLoop, 'FUNDER_REPORT');
 
 
-
-                // _currentMonthInLoop := 0D;
-                // if (monthCounter = 1) then begin
-                //     _currentMonthInLoop := dueDate;
-                //     _currentMonthInLoopBegin := placementDate;
-                // end
-                // else begin
-                //     if (monthCounter = NoOfMonths) then begin
-                //         _currentMonthInLoop := CalcDate('<CM>', maturityDate);
-                //         _currentMonthInLoopBegin := CalcDate('<-CM>', maturityDate);
-                //     end
-                //     else begin
-                //         _currentMonthInLoop := CalcDate('<CM>', CalcDate('<' + Format(monthCounter - 1) + 'M>', dueDate));
-                //         _currentMonthInLoopBegin := CalcDate('<-CM>', CalcDate('<' + Format(monthCounter - 1) + 'M>', dueDate));
-                //         _outstandingAmount := _principle;
-                //     end;
-                // end;
-
-
-                // DaysInMonth := DATE2DMY(_currentMonthInLoop, 1);
-                // if (monthCounter = 0) then begin
-                //     //Start Date
-                //     // DaysInMonth := CalcDate('<CM>', placementDate) - placementDate + 1; //Remaining to End month
-                //     // _outstandingAmount := _principle;
-                // end;
-                // if (monthCounter = NoOfMonths) then begin
-                //     //End Date
-                //     DaysInMonth := maturityDate - CalcDate('<-CM>', maturityDate) + 1;
-                //     _amortization := _principle;
-                //     _outstandingAmount := 0;
-                //     _totalPayment := _principle;
-                // end;
-
-                // _disbursTrachesTbl.Reset();
-                // _disbursTrachesTbl.SetRange(_disbursTrachesTbl."Maturity Date", _currentMonthInLoopBegin, _currentMonthInLoop);
-                // if _disbursTrachesTbl.Find('-') then begin
-
-                // end;
-
-                // Get interest in logic of existing Tranches
-                // _interestRate_Active := TrsyMgt.GetInterestRateSchedule(FunderLoanTbl."No.", _currentMonthInLoop, 'FUNDER_REPORT');
-
                 _finalReducing := false;
 
                 if monthCounter = 0 then begin

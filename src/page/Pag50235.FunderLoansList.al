@@ -30,6 +30,11 @@ page 50235 "Funder Loans List"
                     ApplicationArea = All;
                     Caption = 'Funder Name';
                 }
+                field("Portfolio Name"; Rec."Portfolio Name")
+                {
+                    ApplicationArea = All;
+
+                }
 
                 field("PlacementDate"; Rec."PlacementDate")
                 {

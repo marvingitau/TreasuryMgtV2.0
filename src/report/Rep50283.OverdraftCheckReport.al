@@ -12,6 +12,8 @@ report 50283 "Overdraft Check Report"
             begin
                 "Funder Loan".SetRange(Category, 'BANK OVERDRAFT');
                 "Funder Loan".SetRange(Status, Status::Approved);
+                if LoanNo <> '' then
+                    "Funder Loan".SetRange("No.", LoanNo);
             end;
 
             trigger OnAfterGetRecord()
@@ -19,6 +21,12 @@ report 50283 "Overdraft Check Report"
                 _lcyBalanceAmount: Decimal;
                 _BalanceAmount: Decimal;
             begin
+                OverdraftLedgerEntryTbl.Reset();
+                OverdraftLedgerEntryTbl.SetFilter("Posting Date", '=%1', Today);
+                OverdraftLedgerEntryTbl.SetRange("Loan No.", "Funder Loan"."No.");
+                if OverdraftLedgerEntryTbl.Find('-') then
+                    CurrReport.Skip();
+
                 BankAccount.Reset();
                 BankAccount.SetRange("No.", "Funder Loan".FundSource);
                 if not BankAccount.Find('-') then
@@ -82,6 +90,28 @@ report 50283 "Overdraft Check Report"
 
 
     }
+    requestpage
+    {
+        // AboutTitle = 'Teaching tip title';
+        // AboutText = 'Teaching tip content';
+        layout
+        {
+            area(Content)
+            {
+                group(General)
+                {
+                    field(FunderLoanNumber; LoanNo)
+                    {
+                        ApplicationArea = All;
+                        Caption = 'Loan No.';
+                        TableRelation = "Funder Loan"."No.";
+                    }
+                }
+            }
+        }
+
+
+    }
 
     trigger OnInitReport()
     var
@@ -94,4 +124,5 @@ report 50283 "Overdraft Check Report"
         OverdraftLedgerEntryTbl1: Record "Overdraft Ledger Entries";
         OverdraftLedgerEntryTbl2: Record "Overdraft Ledger Entries";
         BankAccount: Record "Bank Account";
+        LoanNo: Code[20];
 }

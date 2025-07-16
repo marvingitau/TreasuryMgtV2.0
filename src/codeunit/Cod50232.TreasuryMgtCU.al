@@ -1303,6 +1303,1279 @@ codeunit 50232 "Treasury Mgt CU"
 
     end;
 
+    procedure PostTrsyJnlRelated()
+    var
+        GLEntry: Record "G/L Entry";
+        NextEntryNo: Integer;
+        JournalEntry: Record "Gen. Journal Line";
+        GLPost: Codeunit "Gen. Jnl.-Post Line";
+        TrsyJnl: Record "Trsy Journal";
+        Counter: Integer;
+        relatedparty: Record RelatedParty;
+        relatedpartyLoan: Record "RelatedParty Loan";
+        relatedpartyLoan2: Record "RelatedParty Loan";
+        totalAccruedInterest: Decimal;
+        totalPaidInterest: Decimal;
+        differentAccrPaidInterest: Decimal;
+        totalOriginalAmount: Decimal;
+        totalWithdrawalAmount: Decimal;
+        differenceOriginalWithdrawal: Decimal;
+        relatedpartyEntryCounter: Integer;
+        debtorEntryCounter: Integer;
+        relatedpartyLegderEntry: Record RelatedLedgerEntry;
+        relatedpartyLegderEntry1: Record RelatedLedgerEntry;//Calculate every month
+        relatedpartyLegderEntry2: Record RelatedLedgerEntry;//Calculate every month
+        looper: Record RelatedLedgerEntry;
+        venPostingGroup: record "Treasury Posting Group";
+        principleAcc: Code[100];
+        interestAccExpense: Code[100];
+        interestAccPay: Code[100];
+        withholdingAcc: Code[20];
+        monthlyInterest: Decimal;
+        witHldInterest: Decimal;
+        _amount: Decimal;
+        latestRemainingAmount: Decimal;
+        _accruingIntrestNo: Integer;
+        TotalProcessed: Integer;
+        BatchSize: Integer;
+        CurrentBatchCount: Integer;
+        TotalDebit: Decimal;
+        TotalCredit: Decimal;
+        generalSetup: Record "Treasury General Setup";
+        relatedpartyNo: Code[100];
+        relatedpartyName: Text[100];
+        _loanNo: Code[100];
+        _loanName: Code[100];
+        originalAmount: Decimal;
+        _auxAmount: Decimal;
+
+        totalCapitalInterest: Decimal;
+        totalWithholdingAmount: Decimal;
+    begin
+        JournalEntry.LockTable();
+        if JournalEntry.FindLast() then
+            NextEntryNo := JournalEntry."Line No." + 1000
+        else
+            NextEntryNo := 1000;
+
+        // Relatedparty Ledger Entry 
+        looper.LockTable();
+        looper.Reset();
+        if looper.FindLast() then
+            relatedpartyEntryCounter := looper."Entry No." + 3
+        else
+            relatedpartyEntryCounter := 1;
+
+
+        TrsyJnl.Reset();
+        TrsyJnl.SetRange("Posting Date", 0D, Today);
+        TrsyJnl.SetRange(TrsyJnl."Transaction Nature", TrsyJnl."Transaction Nature"::"Original Principle");
+        if TrsyJnl.Find('-') then begin
+            repeat
+                //Post To Trsy Tble and Post to G/L
+
+                if TrsyJnl."Transaction Nature" = TrsyJnl."Transaction Nature"::"Original Principle" then begin
+                    JournalEntry.Init();
+                    JournalEntry."Journal Template Name" := 'GENERAL';
+                    JournalEntry."Journal Batch Name" := 'TREASURY';
+                    // JournalEntry."Line No." := NextEntryNo + (Counter + 1);
+                    // JournalEntry.Entry_ID := NextEntryNo + (Counter + 1);
+
+                    JournalEntry."Posting Date" := TrsyJnl."Posting Date";
+                    JournalEntry.Creation_Date := TrsyJnl."Posting Date";
+                    JournalEntry."Document No." := TrsyJnl."Document No.";
+                    JournalEntry.Description := TrsyJnl.Description;
+                    JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                    JournalEntry.Validate("Shortcut Dimension 1 Code");
+                    if (TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Relatedparty) OR (TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"G/L Account") then begin
+
+                        if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Relatedparty then begin
+                            principleAcc := '';
+                            relatedpartyLoan.Reset();
+                            relatedpartyLoan.SetRange("No.", TrsyJnl."Bal. Account No.");
+                            if not relatedpartyLoan.Find('-') then// Get the Loan Details
+                                Error('relatedparty Loan = %1, dont exist.', TrsyJnl."Bal. Account No.");
+                            if relatedpartyLoan.Currency <> '' then // @@@@@  CURRENCY VALIDATION
+                                JournalEntry."Currency Code" := relatedpartyLoan.Currency;
+                            if not relatedparty.Get(relatedpartyLoan."Relatedparty No.") then begin
+                                Error('relatedparty = %1, dont exist.', relatedpartyLoan."Relatedparty No.");
+                            end;
+
+                            principleAcc := relatedpartyLoan."Payables Account";
+                            if principleAcc = '' then
+                                Error('Missing Principle A/C: %1', Relatedparty."No.");
+
+
+                        end;
+                        if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Relatedparty then begin
+                            principleAcc := '';
+                            relatedpartyLoan.Reset();
+                            relatedpartyLoan.SetRange("No.", TrsyJnl."Account No.");
+                            if not relatedpartyLoan.Find('-') then// Get the Loan Details
+                                Error('relatedparty Loan = %1, dont exist.', TrsyJnl."Account No.");
+                            if relatedpartyLoan.Currency <> '' then
+                                JournalEntry."Currency Code" := relatedpartyLoan.Currency;
+                            if not relatedparty.Get(relatedpartyLoan."relatedparty No.") then begin
+                                Error('relatedparty = %1, dont exist.', relatedpartyLoan."relatedparty No.")
+                            end;
+
+
+                            principleAcc := relatedpartyLoan."Payables Account";
+                            if principleAcc = '' then
+                                Error('Missing Principle A/C: %1', relatedparty."No.");
+
+
+                        end;
+
+                        JournalEntry.Amount := Round(TrsyJnl.Amount, 0.01, '=');
+                        JournalEntry.Validate(JournalEntry.Amount);
+                        //@@ Account Type
+                        if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"Bank Account" then begin//@@@@ Debit Bank
+
+                            JournalEntry."Account Type" := TrsyJnl."Account Type"::"Bank Account";
+                            JournalEntry."Account No." := TrsyJnl."Account No.";
+                        end
+                        else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Relatedparty then begin
+                            JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account";
+                            JournalEntry."Account No." := principleAcc;
+                        end
+                        else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Debtor then
+                            Error('Debtor not suppoted')//JournalEntry."Account Type" := TrsyJnl."Account Type"::Debtor
+                        else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"G/L Account" then begin
+                            JournalEntry."Account No." := TrsyJnl."Account No.";
+                            JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account";
+                        end;
+
+                        // @@ Bal Account Type
+                        if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"Bank Account" then begin//@@@@ Credit Principal Account
+                            JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"Bank Account";
+                            JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                        end
+                        else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Relatedparty then begin
+                            JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account";
+                            JournalEntry."Bal. Account No." := principleAcc;
+                        end
+                        else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Debtor then
+                            Error('Debtor not suppoted')//JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::Debtor
+                        else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"G/L Account" then begin
+                            JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account";
+                            JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                        end;
+                        if TrsyJnl."Enable GL Posting" = true then
+                            GLPost.RunWithCheck(JournalEntry);
+                        //*****************************
+                        //Funder Ledger Entries
+                        //*****************************
+                        looper.LockTable();
+                        looper.Reset();
+                        if looper.FindLast() then
+                            relatedpartyEntryCounter := looper."Entry No." + 1
+                        else
+                            relatedpartyEntryCounter := 1;
+                        relatedpartyLegderEntry.Init();
+                        relatedpartyLegderEntry."Entry No." := relatedpartyEntryCounter;
+                        relatedpartyLegderEntry."relatedparty No." := relatedparty."No.";
+                        relatedpartyLegderEntry."Related  Name" := relatedparty.Name;
+                        relatedpartyLegderEntry."Loan No." := relatedpartyLoan."No.";
+                        relatedpartyLegderEntry."Loan Name" := relatedpartyLoan."Loan Name";
+                        if JournalEntry."Currency Code" <> '' then //Populated during posting group validation
+                            relatedpartyLegderEntry."Currency Code" := JournalEntry."Currency Code";
+                        relatedpartyLegderEntry."Posting Date" := TrsyJnl."Posting Date";
+                        relatedpartyLegderEntry."Document Type" := relatedpartyLegderEntry."Document Type"::"Original Amount";
+                        relatedpartyLegderEntry."Document No." := TrsyJnl."Document No.";
+                        // relatedpartyLegderEntry."Transaction Type" := relatedpartyLegderEntry."Transaction Type"::"Original Amount";
+                        relatedpartyLegderEntry.Description := 'Original Amount (Trsy Jnl)' + Format(Today) + TrsyJnl.Description;
+                        // if JournalEntry."Currency Code" <> '' then begin
+                        //     relatedpartyLegderEntry."Amount(LCY)" := Round(ConvertCurrencyAmount(JournalEntry."Currency Code", TrsyJnl.Amount), 0.01, '=');
+                        // end
+                        // else
+                        relatedpartyLegderEntry."Amount(LCY)" := Round(TrsyJnl.Amount, 0.01, '=');
+                        relatedpartyLegderEntry.Amount := Round(TrsyJnl.Amount, 0.01, '=');
+                        relatedpartyLegderEntry."Remaining Amount(LCY)" := Round(TrsyJnl.Amount, 0.01, '=');
+                        relatedpartyLegderEntry."Remaining Amount" := Round(TrsyJnl.Amount, 0.01, '=');
+                        relatedpartyLegderEntry.Insert();
+                    end;
+                end;
+
+
+            until TrsyJnl.Next() = 0;
+            TrsyJnl.Reset();
+            TrsyJnl.SetFilter("Account No.", '<>%1', '');
+            if TrsyJnl.Find('-') then begin
+                repeat
+                    TrsyJnl.Delete();
+                until TrsyJnl.Next() = 0;
+            end;
+
+            Message('Journal Original Principle Posting Done');
+
+        end;
+
+        TrsyJnl.Reset();
+        TrsyJnl.SetRange("Posting Date", 0D, Today);
+        TrsyJnl.SetRange(TrsyJnl."Transaction Nature", TrsyJnl."Transaction Nature"::"Accruing Interest");
+        _accruingIntrestNo := TrsyJnl.Count();
+        TotalDebit := 0;
+        TotalCredit := 0;
+        BatchSize := 3; // Set the number of records to process in each loop
+        if TrsyJnl.Find('-') then begin
+            repeat
+                CurrentBatchCount := 0;
+                _amount := 0;
+                witHldInterest := 0;
+                relatedpartyNo := '';
+                relatedpartyName := '';
+                _loanNo := '';
+                _loanName := '';
+                repeat
+                    // Accumulate totals for validation 
+                    TotalDebit := TotalDebit + TrsyJnl.Amount;
+                    // TotalCredit := TotalCredit + TrsyJnl.Amount;
+
+                    if TrsyJnl."Transaction Nature" = TrsyJnl."Transaction Nature"::"Accruing Interest" then begin
+                        //**************
+                        // relatedparty INTERST EXPENSE (Dr)
+                        //**************
+                        if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Relatedparty then begin // is relatedparty
+                            relatedpartyLoan.Reset();
+                            relatedpartyLoan.SetRange("No.", TrsyJnl."Account No.");
+                            if not relatedpartyLoan.Find('-') then// Get the Loan Details
+                                Error('relatedparty Loan = %1, dont exist.', TrsyJnl."Account No.");
+
+                            if relatedparty.Get(relatedpartyLoan."relatedparty No.") then begin  // get relatedparty
+
+                                // **********************************************
+                                //          Get Posting groups & Posting Accounts
+                                // **********************************************
+                                // if not venPostingGroup.Get(funderLoan."Posting Group") then
+                                //     Error('Missing Posting Group: %1', funder."No.");
+                                interestAccExpense := relatedpartyLoan."Interest Expense";
+                                if interestAccExpense = '' then
+                                    Error('Missing Interest Expense A/C: %1', relatedparty."No.");
+                                interestAccPay := relatedpartyLoan."Interest Payable";
+                                if interestAccPay = '' then
+                                    Error('Missing Interest Payable A/C: %1', relatedparty."No.");
+                                principleAcc := relatedpartyLoan."Payables Account";
+                                if principleAcc = '' then
+                                    Error('Missing Principle A/C: %1', relatedparty."No.");
+                                if not generalSetup.FindFirst() then
+                                    Error('Please Define Withholding Tax under General Setup');
+                                withholdingAcc := generalSetup.relatedWithholdingAcc;
+                                //Get the latest remaining amount
+                                relatedpartyLegderEntry.SetRange(relatedpartyLegderEntry."Document Type", relatedpartyLegderEntry."Document Type"::"Remaining Amount");
+                                if relatedpartyLegderEntry.FindLast() then
+                                    latestRemainingAmount := relatedpartyLegderEntry."Remaining Amount";
+
+                                relatedpartyNo := relatedparty."No.";
+                                relatedpartyName := relatedparty.Name;
+                                _loanNo := relatedpartyLoan."No.";
+                                _loanName := relatedpartyLoan."Loan Name";
+                                //**********************************************
+                                // Posting AMOUNT
+                                //**********************************************
+                                _amount := Round(TrsyJnl.Amount, 0.01, '=');
+                                // *********************
+                                // INTEREST EXPENSE (Dr)
+                                // *********************
+                                JournalEntry.Init();
+                                JournalEntry."Journal Template Name" := 'GENERAL';
+                                JournalEntry."Journal Batch Name" := 'TREASURY';
+                                // JournalEntry."Line No." := NextEntryNo + Counter + CurrentBatchCount;
+                                // JournalEntry.Entry_ID := NextEntryNo + (Counter + 1);
+                                JournalEntry."Posting Date" := TrsyJnl."Posting Date";
+                                JournalEntry.Creation_Date := TrsyJnl."Posting Date";
+                                JournalEntry."Document No." := TrsyJnl."Document No.";
+                                JournalEntry.Description := TrsyJnl.Description;
+                                JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                                JournalEntry.Validate("Shortcut Dimension 1 Code");
+                                if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"Bank Account" then begin
+                                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"Bank Account"; //@@@@ Debit Bank
+                                    JournalEntry."Account No." := TrsyJnl."Account No.";
+                                end
+                                else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Relatedparty then begin
+                                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account";
+                                    JournalEntry."Account No." := interestAccExpense;
+                                end
+                                else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Debtor then begin
+                                    // JournalEntry."Account Type" := TrsyJnl."Account Type"::Debtor
+                                    // JournalEntry."Account No." := principleAcc;
+                                    Error('Debtor not suppoted')
+                                end
+                                else
+                                    Error('Unsupported Account Type = %1', TrsyJnl."Account Type");
+
+
+                                JournalEntry.Amount := _amount;
+                                JournalEntry.Validate(JournalEntry.Amount);
+                                JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
+                                if TrsyJnl."Bal. Account No." <> '' then begin //Opening Balance Entry 
+                                    JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                                    //*****************************
+                                    //relatedparty Ledger Entries
+                                    //*****************************
+                                    looper.LockTable();
+                                    looper.Reset();
+                                    if looper.FindLast() then
+                                        relatedpartyEntryCounter := looper."Entry No." + 1
+                                    else
+                                        relatedpartyEntryCounter := 1;
+                                    relatedpartyLegderEntry.Init();
+                                    relatedpartyLegderEntry."Entry No." := relatedpartyEntryCounter;
+                                    relatedpartyLegderEntry."relatedparty No." := relatedparty."No.";
+                                    relatedpartyLegderEntry."related  Name" := relatedpartyName;
+                                    relatedpartyLegderEntry."Loan No." := _loanNo;
+                                    relatedpartyLegderEntry."Loan Name" := _loanName;
+                                    // relatedpartyLegderEntry."relatedparty Name" := Name;
+                                    if relatedpartyLoan.Currency <> '' then
+                                        relatedpartyLegderEntry."Currency Code" := relatedpartyLoan.Currency;
+                                    relatedpartyLegderEntry."Posting Date" := TrsyJnl."Posting Date";
+                                    relatedpartyLegderEntry."Document Type" := relatedpartyLegderEntry."Document Type"::Interest;
+                                    relatedpartyLegderEntry."Document No." := TrsyJnl."Document No.";
+                                    // relatedpartyLegderEntry."Transaction Type" := relatedpartyLegderEntry."Transaction Type"::"Original Amount";
+                                    relatedpartyLegderEntry.Description := 'Interest Amount (Trsy Jnl) ' + Format(Today) + ' ' + TrsyJnl.Description;
+                                    relatedpartyLegderEntry.Amount := Abs(JournalEntry.Amount); //@hotte req
+                                    relatedpartyLegderEntry."Amount(LCY)" := Abs(JournalEntry.Amount);//@hotte req
+                                    relatedpartyLegderEntry."Remaining Amount" := Abs(JournalEntry.Amount);//@hotte req
+                                    relatedpartyLegderEntry.Insert();
+
+                                end;
+                                if relatedpartyLoan.Currency <> '' then
+                                    JournalEntry."Currency Code" := relatedpartyLoan.Currency;
+                                // JournalEntry.Insert();
+                                if TrsyJnl."Enable GL Posting" = true then
+                                    GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
+
+                                // end;
+                            end;
+                        end;
+                        //**************
+                        // INTREST PAYABLE ( Cr)  WHOLDING (Cr)
+                        //**************
+                        if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"G/L Account" then begin
+                            // **************
+                            // INTREST PAYABLE ( Cr)  WHOLDING (Cr) 
+                            // if JournalEntry.FindLast() then
+                            //     NextEntryNo := JournalEntry."Line No." + 1;
+                            JournalEntry.Init();
+                            JournalEntry."Journal Template Name" := 'GENERAL';
+                            JournalEntry."Journal Batch Name" := 'TREASURY';
+                            // JournalEntry."Line No." := Counter + CurrentBatchCount;
+                            // JournalEntry.Entry_ID := NextEntryNo + (Counter + 1);
+                            JournalEntry."Posting Date" := TrsyJnl."Posting Date";
+                            JournalEntry.Creation_Date := TrsyJnl."Posting Date";
+                            JournalEntry."Document No." := TrsyJnl."Document No.";
+                            JournalEntry.Description := TrsyJnl.Description;
+                            JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                            JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account";
+                            JournalEntry."Account No." := interestAccPay;
+                            JournalEntry.Amount := TrsyJnl.Amount;//@@@
+                            JournalEntry.Validate(JournalEntry.Amount);
+                            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
+                            if TrsyJnl."Bal. Account No." <> '' then
+                                JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                            if TrsyJnl."Currency Code" <> '' then
+                                JournalEntry."Currency Code" := TrsyJnl."Currency Code";
+                            // JournalEntry.Insert();
+                            if TrsyJnl."Enable GL Posting" = true then
+                                GLPost.RunWithCheck(JournalEntry); // Post Cr Transaction
+
+                            //********************************
+                            //       relatedparty ledget entries
+                            //******************************
+                            //Get the latest remaining amount
+                            relatedpartyLegderEntry.SetRange(relatedpartyLegderEntry."Document Type", relatedpartyLegderEntry."Document Type"::"Remaining Amount");
+                            relatedpartyLegderEntry.SetRange("relatedparty No.", relatedpartyNo);
+                            if relatedpartyLegderEntry.FindLast() then
+                                latestRemainingAmount := relatedpartyLegderEntry."Remaining Amount";
+                            // Get the Original Amount
+                            relatedpartyLegderEntry.Reset();
+                            relatedpartyLegderEntry.SetRange(relatedpartyLegderEntry."Document Type", relatedpartyLegderEntry."Document Type"::"Original Amount");
+                            relatedpartyLegderEntry.SetRange(relatedpartyLegderEntry."relatedparty No.", relatedpartyNo);
+                            // relatedpartyLegderEntry.CalcSums(Amount);
+                            if relatedpartyLegderEntry.FindSet() then
+                                repeat
+                                    originalAmount := originalAmount + relatedpartyLegderEntry.Amount;
+                                until relatedpartyLegderEntry.Next() = 0;
+
+                            //Set condition to run only if the GL in scope is Wholding one.
+                            generalSetup.Reset();
+                            generalSetup.SetRange(generalSetup.relatedWithholdingAcc, TrsyJnl."Account No.");
+                            if generalSetup.Find('-') then begin
+                                witHldInterest := TrsyJnl.Amount;
+
+                                relatedpartyLegderEntry1.Init();
+                                relatedpartyLegderEntry1."Entry No." := relatedpartyEntryCounter + 1;
+                                relatedpartyLegderEntry1."relatedparty No." := relatedpartyNo;
+                                relatedpartyLegderEntry1."related  Name" := relatedpartyName;
+                                relatedpartyLegderEntry1."Loan No." := _loanNo;
+                                relatedpartyLegderEntry1."Loan Name" := _loanName;
+
+                                if TrsyJnl."Currency Code" <> '' then
+                                    relatedpartyLegderEntry1."Currency Code" := TrsyJnl."Currency Code";
+                                relatedpartyLegderEntry1."Posting Date" := TrsyJnl."Posting Date";
+                                relatedpartyLegderEntry1."Document Type" := relatedpartyLegderEntry."Document Type"::Withholding;
+                                relatedpartyLegderEntry1."Document No." := TrsyJnl."Document No.";
+                                relatedpartyLegderEntry1.Description := 'Withholding calculation' + Format(Today) + TrsyJnl.Description;
+                                relatedpartyLegderEntry1.Amount := Abs(witHldInterest);
+                                relatedpartyLegderEntry1."Amount(LCY)" := Abs(witHldInterest);
+                                relatedpartyLegderEntry1.Insert();
+
+                                //Update Incase Wholding Came Last
+                                relatedpartyLegderEntry1.Reset();
+                                relatedpartyLegderEntry1.SetRange(relatedpartyLegderEntry1."Document Type", relatedpartyLegderEntry1."Document Type"::Interest);
+                                relatedpartyLegderEntry1.SetRange(relatedpartyLegderEntry1."Document No.", TrsyJnl."Document No.");
+                                relatedpartyLegderEntry1.SetRange(relatedpartyLegderEntry1."Posting Date", TrsyJnl."Posting Date");
+                                // relatedpartyLegderEntry1.SetRange(relatedpartyLegderEntry1."Document No.", relatedpartyLegderEntry1."Document No.");
+                                if relatedpartyLegderEntry1.Find('-') then begin
+                                    relatedpartyLegderEntry1.Amount := Abs(relatedpartyLegderEntry1.Amount + witHldInterest);
+                                    relatedpartyLegderEntry1."Amount(LCY)" := Abs(relatedpartyLegderEntry1."Amount(LCY)" + witHldInterest);
+                                    relatedpartyLegderEntry1."Remaining Amount" := Abs(relatedpartyLegderEntry1."Remaining Amount");
+                                    relatedpartyLegderEntry1.Modify();
+                                end;
+
+                                relatedpartyLegderEntry1.Reset();
+                                relatedpartyLegderEntry1.SetRange(relatedpartyLegderEntry1."Document Type", relatedpartyLegderEntry1."Document Type"::"Remaining Amount");
+                                relatedpartyLegderEntry1.SetRange(relatedpartyLegderEntry1."Document No.", TrsyJnl."Document No.");
+                                relatedpartyLegderEntry1.SetRange(relatedpartyLegderEntry1."Posting Date", TrsyJnl."Posting Date");
+                                // relatedpartyLegderEntry1.SetRange(relatedpartyLegderEntry1."Document No.", relatedpartyLegderEntry1."Document No.");
+                                if relatedpartyLegderEntry1.Find('-') then begin
+                                    relatedpartyLegderEntry1.Amount := Abs(relatedpartyLegderEntry1.Amount) + originalAmount;
+                                    relatedpartyLegderEntry1."Amount(LCY)" := Abs(relatedpartyLegderEntry1."Amount(LCY)") + originalAmount;
+                                    if latestRemainingAmount = 0 then
+                                        relatedpartyLegderEntry1."Remaining Amount" := Abs(relatedpartyLegderEntry1."Remaining Amount" + originalAmount)
+                                    else
+                                        relatedpartyLegderEntry1."Remaining Amount" := Abs(relatedpartyLegderEntry1."Remaining Amount" + latestRemainingAmount);
+                                    relatedpartyLegderEntry1.Modify();
+
+                                end;
+
+
+                            end
+                            else begin
+                                //Interest Payable Account 
+                                // Non - Taxable 
+                                //Set condition to run only of the GL in scope is not Wholding one.
+                                relatedparty3.Get(relatedpartyNo);
+                                //relatedpartyLoan3.Get(_loanNo, _loanName);
+                                relatedpartyLoan3.Reset();
+                                relatedpartyLoan3.SetRange("No.", _loanNo);
+                                if not relatedpartyLoan3.Find('-') then
+                                    Error('relatedparty Loan %1 not found', _loanNo);
+
+                                relatedpartyLegderEntry.Init();
+                                relatedpartyLegderEntry."Entry No." := relatedpartyEntryCounter + 2;
+                                relatedpartyLegderEntry."relatedparty No." := relatedpartyNo;
+                                relatedpartyLegderEntry."related  Name" := relatedpartyName;
+                                relatedpartyLegderEntry."Loan No." := _loanNo;
+                                relatedpartyLegderEntry."Loan Name" := _loanName;
+                                if TrsyJnl."Currency Code" <> '' then
+                                    relatedpartyLegderEntry."Currency Code" := TrsyJnl."Currency Code";
+                                relatedpartyLegderEntry."Posting Date" := TrsyJnl."Posting Date";
+                                relatedpartyLegderEntry."Document Type" := relatedpartyLegderEntry."Document Type"::Interest;
+                                relatedpartyLegderEntry."Document No." := TrsyJnl."Document No.";
+                                relatedpartyLegderEntry.Description := 'Accruing Interest calculation' + Format(Today) + TrsyJnl.Description;
+                                relatedpartyLegderEntry.Amount := Abs(TrsyJnl.Amount + witHldInterest);
+                                relatedpartyLegderEntry."Amount(LCY)" := Abs(TrsyJnl.Amount + witHldInterest);
+                                relatedpartyLegderEntry."Remaining Amount" := Abs(TrsyJnl.Amount);
+                                relatedpartyLegderEntry.Insert();
+
+                                relatedpartyLegderEntry2.Init();
+                                relatedpartyLegderEntry2."Entry No." := relatedpartyEntryCounter + 3;
+                                relatedpartyLegderEntry2."relatedparty No." := relatedpartyNo;
+                                relatedpartyLegderEntry2."related  Name" := relatedpartyName;
+                                relatedpartyLegderEntry2."Loan No." := _loanNo;
+                                relatedpartyLegderEntry2."Loan Name" := _loanName;
+                                if TrsyJnl."Currency Code" <> '' then
+                                    relatedpartyLegderEntry2."Currency Code" := TrsyJnl."Currency Code";
+                                relatedpartyLegderEntry2."Posting Date" := TrsyJnl."Posting Date";
+                                relatedpartyLegderEntry2."Document Type" := relatedpartyLegderEntry."Document Type"::"Remaining Amount";
+                                relatedpartyLegderEntry2."Document No." := TrsyJnl."Document No.";
+                                relatedpartyLegderEntry2.Description := 'Remaining Amount' + Format(Today) + TrsyJnl.Description;
+
+                                relatedpartyLegderEntry2.Amount := Abs((_amount - witHldInterest) + originalAmount);
+                                relatedpartyLegderEntry2."Amount(LCY)" := Abs((_amount - witHldInterest) + originalAmount);
+                                if latestRemainingAmount = 0 then begin
+                                    relatedpartyLegderEntry2."Remaining Amount" := Abs((_amount - witHldInterest) + originalAmount);
+                                end
+                                else begin
+                                    relatedpartyLegderEntry2."Remaining Amount" := Abs((_amount - witHldInterest) + latestRemainingAmount);
+                                end;
+                                relatedpartyLegderEntry2.Insert();
+
+                            end;
+
+
+                        end;
+
+                    end;
+
+                    // Increment the current batch count 
+                    CurrentBatchCount := CurrentBatchCount + 1;
+                until (TrsyJnl.Next() = 0) or (CurrentBatchCount >= BatchSize);
+                Counter := Counter + 1;
+
+            until TrsyJnl.Next() = 0;
+            TrsyJnl.Reset();
+            TrsyJnl.SetFilter("Account No.", '<>%1', '');
+            if TrsyJnl.Find('-') then begin
+                repeat
+                // TrsyJnl.Delete();
+                until TrsyJnl.Next() = 0;
+            end;
+
+            Message('Journal Accruing Interest Posting Done');
+        end;
+
+
+        TrsyJnl.Reset();
+        TrsyJnl.SetRange("Posting Date", 0D, Today);
+        TrsyJnl.SetRange(TrsyJnl."Transaction Nature", TrsyJnl."Transaction Nature"::"Interest Paid");
+        if TrsyJnl.Find('-') then begin
+            repeat
+                if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Relatedparty then begin
+                    relatedpartyLoan.Reset();
+                    relatedpartyLoan.SetRange("No.", TrsyJnl."Bal. Account No.");
+                    if not relatedpartyLoan.Find('-') then// Get the Loan Details
+                        Error('relatedparty Loan = %1, dont exist.', TrsyJnl."Bal. Account No.");
+                    if relatedparty.Get(relatedpartyLoan."relatedparty No.") then begin
+
+                        //**********************************************
+                        //          Get Posting groups & Posting Accounts
+                        //**********************************************
+                        // if not venPostingGroup.Get(funderLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', funder."No.");
+                        interestAccExpense := relatedpartyLoan."Interest Expense";
+                        if interestAccExpense = '' then
+                            Error('Missing Interest Expense A/C: %1', relatedparty."No.");
+                        interestAccPay := relatedpartyLoan."Interest Payable";
+                        if interestAccPay = '' then
+                            Error('Missing Interest Payable A/C: %1', relatedparty."No.");
+                        principleAcc := relatedpartyLoan."Payables Account";
+                        if principleAcc = '' then
+                            Error('Missing Principle A/C: %1', relatedparty."No.");
+                        if not generalSetup.FindFirst() then
+                            Error('Please Define Withholding Tax under General Setup');
+                        withholdingAcc := generalSetup.relatedWithholdingAcc;
+                        relatedpartyNo := relatedpartyLoan."relatedparty No.";
+                    end;
+                end;
+                if TrsyJnl."Account Type" = TrsyJnl."Account Type"::relatedparty then begin
+                    relatedpartyLoan.Reset();
+                    relatedpartyLoan.SetRange("No.", TrsyJnl."Account No.");
+                    if not relatedpartyLoan.Find('-') then// Get the Loan Details
+                        Error('relatedparty Loan = %1, dont exist.', TrsyJnl."Account No.");
+                    _loanName := relatedpartyLoan.Name;
+                    _loanNo := relatedpartyLoan."No.";
+                    if relatedparty.Get(relatedpartyLoan."relatedparty No.") then begin
+
+                        //**********************************************
+                        //          Get Posting groups & Posting Accounts
+                        //**********************************************
+                        // if not venPostingGroup.Get(relatedpartyLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', relatedparty."No.");
+                        interestAccExpense := relatedpartyLoan."Interest Expense";
+                        if interestAccExpense = '' then
+                            Error('Missing Interest Expense A/C: %1', relatedparty."No.");
+                        interestAccPay := relatedpartyLoan."Interest Payable";
+                        if interestAccPay = '' then
+                            Error('Missing Interest Payable A/C: %1', relatedparty."No.");
+                        principleAcc := relatedpartyLoan."Payables Account";
+                        if principleAcc = '' then
+                            Error('Missing Principle A/C: %1', relatedparty."No.");
+                        if not generalSetup.FindFirst() then
+                            Error('Please Define Withholding Tax under General Setup');
+                        withholdingAcc := generalSetup.relatedWithholdingAcc;
+                        relatedpartyNo := relatedpartyLoan."relatedparty No.";
+                    end;
+                end;
+                //Get Total Accrued Interest
+                relatedpartyLegderEntry2.Reset();
+                relatedpartyLegderEntry2.SetRange("relatedparty No.", relatedpartyNo);
+                relatedpartyLegderEntry2.SetRange(relatedpartyLegderEntry2."Document Type", relatedpartyLegderEntry2."Document Type"::Interest);
+                relatedpartyLegderEntry2.CalcSums(Amount);
+                totalAccruedInterest := relatedpartyLegderEntry2.Amount;
+
+                relatedpartyLegderEntry2.Reset();
+                relatedpartyLegderEntry2.SetRange("relatedparty No.", relatedpartyNo);
+                relatedpartyLegderEntry2.SetRange(relatedpartyLegderEntry2."Document Type", relatedpartyLegderEntry2."Document Type"::"Interest Paid");
+                relatedpartyLegderEntry2.CalcSums(Amount);
+                totalPaidInterest := Abs(relatedpartyLegderEntry2.Amount);
+
+                differentAccrPaidInterest := totalAccruedInterest - totalPaidInterest; // Get the floating value
+                //Ensure Interest Paid does not negative Accrued Interest
+                if differentAccrPaidInterest > 0 then begin
+                    if differentAccrPaidInterest - Round(TrsyJnl.Amount, 0.01, '=') >= Round(TrsyJnl.Amount, 0.01, '=') then
+                        _amount := Round(TrsyJnl.Amount, 0.01, '=')
+                    else
+                        _amount := differentAccrPaidInterest
+
+                end else begin
+                    _amount := Round(0, 0.01, '=');
+                    Error('Zero Accrued Interest');
+                end;
+
+                //Get the latest remaining amount
+                relatedpartyLegderEntry.SetRange(relatedpartyLegderEntry."Document Type", relatedpartyLegderEntry."Document Type"::"Remaining Amount");
+                relatedpartyLegderEntry.SetAscending(relatedpartyLegderEntry."Entry No.", true);
+                if relatedpartyLegderEntry.FindLast() then
+                    latestRemainingAmount := relatedpartyLegderEntry."Remaining Amount";
+                // Get the Original Amount
+                relatedpartyLegderEntry.Reset();
+                relatedpartyLegderEntry.SetRange(relatedpartyLegderEntry."Document Type", relatedpartyLegderEntry."Document Type"::"Original Amount");
+                relatedpartyLegderEntry.SetRange(relatedpartyLegderEntry."relatedparty No.", relatedpartyNo);
+                // relatedpartyLegderEntry.CalcSums(Amount);
+                if relatedpartyLegderEntry.FindSet() then
+                    repeat
+                        originalAmount := originalAmount + relatedpartyLegderEntry.Amount;
+                    until relatedpartyLegderEntry.Next() = 0;
+                //**********************************************
+                // Posting AMOUNT
+                //**********************************************
+
+                //**********************************************
+                //   Withholding on interest
+                //   Depending on Tax Exceptions
+                //**********************************************
+                witHldInterest := 0;
+                // if relatedparty.TaxStatus = relatedparty.TaxStatus::Taxable then begin
+                //     relatedparty.TestField(Withldtax);
+                //     witHldInterest := (relatedparty.Withldtax / 100) * _amount;
+                // end;
+
+                // **************
+                // INTEREST PAYABLE (Dr) | BANK (Cr)
+
+                JournalEntry.Init();
+                JournalEntry."Journal Template Name" := 'GENERAL';
+                JournalEntry."Journal Batch Name" := 'TREASURY';
+                // JournalEntry."Line No." := NextEntryNo + (Counter + 1);
+                // JournalEntry.Entry_ID := NextEntryNo + (Counter + 1);
+                JournalEntry."Posting Date" := TrsyJnl."Posting Date";
+                JournalEntry.Creation_Date := TrsyJnl."Posting Date";
+                JournalEntry."Document No." := TrsyJnl."Document No.";
+                JournalEntry.Description := TrsyJnl.Description;
+                JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                JournalEntry.Validate("Shortcut Dimension 1 Code");
+                if TrsyJnl."Account Type" = TrsyJnl."Account Type"::relatedparty then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := interestAccPay;
+                end else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"G/L Account" then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := TrsyJnl."Account No.";
+                end else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"Bank Account" then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"Bank Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := TrsyJnl."Account No.";
+                end
+                else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Debtor then begin
+                end;
+
+
+
+                JournalEntry.Amount := _amount;
+                JournalEntry.Validate(JournalEntry.Amount);
+                if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::relatedparty then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := interestAccPay;
+                end else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"G/L Account" then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                end else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"Bank Account" then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"Bank Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                end
+                else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Debtor then begin
+                end;
+                // JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"; //@@@@@@@ Credit Bank
+                // JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                if TrsyJnl."Currency Code" <> '' then
+                    JournalEntry."Currency Code" := TrsyJnl."Currency Code";
+                if TrsyJnl."Enable GL Posting" = true then
+                    GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
+
+
+
+                //*****************************
+                //relatedparty Ledger Entries
+                //*****************************
+
+                looper.LockTable();
+                looper.Reset();
+                if looper.FindLast() then
+                    relatedpartyEntryCounter := looper."Entry No." + 1
+                else
+                    relatedpartyEntryCounter := 1;
+
+
+                relatedpartyLegderEntry.Init();
+                relatedpartyLegderEntry."Entry No." := relatedpartyEntryCounter;
+                relatedpartyLegderEntry."relatedparty No." := relatedparty."No.";
+                relatedpartyLegderEntry."related  Name" := relatedparty.Name;
+                relatedpartyLegderEntry."Loan No." := _loanNo;
+                relatedpartyLegderEntry."Loan Name" := _loanName;
+
+                if TrsyJnl."Currency Code" <> '' then
+                    relatedpartyLegderEntry."Currency Code" := TrsyJnl."Currency Code";
+                relatedpartyLegderEntry."Posting Date" := Today;
+                relatedpartyLegderEntry."Document Type" := relatedpartyLegderEntry."Document Type"::"Interest Paid";
+                relatedpartyLegderEntry."Document No." := TrsyJnl."Document No.";
+                relatedpartyLegderEntry.Description := 'Interest Paid calculation' + Format(Today) + TrsyJnl.Description;
+                relatedpartyLegderEntry.Amount := -(_amount);
+                relatedpartyLegderEntry."Amount(LCY)" := -(_amount);
+                relatedpartyLegderEntry."Remaining Amount" := -(_amount);
+                relatedpartyLegderEntry.Insert();
+
+                relatedpartyLegderEntry1.Init();
+                relatedpartyLegderEntry1."Entry No." := relatedpartyEntryCounter + 1;
+                relatedpartyLegderEntry1."relatedparty No." := relatedparty."No.";
+                relatedpartyLegderEntry1."related  Name" := relatedparty.Name;
+                relatedpartyLegderEntry1."Loan No." := _loanNo;
+                relatedpartyLegderEntry1."Loan Name" := _loanName;
+
+                if TrsyJnl."Currency Code" <> '' then
+                    relatedpartyLegderEntry1."Currency Code" := TrsyJnl."Currency Code";
+                relatedpartyLegderEntry1."Posting Date" := TrsyJnl."Posting Date";
+                relatedpartyLegderEntry1."Document Type" := relatedpartyLegderEntry."Document Type"::Withholding;
+                relatedpartyLegderEntry."Document No." := TrsyJnl."Document No.";
+                relatedpartyLegderEntry1.Description := 'Withholding calculation' + Format(Today) + TrsyJnl.Description;
+                relatedpartyLegderEntry1.Amount := witHldInterest;
+                relatedpartyLegderEntry1."Amount(LCY)" := witHldInterest;
+                relatedpartyLegderEntry1.Insert();
+
+                relatedpartyLegderEntry2.Init();
+                relatedpartyLegderEntry2."Entry No." := relatedpartyEntryCounter + 2;
+                relatedpartyLegderEntry2."relatedparty No." := relatedparty."No.";
+                relatedpartyLegderEntry2."related  Name" := relatedparty.Name;
+                relatedpartyLegderEntry2."Loan No." := _loanNo;
+                relatedpartyLegderEntry2."Loan Name" := _loanName;
+
+                if TrsyJnl."Currency Code" <> '' then
+                    relatedpartyLegderEntry2."Currency Code" := TrsyJnl."Currency Code";
+                relatedpartyLegderEntry2."Posting Date" := TrsyJnl."Posting Date";
+                relatedpartyLegderEntry2."Document Type" := relatedpartyLegderEntry."Document Type"::"Remaining Amount";
+                relatedpartyLegderEntry."Document No." := TrsyJnl."Document No.";
+                relatedpartyLegderEntry2.Description := 'Remaining Amount' + Format(Today) + TrsyJnl.Description;
+                relatedpartyLegderEntry2.Amount := ((-_amount + witHldInterest) + originalAmount);
+                relatedpartyLegderEntry2."Amount(LCY)" := ((-_amount + witHldInterest) + originalAmount);
+                if latestRemainingAmount = 0 then begin
+                    relatedpartyLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + originalAmount);
+                end
+                else begin
+                    relatedpartyLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + latestRemainingAmount);
+                end;
+                relatedpartyLegderEntry2.Insert();
+
+
+            until TrsyJnl.Next() = 0;
+            TrsyJnl.Reset();
+            TrsyJnl.SetFilter("Account No.", '<>%1', '');
+            if TrsyJnl.Find('-') then begin
+                repeat
+                // TrsyJnl.Delete();
+                until TrsyJnl.Next() = 0;
+            end;
+            Message('Journal Interest Payment Posting Done');
+        end;
+
+        TrsyJnl.Reset();
+        TrsyJnl.SetRange("Posting Date", 0D, Today);
+        TrsyJnl.SetRange(TrsyJnl."Transaction Nature", TrsyJnl."Transaction Nature"::Repayment);
+        if TrsyJnl.Find('-') then begin
+            repeat
+                if TrsyJnl."Account Type" = TrsyJnl."Account Type"::relatedparty then begin
+                    relatedpartyLoan.Reset();
+                    relatedpartyLoan.SetRange("No.", TrsyJnl."Account No.");
+                    if not relatedpartyLoan.Find('-') then// Get the Loan Details
+                        Error('relatedparty Loan = %1, dont exist.', TrsyJnl."Account No.");
+                    _loanName := relatedpartyLoan.Name;
+                    _loanNo := relatedpartyLoan."No.";
+                    if relatedparty.Get(relatedpartyLoan."relatedparty No.") then begin
+
+                        //**********************************************
+                        //          Get Posting groups & Posting Accounts
+                        //**********************************************
+                        // if not venPostingGroup.Get(relatedpartyLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', relatedparty."No.");
+                        interestAccExpense := relatedpartyLoan."Interest Expense";
+                        if interestAccExpense = '' then
+                            Error('Missing Interest Expense A/C: %1', relatedparty."No.");
+                        interestAccPay := relatedpartyLoan."Interest Payable";
+                        if interestAccPay = '' then
+                            Error('Missing Interest Payable A/C: %1', relatedparty."No.");
+                        principleAcc := relatedpartyLoan."Payables Account";
+                        if principleAcc = '' then
+                            Error('Missing Principle A/C: %1', relatedparty."No.");
+                        if not generalSetup.FindFirst() then
+                            Error('Please Define Withholding Tax under General Setup');
+                        withholdingAcc := generalSetup.relatedWithholdingAcc;
+                        relatedpartyNo := relatedpartyLoan."relatedparty No.";
+                        relatedpartyName := relatedpartyLoan.Name;
+                    end;
+                end;
+                if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::relatedparty then begin
+                    relatedpartyLoan.Reset();
+                    relatedpartyLoan.SetRange("No.", TrsyJnl."Bal. Account No.");
+                    if not relatedpartyLoan.Find('-') then// Get the Loan Details
+                        Error('relatedparty Loan = %1, dont exist.', TrsyJnl."Bal. Account No.");
+                    _loanName := relatedpartyLoan.Name;
+                    _loanNo := relatedpartyLoan."No.";
+                    if relatedparty.Get(relatedpartyLoan."relatedparty No.") then begin
+
+                        //**********************************************
+                        //          Get Posting groups & Posting Accounts
+                        //**********************************************
+                        // if not venPostingGroup.Get(relatedpartyLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', relatedparty."No.");
+                        interestAccExpense := relatedpartyLoan."Interest Expense";
+                        if interestAccExpense = '' then
+                            Error('Missing Interest Expense A/C: %1', relatedparty."No.");
+                        interestAccPay := relatedpartyLoan."Interest Payable";
+                        if interestAccPay = '' then
+                            Error('Missing Interest Payable A/C: %1', relatedparty."No.");
+                        principleAcc := relatedpartyLoan."Payables Account";
+                        if principleAcc = '' then
+                            Error('Missing Principle A/C: %1', relatedparty."No.");
+                        if not generalSetup.FindFirst() then
+                            Error('Please Define Withholding Tax under General Setup');
+                        withholdingAcc := generalSetup.relatedWithholdingAcc;
+                        relatedpartyNo := relatedpartyLoan."relatedparty No.";
+                        relatedpartyName := relatedpartyLoan.Name;
+                    end;
+                end;
+                // Get Total of Original Amount (Principal)
+                relatedpartyLegderEntry2.Reset();
+                relatedpartyLegderEntry2.SetRange("relatedparty No.", relatedpartyNo);
+                relatedpartyLegderEntry2.SetRange(relatedpartyLegderEntry2."Document Type", relatedpartyLegderEntry2."Document Type"::"Original Amount");
+                relatedpartyLegderEntry2.CalcSums(Amount);
+                totalOriginalAmount := relatedpartyLegderEntry2.Amount;
+
+                relatedpartyLegderEntry2.Reset();
+                relatedpartyLegderEntry2.SetRange("relatedparty No.", relatedpartyNo);
+                relatedpartyLegderEntry2.SetRange(relatedpartyLegderEntry2."Document Type", relatedpartyLegderEntry2."Document Type"::Repayment);
+                relatedpartyLegderEntry2.CalcSums(Amount);
+                totalWithdrawalAmount := Abs(relatedpartyLegderEntry2.Amount);
+
+                differenceOriginalWithdrawal := totalOriginalAmount - totalWithdrawalAmount; // Get the floating value
+
+                if differenceOriginalWithdrawal > 0 then begin
+                    if differenceOriginalWithdrawal - Round(TrsyJnl.Amount, 0.01, '=') >= Round(TrsyJnl.Amount, 0.01, '=') then
+                        _amount := Round(TrsyJnl.Amount, 0.01, '=')
+                    else
+                        _amount := differenceOriginalWithdrawal
+
+                end else begin
+                    _amount := Round(0, 0.01, '=');
+                    Error('Zero Original Amount');
+                end;
+
+
+
+                //Get the latest remaining amount
+                relatedpartyLegderEntry.SetRange(relatedpartyLegderEntry."Document Type", relatedpartyLegderEntry."Document Type"::"Remaining Amount");
+                relatedpartyLegderEntry.SetAscending(relatedpartyLegderEntry."Entry No.", true);
+                if relatedpartyLegderEntry.FindLast() then
+                    latestRemainingAmount := relatedpartyLegderEntry."Remaining Amount";
+                // Get the Original Amount
+                relatedpartyLegderEntry.Reset();
+                relatedpartyLegderEntry.SetRange(relatedpartyLegderEntry."Document Type", relatedpartyLegderEntry."Document Type"::"Original Amount");
+                relatedpartyLegderEntry.SetRange(relatedpartyLegderEntry."relatedparty No.", relatedpartyNo);
+                // relatedpartyLegderEntry.CalcSums(Amount);
+                if relatedpartyLegderEntry.FindSet() then
+                    repeat
+                        originalAmount := originalAmount + relatedpartyLegderEntry.Amount;
+                    until relatedpartyLegderEntry.Next() = 0;
+                //**********************************************
+                // Posting AMOUNT
+                //**********************************************
+
+                //**********************************************
+                //   Withholding on interest
+                //   Depending on Tax Exceptions
+                //**********************************************
+                witHldInterest := 0;
+                // if relatedparty.TaxStatus = relatedparty.TaxStatus::Taxable then begin
+                //     relatedparty.TestField(Withldtax);
+                //     witHldInterest := (relatedparty.Withldtax / 100) * _amount;
+                // end;
+
+                // **************
+                // relatedparty A/C (Dr) | BANK (Cr)
+
+                JournalEntry.Init();
+                JournalEntry."Journal Template Name" := 'GENERAL';
+                JournalEntry."Journal Batch Name" := 'TREASURY';
+                // JournalEntry."Line No." := NextEntryNo + (Counter + 1);
+                // JournalEntry.Entry_ID := NextEntryNo + (Counter + 1);
+                JournalEntry."Posting Date" := TrsyJnl."Posting Date";
+                JournalEntry.Creation_Date := TrsyJnl."Posting Date";
+                JournalEntry."Document No." := TrsyJnl."Document No.";
+                JournalEntry.Description := TrsyJnl.Description;
+                JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                JournalEntry.Validate("Shortcut Dimension 1 Code");
+                if TrsyJnl."Account Type" = TrsyJnl."Account Type"::relatedparty then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := interestAccPay;
+                end else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"G/L Account" then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := TrsyJnl."Account No.";
+                end else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"Bank Account" then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"Bank Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := TrsyJnl."Account No.";
+                end
+                else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Debtor then begin
+                    Error('Debtor not supported');
+                end;
+                // JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit relatedparty A/c
+                // JournalEntry."Account No." := principleAcc;
+                JournalEntry.Amount := _amount;
+                JournalEntry.Validate(JournalEntry.Amount);
+                if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::relatedparty then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := interestAccPay;
+                end else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"G/L Account" then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                end else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"Bank Account" then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"Bank Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                end
+                else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Debtor then begin
+                end;
+                // JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"; //@@@@@@@ Credit Bank
+                // JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                if TrsyJnl."Currency Code" <> '' then
+                    JournalEntry."Currency Code" := TrsyJnl."Currency Code";
+                if TrsyJnl."Enable GL Posting" = true then
+                    GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
+
+
+
+                //*****************************
+                //relatedparty Ledger Entries
+                //*****************************
+
+                looper.LockTable();
+                looper.Reset();
+                if looper.FindLast() then
+                    relatedpartyEntryCounter := looper."Entry No." + 1
+                else
+                    relatedpartyEntryCounter := 1;
+
+                relatedpartyLegderEntry.Init();
+                relatedpartyLegderEntry."Entry No." := relatedpartyEntryCounter;
+                relatedpartyLegderEntry."relatedparty No." := relatedparty."No.";
+                relatedpartyLegderEntry."related  Name" := relatedparty.Name;
+                relatedpartyLegderEntry."Loan No." := _loanNo;
+                relatedpartyLegderEntry."Loan Name" := _loanName;
+                if TrsyJnl."Currency Code" <> '' then
+                    relatedpartyLegderEntry."Currency Code" := TrsyJnl."Currency Code";
+                relatedpartyLegderEntry."Posting Date" := Today;
+                relatedpartyLegderEntry."Document Type" := relatedpartyLegderEntry."Document Type"::Repayment;
+                relatedpartyLegderEntry."Document No." := TrsyJnl."Document No.";
+                relatedpartyLegderEntry.Description := 'Repayment calculation' + Format(Today) + TrsyJnl.Description;
+                relatedpartyLegderEntry.Amount := -_amount;
+                relatedpartyLegderEntry."Amount(LCY)" := -_amount;
+                relatedpartyLegderEntry."Remaining Amount" := -_amount;
+                relatedpartyLegderEntry.Insert();
+
+                relatedpartyLegderEntry2.Init();
+                relatedpartyLegderEntry2."Entry No." := relatedpartyEntryCounter + 1;
+                relatedpartyLegderEntry2."relatedparty No." := relatedparty."No.";
+                relatedpartyLegderEntry2."related  Name" := relatedparty.Name;
+                relatedpartyLegderEntry2."Loan No." := _loanNo;
+                relatedpartyLegderEntry2."Loan Name" := _loanName;
+                if TrsyJnl."Currency Code" <> '' then
+                    relatedpartyLegderEntry2."Currency Code" := TrsyJnl."Currency Code";
+                relatedpartyLegderEntry2."Posting Date" := TrsyJnl."Posting Date";
+                relatedpartyLegderEntry2."Document Type" := relatedpartyLegderEntry."Document Type"::"Remaining Amount";
+                relatedpartyLegderEntry2."Document No." := TrsyJnl."Document No.";
+                relatedpartyLegderEntry2.Description := 'Remaining Amount (Repayment)' + Format(Today) + TrsyJnl.Description;
+                relatedpartyLegderEntry2.Amount := ((-_amount + witHldInterest) + originalAmount);
+                relatedpartyLegderEntry2."Amount(LCY)" := ((-_amount + witHldInterest) + originalAmount);
+                if latestRemainingAmount = 0 then begin
+                    relatedpartyLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + originalAmount);
+                end
+                else begin
+                    relatedpartyLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + latestRemainingAmount);
+                end;
+                relatedpartyLegderEntry2.Insert();
+            until TrsyJnl.Next() = 0;
+            TrsyJnl.Reset();
+            TrsyJnl.SetFilter("Account No.", '<>%1', '');
+            if TrsyJnl.Find('-') then begin
+                repeat
+                // TrsyJnl.Delete();
+                until TrsyJnl.Next() = 0;
+            end;
+            Message('Journal Repayment Posting Done');
+
+        end;
+
+        TrsyJnl.Reset();
+        TrsyJnl.SetRange("Posting Date", 0D, Today);
+        TrsyJnl.SetRange(TrsyJnl."Transaction Nature", TrsyJnl."Transaction Nature"::"Capitalized Interest");
+        if TrsyJnl.Find('-') then begin
+            repeat
+                if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::relatedparty then begin
+                    relatedpartyLoan.Reset();
+                    relatedpartyLoan.SetRange("No.", TrsyJnl."Bal. Account No.");
+                    if not relatedpartyLoan.Find('-') then// Get the Loan Details
+                        Error('relatedparty Loan = %1, dont exist.', TrsyJnl."Bal. Account No.");
+                    if relatedparty.Get(relatedpartyLoan."relatedparty No.") then begin
+
+                        //**********************************************
+                        //          Get Posting groups & Posting Accounts
+                        //**********************************************
+                        // if not venPostingGroup.Get(relatedpartyLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', relatedparty."No.");
+                        interestAccExpense := relatedpartyLoan."Interest Expense";
+                        if interestAccExpense = '' then
+                            Error('Missing Interest Expense A/C: %1', relatedparty."No.");
+                        interestAccPay := relatedpartyLoan."Interest Payable";
+                        if interestAccPay = '' then
+                            Error('Missing Interest Payable A/C: %1', relatedparty."No.");
+                        principleAcc := relatedpartyLoan."Payables Account";
+                        if principleAcc = '' then
+                            Error('Missing Principle A/C: %1', relatedparty."No.");
+                        if not generalSetup.FindFirst() then
+                            Error('Please Define Withholding Tax under General Setup');
+                        withholdingAcc := generalSetup.relatedWithholdingAcc;
+                        relatedpartyNo := relatedpartyLoan."relatedparty No.";
+                    end;
+                end;
+                if TrsyJnl."Account Type" = TrsyJnl."Account Type"::relatedparty then begin
+                    relatedpartyLoan.Reset();
+                    relatedpartyLoan.SetRange("No.", TrsyJnl."Account No.");
+                    if not relatedpartyLoan.Find('-') then// Get the Loan Details
+                        Error('relatedparty Loan = %1, dont exist.', TrsyJnl."Account No.");
+                    _loanName := relatedpartyLoan.Name;
+                    _loanNo := relatedpartyLoan."No.";
+                    if relatedparty.Get(relatedpartyLoan."relatedparty No.") then begin
+
+                        //**********************************************
+                        //          Get Posting groups & Posting Accounts
+                        //**********************************************
+                        // if not venPostingGroup.Get(relatedpartyLoan."Posting Group") then
+                        //     Error('Missing Posting Group: %1', relatedparty."No.");
+                        interestAccExpense := relatedpartyLoan."Interest Expense";
+                        if interestAccExpense = '' then
+                            Error('Missing Interest Expense A/C: %1', relatedparty."No.");
+                        interestAccPay := relatedpartyLoan."Interest Payable";
+                        if interestAccPay = '' then
+                            Error('Missing Interest Payable A/C: %1', relatedparty."No.");
+                        principleAcc := relatedpartyLoan."Payables Account";
+                        if principleAcc = '' then
+                            Error('Missing Principle A/C: %1', relatedparty."No.");
+                        if not generalSetup.FindFirst() then
+                            Error('Please Define Withholding Tax under General Setup');
+                        withholdingAcc := generalSetup.relatedWithholdingAcc;
+                        relatedpartyNo := relatedpartyLoan."relatedparty No.";
+                    end;
+                end;
+                //Get Total Accrued Interest
+                relatedpartyLegderEntry2.Reset();
+                relatedpartyLegderEntry2.SetRange("relatedparty No.", relatedpartyNo);
+                relatedpartyLegderEntry2.SetRange(relatedpartyLegderEntry2."Document Type", relatedpartyLegderEntry2."Document Type"::Interest);
+                relatedpartyLegderEntry2.CalcSums(Amount);
+                totalAccruedInterest := relatedpartyLegderEntry2.Amount;
+
+                relatedpartyLegderEntry2.Reset();
+                relatedpartyLegderEntry2.SetRange("relatedparty No.", relatedpartyNo);
+                relatedpartyLegderEntry2.SetRange(relatedpartyLegderEntry2."Document Type", relatedpartyLegderEntry2."Document Type"::"Interest Paid");
+                relatedpartyLegderEntry2.CalcSums(Amount);
+                totalPaidInterest := Abs(relatedpartyLegderEntry2.Amount);
+
+                relatedpartyLegderEntry2.Reset();
+                relatedpartyLegderEntry2.SetRange("relatedparty No.", relatedpartyNo);
+                relatedpartyLegderEntry2.SetRange(relatedpartyLegderEntry2."Document Type", relatedpartyLegderEntry2."Document Type"::"Capitalized Interest");
+                relatedpartyLegderEntry2.CalcSums(Amount);
+                totalCapitalInterest := Abs(relatedpartyLegderEntry2.Amount);
+
+                relatedpartyLegderEntry2.Reset();
+                relatedpartyLegderEntry2.SetRange("relatedparty No.", relatedpartyNo);
+                relatedpartyLegderEntry2.SetRange(relatedpartyLegderEntry2."Document Type", relatedpartyLegderEntry2."Document Type"::Withholding);
+                relatedpartyLegderEntry2.CalcSums(Amount);
+                totalWithholdingAmount := Abs(relatedpartyLegderEntry2.Amount);
+
+                differentAccrPaidInterest := totalAccruedInterest + totalPaidInterest + totalCapitalInterest; // Get the floating value
+                //Ensure Interest Paid does not negative Accrued Interest
+                if differentAccrPaidInterest > 0 then begin
+                    // if differentAccrPaidInterest - Round(TrsyJnl.Amount, 0.01, '=') >= Round(TrsyJnl.Amount, 0.01, '=') then
+                    _amount := Round(TrsyJnl.Amount, 0.01, '=');
+                    // else
+                    // _amount := differentAccrPaidInterest
+
+                end else begin
+                    _amount := Round(0, 0.01, '=');
+                    Error('Zero Accrued Interest');
+                end;
+
+                //Get the latest remaining amount
+                relatedpartyLegderEntry.SetRange(relatedpartyLegderEntry."Document Type", relatedpartyLegderEntry."Document Type"::"Remaining Amount");
+                relatedpartyLegderEntry.SetAscending(relatedpartyLegderEntry."Entry No.", true);
+                if relatedpartyLegderEntry.FindLast() then
+                    latestRemainingAmount := relatedpartyLegderEntry."Remaining Amount";
+                // Get the Original Amount
+                relatedpartyLegderEntry.Reset();
+                relatedpartyLegderEntry.SetRange(relatedpartyLegderEntry."Document Type", relatedpartyLegderEntry."Document Type"::"Original Amount");
+                relatedpartyLegderEntry.SetRange(relatedpartyLegderEntry."relatedparty No.", relatedpartyNo);
+                // relatedpartyLegderEntry.CalcSums(Amount);
+                if relatedpartyLegderEntry.FindSet() then
+                    repeat
+                        originalAmount := originalAmount + relatedpartyLegderEntry.Amount;
+                    until relatedpartyLegderEntry.Next() = 0;
+                //**********************************************
+                // Posting AMOUNT
+                //**********************************************
+
+                //**********************************************
+                //   Withholding on interest
+                //   Depending on Tax Exceptions
+                //**********************************************
+                witHldInterest := 0;
+                // if relatedparty.TaxStatus = relatedparty.TaxStatus::Taxable then begin
+                //     relatedparty.TestField(Withldtax);
+                //     witHldInterest := (relatedparty.Withldtax / 100) * _amount;
+                // end;
+
+                // **************
+                // INTEREST PAYABLE (Dr) | BANK (Cr)
+
+                JournalEntry.Init();
+                JournalEntry."Journal Template Name" := 'GENERAL';
+                JournalEntry."Journal Batch Name" := 'TREASURY';
+                // JournalEntry."Line No." := NextEntryNo + (Counter + 1);
+                // JournalEntry.Entry_ID := NextEntryNo + (Counter + 1);
+                JournalEntry."Posting Date" := TrsyJnl."Posting Date";
+                JournalEntry.Creation_Date := TrsyJnl."Posting Date";
+                JournalEntry."Document No." := TrsyJnl."Document No.";
+                JournalEntry.Description := TrsyJnl.Description;
+                JournalEntry."Shortcut Dimension 1 Code" := TrsyJnl."Shortcut Dimension 1 Code";
+                JournalEntry.Validate("Shortcut Dimension 1 Code");
+
+                if TrsyJnl."Account Type" = TrsyJnl."Account Type"::relatedparty then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := interestAccPay;
+                end else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"G/L Account" then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"G/L Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := TrsyJnl."Account No.";
+                end else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::"Bank Account" then begin
+                    JournalEntry."Account Type" := TrsyJnl."Account Type"::"Bank Account"; //@@@@@ Debit Int Payable
+                    JournalEntry."Account No." := TrsyJnl."Account No.";
+                end
+                else if TrsyJnl."Account Type" = TrsyJnl."Account Type"::Debtor then begin
+                end;
+
+
+
+                JournalEntry.Amount := _amount;
+                JournalEntry.Validate(JournalEntry.Amount);
+                if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::relatedparty then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := interestAccPay;
+                end else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"G/L Account" then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"G/L Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                end else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::"Bank Account" then begin
+                    JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"::"Bank Account"; //@@@@@@@ Credit Bank
+                    JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                end
+                else if TrsyJnl."Bal. Account Type" = TrsyJnl."Bal. Account Type"::Debtor then begin
+                end;
+                // JournalEntry."Bal. Account Type" := TrsyJnl."Bal. Account Type"; //@@@@@@@ Credit Bank
+                // JournalEntry."Bal. Account No." := TrsyJnl."Bal. Account No.";
+                if TrsyJnl."Currency Code" <> '' then
+                    JournalEntry."Currency Code" := TrsyJnl."Currency Code";
+                if TrsyJnl."Enable GL Posting" = true then
+                    GLPost.RunWithCheck(JournalEntry); // Post Dr Transaction
+
+
+
+                //*****************************
+                //relatedparty Ledger Entries
+                //*****************************
+
+                looper.LockTable();
+                looper.Reset();
+                if looper.FindLast() then
+                    relatedpartyEntryCounter := looper."Entry No." + 1
+                else
+                    relatedpartyEntryCounter := 1;
+
+
+                relatedpartyLegderEntry.Init();
+                relatedpartyLegderEntry."Entry No." := relatedpartyEntryCounter;
+                relatedpartyLegderEntry."relatedparty No." := relatedparty."No.";
+                relatedpartyLegderEntry."related  Name" := relatedparty.Name;
+                relatedpartyLegderEntry."Loan No." := _loanNo;
+                relatedpartyLegderEntry."Loan Name" := _loanName;
+
+                if TrsyJnl."Currency Code" <> '' then
+                    relatedpartyLegderEntry."Currency Code" := TrsyJnl."Currency Code";
+                relatedpartyLegderEntry."Posting Date" := Today;
+                relatedpartyLegderEntry."Document Type" := relatedpartyLegderEntry."Document Type"::"Capitalized Interest";
+                relatedpartyLegderEntry."Document No." := TrsyJnl."Document No.";
+                relatedpartyLegderEntry.Description := 'Interest Capitalization' + Format(Today) + TrsyJnl.Description;
+                relatedpartyLegderEntry.Amount := -(_amount);
+                relatedpartyLegderEntry."Amount(LCY)" := -(_amount);
+                relatedpartyLegderEntry."Remaining Amount" := -(_amount);
+                relatedpartyLegderEntry.Insert();
+
+                relatedpartyLegderEntry1.Init();
+                relatedpartyLegderEntry1."Entry No." := relatedpartyEntryCounter + 1;
+                relatedpartyLegderEntry1."relatedparty No." := relatedparty."No.";
+                relatedpartyLegderEntry1."related  Name" := relatedparty.Name;
+                relatedpartyLegderEntry1."Loan No." := _loanNo;
+                relatedpartyLegderEntry1."Loan Name" := _loanName;
+
+                if TrsyJnl."Currency Code" <> '' then
+                    relatedpartyLegderEntry1."Currency Code" := TrsyJnl."Currency Code";
+                relatedpartyLegderEntry1."Posting Date" := TrsyJnl."Posting Date";
+                relatedpartyLegderEntry1."Document Type" := relatedpartyLegderEntry."Document Type"::"Secondary Amount";
+                relatedpartyLegderEntry."Document No." := TrsyJnl."Document No.";
+                relatedpartyLegderEntry1.Description := 'Additional Original from Capitalization' + Format(Today) + TrsyJnl.Description;
+                relatedpartyLegderEntry1.Amount := _amount;
+                relatedpartyLegderEntry1."Amount(LCY)" := _amount;
+                relatedpartyLegderEntry1.Insert();
+
+            // relatedpartyLegderEntry2.Init();
+            // relatedpartyLegderEntry2."Entry No." := relatedpartyEntryCounter + 2;
+            // relatedpartyLegderEntry2."relatedparty No." := relatedparty."No.";
+            // relatedpartyLegderEntry2."relatedparty Name" := relatedparty.Name;
+            // relatedpartyLegderEntry2."Loan No." := _loanNo;
+            // relatedpartyLegderEntry2."Loan Name" := _loanName;
+
+            // if TrsyJnl."Currency Code" <> '' then
+            //     relatedpartyLegderEntry2."Currency Code" := TrsyJnl."Currency Code";
+            // relatedpartyLegderEntry2."Posting Date" := TrsyJnl."Posting Date";
+            // relatedpartyLegderEntry2."Document Type" := relatedpartyLegderEntry."Document Type"::"Remaining Amount";
+            // relatedpartyLegderEntry."Document No." := TrsyJnl."Document No.";
+            // relatedpartyLegderEntry2.Description := 'Remaining Amount' + Format(Today) + TrsyJnl.Description;
+            // relatedpartyLegderEntry2.Amount := ((-_amount + witHldInterest) + originalAmount);
+            // relatedpartyLegderEntry2."Amount(LCY)" := ((-_amount + witHldInterest) + originalAmount);
+            // if latestRemainingAmount = 0 then begin
+            //     relatedpartyLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + originalAmount);
+            // end
+            // else begin
+            //     relatedpartyLegderEntry2."Remaining Amount" := ((-_amount + witHldInterest) + latestRemainingAmount);
+            // end;
+            // relatedpartyLegderEntry2.Insert();
+
+            //+++++++++++++++++++++ EMAIL THE relatedparty ON THE NEW PRINCIPAL
+            // EmailingCU.EmailRelatedOnNewPrincipalFromCapitalization(_loanNo);
+            until TrsyJnl.Next() = 0;
+            TrsyJnl.Reset();
+            TrsyJnl.SetFilter("Account No.", '<>%1', '');
+            if TrsyJnl.Find('-') then begin
+                repeat
+                // TrsyJnl.Delete();
+                until TrsyJnl.Next() = 0;
+            end;
+            Message('Interest Capitalization Posting Done');
+        end;
+
+
+    end;
+
     //---------- UNUSED
     procedure PostCapitalization()
     var
@@ -2880,4 +4153,10 @@ codeunit 50232 "Treasury Mgt CU"
         FunderMGTCU: Codeunit FunderMgtCU;
         RelatedParty: Record "RelatedParty Loan";
         GenSetup: Record "Treasury General Setup";
+
+        relatedpartyLedgerEntries: Page RelatedLedgerEntry;
+        relatedparty3: Record relatedparty;
+        relatedpartyLoan: Record "relatedparty Loan";
+        relatedpartyLoan3: Record "relatedparty Loan";
+
 }

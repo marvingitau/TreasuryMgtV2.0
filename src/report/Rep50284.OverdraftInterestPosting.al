@@ -19,6 +19,8 @@ report 50284 "Overdraft Interest Posting"
                 end;
                 if FunderNo <> '' then
                     "Overdraft Ledger Entries".SetRange("Funder No.", FunderNo);
+                if LoanNo <> '' then
+                    "Overdraft Ledger Entries".SetRange("Loan No.", LoanNo);
             end;
 
             trigger OnAfterGetRecord()
@@ -35,6 +37,7 @@ report 50284 "Overdraft Interest Posting"
                 _witHldTaxAmount: Decimal;
 
                 _withholdingAcc: Code[20];
+                _currentYearDays: Integer;
             begin
                 LoanTbl.Reset();
                 LoanTbl.SetRange("No.", "Overdraft Ledger Entries"."Loan No.");
@@ -59,21 +62,25 @@ report 50284 "Overdraft Interest Posting"
                 _durationDate := (_maturityDate - _placementDate);
                 // _absoluteBalance := Abs("Closing Bal." - "Opening Bal.");
                 _absoluteBalance := Abs("Closing Bal.");
-                if _absoluteBalance <= 0 then
+                if _absoluteBalance = 0 then
                     CurrReport.Skip();
 
-                if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"30/360" then begin
-                    _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (30 / 360);
-                end else if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"Actual/360" then begin
-                    _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (_durationDate / 360);
-                end else if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"Actual/364" then begin
-                    _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (_durationDate / 364);
-                end else if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"Actual/365" then begin
-                    _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (_durationDate / 365);
-                end
-                else if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"30/365" then begin
-                    _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (30 / 365);
-                end;
+                // if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"30/360" then begin
+                //     _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (30 / 360);
+                // end else if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"Actual/360" then begin
+                //     _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (_durationDate / 360);
+                // end else if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"Actual/364" then begin
+                //     _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (_durationDate / 364);
+                // end else if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"Actual/365" then begin
+                //     _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (_durationDate / 365);
+                // end
+                // else if LoanTbl.InterestMethod = LoanTbl.InterestMethod::"30/365" then begin
+                //     _calculatedInterest := ((_interestRate_Active / 100) * _absoluteBalance) * (30 / 365);
+                // end;
+                _currentYearDays := GetDaysInYear(Today);
+
+                _calculatedInterest := ((1 / _currentYearDays) * (_interestRate_Active / 100) * _absoluteBalance);
+
 
                 _witHldTaxAmount := 0;
                 if LoanTbl.TaxStatus = LoanTbl.TaxStatus::Taxable then begin
@@ -82,7 +89,7 @@ report 50284 "Overdraft Interest Posting"
                 end;
 
 
-                if (_calculatedInterest > 0) then //LoanTbl.EnableGLPosting = true
+                if (_calculatedInterest <> 0) then //LoanTbl.EnableGLPosting = true
                     begin
 
                     FunderMgt.DirectGLPosting('interest', LoanTbl."Interest Expense", _withholdingAcc, _calculatedInterest, _witHldTaxAmount, 'Overdraft Interest Amount', "Loan No.", LoanTbl."Interest Payable", LoanTbl.Currency, '', _docNo, 'Bank Ref. No.', FunderTbl."Shortcut Dimension 1 Code");
@@ -106,22 +113,28 @@ report 50284 "Overdraft Interest Posting"
             {
                 group(General)
                 {
-                    field(PostingStartDate; PostingStartDate)
-                    {
-                        Caption = 'Posting Start Date';
-                        ShowMandatory = true;
-                        ApplicationArea = All;
-                    }
-                    field(PostingEndDate; PostingEndDate)
-                    {
-                        Caption = 'Posting End Date';
-                        ShowMandatory = true;
-                        ApplicationArea = All;
-                    }
+                    // field(PostingStartDate; PostingStartDate)
+                    // {
+                    //     Caption = 'Posting Start Date';
+                    //     ShowMandatory = true;
+                    //     ApplicationArea = All;
+                    // }
+                    // field(PostingEndDate; PostingEndDate)
+                    // {
+                    //     Caption = 'Posting End Date';
+                    //     ShowMandatory = true;
+                    //     ApplicationArea = All;
+                    // }
                     field(FunderNo; FunderNo)
                     {
                         Caption = 'Funder No.';
                         TableRelation = Funders."No.";
+                        ApplicationArea = All;
+                    }
+                    field(LoanNo; LoanNo)
+                    {
+                        Caption = 'Loan No.';
+                        TableRelation = "Funder Loan"."No.";
                         ApplicationArea = All;
                     }
                 }
@@ -149,6 +162,29 @@ report 50284 "Overdraft Interest Posting"
         if (PostingEndDate = 0D) then
             Error('Posting End Date Missing');
         */
+    end;
+
+    /// <summary>
+    /// Returns the number of days in the year of the specified date.
+    /// Handles both normal years (365 days) and leap years (366 days).
+    /// </summary>
+    /// <param name="inputDate">The date to evaluate</param>
+    /// <returns>Number of days in the year (365 or 366)</returns>
+    procedure GetDaysInYear(inputDate: Date): Integer
+    var
+        Year: Integer;
+        IsLeapYear: Boolean;
+    begin
+        if inputDate = 0D then
+            Error('Date parameter cannot be blank');
+
+        Year := Date2DMY(inputDate, 3); // Extract year from date
+
+        // Check if year is a leap year
+        IsLeapYear := (Year mod 4 = 0) and ((Year mod 100 <> 0) or (Year mod 400 = 0));
+
+        // Return 366 for leap years, 365 for normal years
+        exit(IsLeapYear ? 366 : 365);
     end;
 
     trigger OnPostReport()

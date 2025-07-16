@@ -37,6 +37,11 @@ page 50281 "Funder Loan List"
                 {
                     ApplicationArea = All;
                 }
+                field("Portfolio Name"; Rec."Portfolio Name")
+                {
+                    ApplicationArea = All;
+
+                }
                 field(PlacementDate; Rec.PlacementDate)
                 {
                     ApplicationArea = All;
@@ -54,6 +59,36 @@ page 50281 "Funder Loan List"
                     ApplicationArea = All;
                     Caption = 'Original / First disbursement Amount';
                 }
+                field(OutstandingAmntDisbLCY; Rec.OutstandingAmntDisbLCY)
+                {
+
+                    DrillDown = true;
+                    DrillDownPageId = FunderLedgerEntry;
+                    ApplicationArea = All;
+                    Caption = 'Outstanding Amount';
+                }
+                field("Outstanding Interest"; Rec."Outstanding Interest")
+                {
+
+                    DrillDown = true;
+                    DrillDownPageId = FunderLedgerEntry;
+                    ApplicationArea = All;
+                    Caption = 'Outstanding Interest';
+                }
+                field("Payables Account"; Rec."Payables Account")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Principal';
+                }
+                field("Interest Expense"; Rec."Interest Expense")
+                {
+                    ApplicationArea = All;
+                }
+                field("Interest Payable"; Rec."Interest Payable")
+                {
+                    ApplicationArea = All;
+                }
+
                 field(InterestRate; Rec.InterestRate)
                 {
                     ApplicationArea = All;

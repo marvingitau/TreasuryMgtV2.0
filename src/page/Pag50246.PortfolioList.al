@@ -26,10 +26,10 @@ page 50246 "Portfolio List"
                 {
                     ApplicationArea = All;
                 }
-                field(ProgramSize; Rec.ProgramSize)
+                field("Actual Program Size"; Rec."Actual Program Size")
                 {
                     ApplicationArea = All;
-                    Caption = 'Program Size';
+                    Caption = 'Actual Program Size';
                 }
                 // field("Actual Program Size"; Rec."Actual Program Size")
                 // {
@@ -48,33 +48,33 @@ page 50246 "Portfolio List"
                 //     end;
 
                 // }
-                field(BeginDate; Rec.BeginDate)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Begin Date';
-                }
-                field(ProgramTerm; Rec.ProgramTerm)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Program Term (Year)';
-                }
-                field(EndTerm; Rec.EndTerm)
-                {
-                    ApplicationArea = All;
-                    Caption = 'End Term';
-                }
-                field("Fee Applicable"; Rec."Fee Applicable")
-                {
-                    ApplicationArea = All;
-                }
-                field("Interest Rate Applicable"; Rec."Interest Rate Applicable")
-                {
-                    ApplicationArea = All;
-                }
-                field("Physical Address"; Rec."Physical Address")
-                {
-                    ApplicationArea = All;
-                }
+                // field(BeginDate; Rec.BeginDate)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Begin Date';
+                // }
+                // field(ProgramTerm; Rec.ProgramTerm)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'Program Term (Year)';
+                // }
+                // field(EndTerm; Rec.EndTerm)
+                // {
+                //     ApplicationArea = All;
+                //     Caption = 'End Term';
+                // }
+                // field("Fee Applicable"; Rec."Fee Applicable")
+                // {
+                //     ApplicationArea = All;
+                // }
+                // field("Interest Rate Applicable"; Rec."Interest Rate Applicable")
+                // {
+                //     ApplicationArea = All;
+                // }
+                // field("Physical Address"; Rec."Physical Address")
+                // {
+                //     ApplicationArea = All;
+                // }
                 // field(Value; Rec.Value)
                 // {
                 //     ApplicationArea = All;
@@ -118,8 +118,50 @@ page 50246 "Portfolio List"
         }
     }
 
+
     trigger OnOpenPage()
     begin
         Rec.SetRange(Rec."Origin Entry", Rec."Origin Entry"::Funder);
     end;
+
+    trigger OnAfterGetRecord()
+    var
+        _funder: Record Funders;
+    begin
+        IsUpdating := false;
+        if not IsUpdating then begin // Prevent recursion
+            IsUpdating := true;
+
+            // _funder.Reset();
+            // _funder.SetRange(_funder.Portfolio, Rec."No.");
+            // _funder.SetRange(_funder.Status, _funder.Status::Approved);
+            // if _funder.Find('-') then begin
+            //     repeat
+            //         FunderLoan.SetRange(FunderLoan."Funder No.", _funder."No.");
+            //         FunderLoan.SetRange(FunderLoan.Status, FunderLoan.Status::Approved);
+            //         if FunderLoan.Find('-') then begin
+            //             repeat
+            //                 FunderLoan.CalcFields(OutstandingAmntDisbLCY);
+            //                 ActualProgramSize := ActualProgramSize + FunderLoan.OutstandingAmntDisbLCY;
+
+            //             until FunderLoan.Next() = 0;
+            //         end;
+
+            //     until _funder.Next() = 0;
+            // end;
+
+            // Rec."Actual Program Size" := ActualProgramSize;
+            // Rec.OutstandingAmountToTarget := Rec.ProgramSize - ActualProgramSize;
+            // Rec.Modify();
+
+            IsUpdating := false;
+        end;
+    end;
+
+
+
+    var
+        IsUpdating: Boolean;
+        FunderLoan: Record "Funder Loan";
+        ActualProgramSize: Decimal;
 }

@@ -68,6 +68,10 @@ table 50293 "Interest Rate Change"
             end;
         }
 
+        field(23; "Loan No."; Code[20])
+        {
+            DataClassification = ToBeClassified;
+        }
         field(25; Active; Boolean)
         {
             DataClassification = ToBeClassified;

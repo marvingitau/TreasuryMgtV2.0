@@ -19,6 +19,8 @@ report 50286 "OD Interest Posting"
                 end;
                 if FunderNo <> '' then
                     "Overdraft Ledger Entries".SetRange("Funder No.", FunderNo);
+                if LoanNo <> '' then
+                    "Overdraft Ledger Entries".SetRange("Loan No.", LoanNo);
             end;
 
             trigger OnAfterGetRecord()
@@ -41,10 +43,10 @@ report 50286 "OD Interest Posting"
                 if not LoanTbl.Find('-') then
                     Error('Missing Loan %1 during Overdraft interest posting', "Overdraft Ledger Entries"."Loan No.");
 
-                _maturityDate := LoanTbl.MaturityDate;
-                _placementDate := LoanTbl.PlacementDate;
-                if (_placementDate = 0D) or (_maturityDate = 0D) then
-                    CurrReport.Skip();
+                // _maturityDate := LoanTbl.MaturityDate;
+                // _placementDate := LoanTbl.PlacementDate;
+                // if (_placementDate = 0D) or (_maturityDate = 0D) then
+                //     CurrReport.Skip();
 
                 _docNo := TrsyMgt.GenerateDocumentNumber();
                 FunderTbl.Reset();
@@ -59,7 +61,7 @@ report 50286 "OD Interest Posting"
                 _durationDate := (_maturityDate - _placementDate);
                 _absoluteBalance := Abs("Closing Bal." - "Opening Bal.");
 
-                if _absoluteBalance <= 0 then
+                if _absoluteBalance = 0 then
                     CurrReport.Skip();
 
 
@@ -71,7 +73,7 @@ report 50286 "OD Interest Posting"
                 end;
 
 
-                if ("Calculated Interest" > 0) then //LoanTbl.EnableGLPosting = true
+                if ("Calculated Interest" <> 0) then //LoanTbl.EnableGLPosting = true
                 begin
                     FunderMgt.DirectGLPosting('interest', LoanTbl."Interest Expense", _withholdingAcc, "Calculated Interest", "Calculated Witholding Amount", 'Overdraft Interest Amount', "Loan No.", LoanTbl."Interest Payable", LoanTbl.Currency, '', _docNo, 'Bank Ref. No.', FunderTbl."Shortcut Dimension 1 Code");
                     "Overdraft Ledger Entries".Processed := true;
@@ -91,22 +93,28 @@ report 50286 "OD Interest Posting"
             {
                 group(General)
                 {
-                    field(PostingStartDate; PostingStartDate)
-                    {
-                        Caption = 'Posting Start Date';
-                        ShowMandatory = true;
-                        ApplicationArea = All;
-                    }
-                    field(PostingEndDate; PostingEndDate)
-                    {
-                        Caption = 'Posting End Date';
-                        ShowMandatory = true;
-                        ApplicationArea = All;
-                    }
+                    // field(PostingStartDate; PostingStartDate)
+                    // {
+                    //     Caption = 'Posting Start Date';
+                    //     ShowMandatory = true;
+                    //     ApplicationArea = All;
+                    // }
+                    // field(PostingEndDate; PostingEndDate)
+                    // {
+                    //     Caption = 'Posting End Date';
+                    //     ShowMandatory = true;
+                    //     ApplicationArea = All;
+                    // }
                     field(FunderNo; FunderNo)
                     {
                         Caption = 'Funder No.';
                         TableRelation = Funders."No.";
+                        ApplicationArea = All;
+                    }
+                    field(LoanNo; LoanNo)
+                    {
+                        Caption = 'Loan No.';
+                        TableRelation = "Funder Loan"."No.";
                         ApplicationArea = All;
                     }
                 }

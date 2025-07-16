@@ -17,7 +17,7 @@ table 50289 "Roll over Tbl"
         field(10; PlacementMaturity; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = Principal,Interest,"Principal + Interest",Terminate;
+            OptionMembers = Principal,Interest,"Principal + Interest";
         }
         field(15; Principal; Decimal)
         {

@@ -69,6 +69,14 @@ table 50284 "Country_Region"
         {
             DataClassification = ToBeClassified;
         }
+        field(67; "Birth Cert. Min Length"; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
+        field(68; "Birth Cert. Max Length"; Integer)
+        {
+            DataClassification = ToBeClassified;
+        }
 
 
 

@@ -33,13 +33,47 @@ pageextension 50230 AccountantRoleCenter extends 9027
                         ToolTip = 'Portfolio Renewal List';
                     }
                 }
-                action(Funder)
+                group("Funder")
                 {
-                    ApplicationArea = Basic, Suite;
-                    Caption = 'Funders';
-                    Image = CashReceiptJournal;
-                    RunObject = Page "Funder List";
-                    ToolTip = 'Funder';
+                    action(Funders)
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Caption = 'Funders';
+                        Image = CashReceiptJournal;
+                        RunObject = Page "Funder List";
+                        ToolTip = 'Funder';
+                    }
+                    action("Open Funders")
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Caption = 'Open Funders';
+                        Image = CashReceiptJournal;
+                        RunObject = Page "Funder List";
+                        RunPageView = where(Status = filter(Open));
+                        ToolTip = 'Open Funder';
+                    }
+                    action("Pending Funders")
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Caption = 'Pending Funders';
+                        Image = CashReceiptJournal;
+                        RunObject = Page "Funder List";
+                        RunPageView = where(Status = filter("Pending Approval"));
+                        ToolTip = 'Pending Funder';
+
+                    }
+                    action("Approved Funders")
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Caption = 'Approved Funders';
+                        Image = CashReceiptJournal;
+                        RunObject = Page "Funder List";
+                        RunPageView = where(Status = filter(Approved));
+                        ToolTip = 'Approved Funder';
+
+                    }
+
+
                 }
                 group("Relatedparty/Customer")
                 {
@@ -77,13 +111,54 @@ pageextension 50230 AccountantRoleCenter extends 9027
                     }
                 }
 
-                action("Funder Loans")
+                group("Funder Loan")
                 {
-                    ApplicationArea = Basic, Suite;
-                    Caption = 'Funder Loans';
-                    Image = ResourceJournal;
-                    RunObject = page 50281;
-                    ToolTip = 'Funder Loans';
+                    action("Funder Loans")
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Caption = 'Funder Loans';
+                        Image = ResourceJournal;
+                        RunObject = page 50281;
+                        ToolTip = 'Funder Loans';
+                    }
+                    action("Open Records")
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Image = OpenJournal;
+                        Caption = 'Open Loans';
+                        RunObject = page 50281;
+                        RunPageView = where(Status = filter(Open));
+
+                    }
+                    action("Pending Approval")
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Image = PeriodEntries;
+                        Caption = 'Pending Loans';
+                        RunObject = page 50281;
+                        RunPageView = where(Status = filter("Pending Approval"));
+
+
+                    }
+                    action("Approved Approval")
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Image = Approval;
+                        Caption = 'Approved Loans';
+                        RunObject = page 50281;
+                        RunPageView = where(Status = filter(Approved));
+
+
+                    }
+                    action("Rejected Approval")
+                    {
+                        ApplicationArea = Basic, Suite;
+                        Image = Reject;
+                        Caption = 'Rejected Loans';
+                        RunObject = page 50281;
+                        RunPageView = where(Status = filter(Rejected));
+
+                    }
                 }
                 action(TrsyJnl)
                 {

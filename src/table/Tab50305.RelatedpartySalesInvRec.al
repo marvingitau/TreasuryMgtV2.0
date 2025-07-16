@@ -24,7 +24,7 @@ table 50305 "Relatedparty Sales Inv Rec."
                     "Related Loan Name" := _relatedLoan.Name;
 
                 _relatedParty.Reset();
-                _relatedParty.SetRange("No.", _relatedLoan."Funder No.");
+                _relatedParty.SetRange("No.", _relatedLoan."RelatedParty No.");
                 if _relatedParty.Find('-') then
                     "Shortcut Dimension 1 Code" := _relatedParty."Shortcut Dimension 1 Code";
             end;

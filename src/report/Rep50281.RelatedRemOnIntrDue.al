@@ -49,7 +49,7 @@ report 50281 "Related Rem. On Intr. Due"
 
             dataitem(RelatedParty; RelatedParty)
             {
-                DataItemLink = "No." = field("Funder No.");
+                DataItemLink = "No." = field("RelatedParty No.");
                 DataItemLinkReference = "RelatedParty Loan";
                 column(Portfolio; Portfolio)
                 {

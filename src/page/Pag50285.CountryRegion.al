@@ -43,13 +43,16 @@ page 50285 "Country Region"
                 {
                     ApplicationArea = All;
                 }
-                field("KRA Min Length"; Rec."KRA Min Length")
+                field("Tax Min Length"; Rec."KRA Min Length")
                 {
                     ApplicationArea = All;
+                    Caption = 'Tax Min Length';
+
                 }
-                field("KRA Max Length"; Rec."KRA Max Length")
+                field("Tax Max Length"; Rec."KRA Max Length")
                 {
                     ApplicationArea = All;
+                    Caption = 'Tax Max Length';
                 }
                 field("ID Min Length"; Rec."ID Min Length")
                 {
@@ -64,6 +67,14 @@ page 50285 "Country Region"
                     ApplicationArea = All;
                 }
                 field("Passport Max Length"; Rec."Passport Max Length")
+                {
+                    ApplicationArea = All;
+                }
+                field("Birth Cert. Min Length"; Rec."Birth Cert. Min Length")
+                {
+                    ApplicationArea = All;
+                }
+                field("Birth Cert. Max Length"; Rec."Birth Cert. Max Length")
                 {
                     ApplicationArea = All;
                 }

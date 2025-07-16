@@ -31,135 +31,17 @@ page 50301 "Portfolio Card RelatedParty"
                     ApplicationArea = All;
                     Editable = false;
                 }
-                field(ProgramSize; Rec.ProgramSize)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Program Size';
-                    Editable = IsEditable;
-                    Enabled = (not ShowOtherFields);
-                }
-                // field(Value;Rec.Value)
-                // {
-                //     ApplicationArea = All;
-                // }
-                // field("Actual Program Size"; Rec."Actual Program Size")
-                // {
-                //     ApplicationArea = All;
-                //     Caption = 'Actual Program Size';
-                //     // DrillDown = true;
-                //     // DrillDownPageId = 50235;
-                //     Editable = false;
-                //     trigger OnDrillDown()
-                //     var
-                //         loans: Record "Funder Loan";
-                //     begin
-                //         if Rec.Category = Rec.Category::"Bank Loan" then
-                //             loans.SetRange(Category, UpperCase('Bank Loan'));
-                //         if Rec.Category = Rec.Category::Individual then
-                //             loans.SetRange(Category, UpperCase('Individual'));
-                //         if Rec.Category = Rec.Category::Institutional then
-                //             loans.SetRange(Category, UpperCase('Institutional'));
-                //         if Rec.Category = Rec.Category::"Asset Term Manager" then
-                //             loans.SetRange(Category, UpperCase('Asset Term Manager'));
-                //         if Rec.Category = Rec.Category::"Medium Term Notes" then
-                //             loans.SetRange(Category, UpperCase('Medium Term Notes'));
 
-                //         // loans.SetRange(Category_Line_No, Rec.Category_Line_No);
-                //         loans.SetRange(loans.Status, loans.Status::Approved);
-                //         Page.Run(Page::"Funder Loans List", loans);
-                //     end;
 
-                // }
                 field("Actual Program Size"; ActualProgramSize)
                 {
                     ApplicationArea = All;
                     Caption = 'Actual Program Size';
                     Editable = false;
                 }
-                field(OutstandingAmountToTarget; Rec.OutstandingAmountToTarget)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Outstanding Amount To Target';
-                    Editable = IsEditable;
-                    Enabled = (not ShowOtherFields);
-                }
-                field(BeginDate; Rec.BeginDate)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Begin Date';
-                    Editable = IsEditable;
-                    Enabled = (not ShowOtherFields);
-                }
-                field(ProgramTerm; Rec.ProgramTerm)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Program Term(Years)';
-                    Editable = IsEditable;
-                    Enabled = (not ShowOtherFields);
-                }
-                field(EndTerm; Rec.EndTerm)
-                {
-                    ApplicationArea = All;
-                    Caption = 'End Term';
-                    Editable = false;
-                    Enabled = IsEditable;
-
-                }
-                // field(ProgramCurrency; Rec.ProgramCurrency)
-                // {
-                //     ApplicationArea = All;
-                //     Caption = 'Program Currency';
-                //     Editable = ShowOtherFields;
-                // }
-                // field("Fee Applicable"; Rec."Fee Applicable")
-                // {
-                //     ApplicationArea = All;
-                //     Caption = 'Fee Applicable (%)';
-                //     Editable = false;
-                // }
-                // field("Interest Rate Applicable"; Rec."Interest Rate Applicable")
-                // {
-                //     ApplicationArea = All;
-                // }
-                field("Physical Address"; Rec."Physical Address")
-                {
-                    ApplicationArea = All;
-                    Editable = IsEditable;
-                    Enabled = (not ShowOtherFields);
-                }
 
 
-                // field(Abbreviation; Rec.Abbreviation)
-                // {
-                //     ApplicationArea = All;
-                //     Caption = 'Abbreviation';
-                // }
 
-                // field("Category Fee"; Rec."Category Fee")
-                // {
-                //     ApplicationArea = All;
-                //     // ShowMandatory = true;
-                //     DrillDownPageId = "Portfolio Fee Setup";
-                //     trigger OnDrillDown()
-                //     var
-                //         FeePage: Page "Portfolio Fee Setup";
-                //         PortfolioFeeSetup: Record "Portfolio Fee Setup";
-                //     begin
-                //         PortfolioFeeSetup.Reset();
-                //         if Rec.Category = Rec.Category::"Bank Loan" then
-                //             PortfolioFeeSetup.SetRange(Code, 'Bank Loan');
-                //         if Rec.Category = Rec.Category::Individual then
-                //             PortfolioFeeSetup.SetRange(Code, 'Individual');
-                //         if Rec.Category = Rec.Category::Institutional then
-                //             PortfolioFeeSetup.SetRange(Code, 'Institutional');
-
-                //         if Page.RunModal(Page::"Portfolio Fee Setup", PortfolioFeeSetup) = Action::LookupOK then begin
-                //             // Rec."Fee Applicable" := PortfolioFeeSetup."Fee Applicable %";
-                //             Rec.Category_Line_No := PortfolioFeeSetup.LineNo;
-                //             CurrPage.Update();
-                //         end;
-                //     end;
-                // }
                 field(Status; Rec.Status)
                 {
                     ApplicationArea = All;
@@ -168,35 +50,35 @@ page 50301 "Portfolio Card RelatedParty"
                 }
 
             }
-            group("Contact Person Details")
-            {
-                // field("Contact Person Detail"; Rec."Contact Person Detail")
-                // {
-                //     ApplicationArea = All;
-                // }
-                Visible = not ShowOtherFields;
-                field("Contact Person Name"; Rec."Contact Person Name")
-                {
-                    ApplicationArea = All;
-                    Editable = IsEditable;
-                }
-                field("Contact Person Address"; Rec."Contact Person Address")
-                {
-                    ApplicationArea = All;
-                    Editable = IsEditable;
-                }
-                field("Contact Person Phone No."; Rec."Contact Person Phone No.")
-                {
-                    ApplicationArea = All;
-                    Editable = IsEditable;
-                }
-                field("Contact Person Email"; Rec."Contact Person Email")
-                {
-                    ApplicationArea = All;
-                    ExtendedDatatype = EMail;
-                    Editable = IsEditable;
-                }
-            }
+            // group("Contact Person Details")
+            // {
+            //     // field("Contact Person Detail"; Rec."Contact Person Detail")
+            //     // {
+            //     //     ApplicationArea = All;
+            //     // }
+            //     Visible = not ShowOtherFields;
+            //     field("Contact Person Name"; Rec."Contact Person Name")
+            //     {
+            //         ApplicationArea = All;
+            //         Editable = IsEditable;
+            //     }
+            //     field("Contact Person Address"; Rec."Contact Person Address")
+            //     {
+            //         ApplicationArea = All;
+            //         Editable = IsEditable;
+            //     }
+            //     field("Contact Person Phone No."; Rec."Contact Person Phone No.")
+            //     {
+            //         ApplicationArea = All;
+            //         Editable = IsEditable;
+            //     }
+            //     field("Contact Person Email"; Rec."Contact Person Email")
+            //     {
+            //         ApplicationArea = All;
+            //         ExtendedDatatype = EMail;
+            //         Editable = IsEditable;
+            //     }
+            // }
         }
         area(Factboxes)
         {
@@ -508,7 +390,7 @@ page 50301 "Portfolio Card RelatedParty"
         _relatedParty.SetRange(_relatedParty.Status, _relatedParty.Status::Approved);
         if _relatedParty.Find('-') then begin
             repeat
-                FunderLoan.SetRange(FunderLoan."Funder No.", _relatedParty."No.");
+                FunderLoan.SetRange(FunderLoan."RelatedParty No.", _relatedParty."No.");
                 FunderLoan.SetRange(FunderLoan.Status, FunderLoan.Status::Approved);
                 if FunderLoan.Find('-') then begin
                     repeat

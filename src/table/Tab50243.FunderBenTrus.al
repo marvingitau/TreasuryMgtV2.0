@@ -31,7 +31,7 @@ table 50243 "Funder Ben/Trus"
         field(59; "Identification Doc."; Option)
         {
             DataClassification = ToBeClassified;
-            OptionMembers = ID,Passport;
+            OptionMembers = ID,Passport,"Birth Certificate";
         }
         field(60; "Employer Identification Number"; Text[50])
         {
@@ -109,6 +109,36 @@ table 50243 "Funder Ben/Trus"
         {
             OptionMembers = Beneficiary,Trustee,"Next of Kin";
             DataClassification = ToBeClassified;
+        }
+        field(100; "RelatedParty No."; Code[20])
+        {
+            DataClassification = ToBeClassified;
+            TableRelation = RelatedParty."No.";
+        }
+
+        field(200; "Birth Cert. Number"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+            trigger OnValidate()
+            var
+                _region: Code[20];
+                noLength: Integer;
+            begin
+                GenSetup.Get(0);
+                _region := GenSetup."Region/Country";
+                "Region/Country".Reset();
+                "Region/Country".SetRange("Country Name", _region);
+                if "Region/Country".Find('-') then begin
+                    noLength := StrLen("Birth Cert. Number");
+                    if (noLength < "Region/Country"."Birth Cert. Min Length") or (noLength > "Region/Country"."Birth Cert. Max Length") then begin
+                        Error('Birth Certificate No. size must be between %1 and %2', "Region/Country"."Birth Cert. Min Length", "Region/Country"."Birth Cert. Max Length");
+                    end;
+                end;
+                // if TrsyMgtCU.ValidateAlphanumeric("Birth Cert. Number") then
+                //     Error('Invalid Character(s)');
+            end;
+
+
         }
     }
 

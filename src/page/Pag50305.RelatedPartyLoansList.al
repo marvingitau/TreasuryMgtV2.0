@@ -22,7 +22,7 @@ page 50305 "RelatedParty Loans List"
                 //     ApplicationArea = All;
                 //     Visible = false;
                 // }
-                field("Funder No."; Rec."Funder No.")
+                field("Funder No."; Rec."RelatedParty No.")
                 {
                     ApplicationArea = All;
                     Caption = 'Record No';
@@ -97,7 +97,7 @@ page 50305 "RelatedParty Loans List"
         SelectedFilterValue: Text;
         GlobalFilters: Codeunit GlobalFilters;
     begin
-        SelectedFilterValue := Rec.GETFILTER("Funder No.");
+        SelectedFilterValue := Rec.GETFILTER("RelatedParty No.");
         GlobalFilters.SetGlobalFilter(SelectedFilterValue);
         Rec.SetRange(Rec."Origin Entry", Rec."Origin Entry"::RelatedParty);
     end;

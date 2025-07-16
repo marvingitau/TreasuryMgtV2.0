@@ -5,20 +5,21 @@ codeunit 50243 RelatepartyMgtCU
 
     end;
 
+    //DEPRECATED
     procedure CalculateInterest()
     var
         myLocalCounter: Integer;
         monthlyInterest: Decimal;
         witHldInterest: Decimal;
         principleAcc: Code[20];
-        interestAccExpense: Code[20];
-        interestAccPayable: Code[20];
+        interestAccIncome: Code[20];
+        interestAccReceivable: Code[20];
         withholdingAcc: Code[20];
         NextEntryNo: Integer;
-        funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry3: Record FunderLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry1: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry2: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry3: Record RelatedLedgerEntry;//Calculate every month
         venPostingGroup: Record "Treasury Posting Group";
         latestRemainingAmount: Decimal;
         remainingDays: Integer;
@@ -34,7 +35,7 @@ codeunit 50243 RelatepartyMgtCU
         _currentPrincipalAmnt: Decimal;
 
         _interestComputationTimes: Integer;
-        _funder: Record RelatedParty;
+        _relatedParty: Record RelatedParty;
         _portfolio: Record "Portfolio RelatedParty";
     begin
         //Interest Rate Type (Fixed/Float)
@@ -44,27 +45,27 @@ codeunit 50243 RelatepartyMgtCU
         // (Annual Rate / 12) * Principal
         //Funder Ldger Entry
         latestRemainingAmount := 0;
-        funderLoan.Reset();
-        funderLoan.SetFilter(funderLoan."No.", '<>%1', '');
-        funderLoan.SetFilter(funderLoan.Status, '=%1', funderLoan.Status::Approved);
-        //funderLoan.SetFilter("Type of Vendor", '=%1', funderLoan."Type of Vendor"::Funder);
-        if funderLoan.Find('-') then begin
+        relatedpartyLoan.Reset();
+        relatedpartyLoan.SetFilter(relatedpartyLoan."No.", '<>%1', '');
+        relatedpartyLoan.SetFilter(relatedpartyLoan.Status, '=%1', relatedpartyLoan.Status::Approved);
+        //relatedpartyLoan.SetFilter("Type of Vendor", '=%1', relatedpartyLoan."Type of Vendor"::Funder);
+        if relatedpartyLoan.Find('-') then begin
             repeat
                 //Fixed Interest Type
-                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") OR (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
-                    funderLoan.TestField(PlacementDate);
+                if (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Fixed Rate") OR (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Floating Rate") then begin
+                    relatedpartyLoan.TestField(PlacementDate);
                     // vendor.TestField(InterestMethod);
-                    // funderLoan.TestField(TaxStatus);
+                    // relatedpartyLoan.TestField(TaxStatus);
 
-                    funderLegderEntry3.Reset();
-                    funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                    funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::Interest);
-                    _interestComputationTimes := funderLegderEntry3.Count();
+                    relatedPartyLegderEntry3.Reset();
+                    relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                    relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::Interest);
+                    _interestComputationTimes := relatedPartyLegderEntry3.Count();
 
                     // endYearDate := CALCDATE('CY', Today);
                     if _interestComputationTimes = 0 then begin
                         endMonthDate := CALCDATE('CM', Today);
-                        remainingDays := endMonthDate - funderLoan.PlacementDate;
+                        remainingDays := endMonthDate - relatedpartyLoan.PlacementDate;
                     end else begin
                         endMonthDate := CALCDATE('CM', Today);
                         remainingDays := Today - endMonthDate;
@@ -72,180 +73,194 @@ codeunit 50243 RelatepartyMgtCU
 
 
                     // Get Total of Original Amount (Principal)
-                    funderLegderEntry3.Reset();
-                    funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                    funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Original Amount");
-                    funderLegderEntry3.CalcSums(Amount);
-                    _totalOriginalAmount := funderLegderEntry3.Amount;
+                    relatedPartyLegderEntry3.Reset();
+                    relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                    relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::"Original Amount");
+                    relatedPartyLegderEntry3.CalcSums(Amount);
+                    _totalOriginalAmount := relatedPartyLegderEntry3.Amount;
 
-                    funderLegderEntry3.Reset();
-                    funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                    funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::Repayment);
-                    funderLegderEntry3.CalcSums(Amount);
-                    _totalWithdrawalAmount := Abs(funderLegderEntry3.Amount);
+                    relatedPartyLegderEntry3.Reset();
+                    relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                    relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::Repayment);
+                    relatedPartyLegderEntry3.CalcSums(Amount);
+                    _totalWithdrawalAmount := Abs(relatedPartyLegderEntry3.Amount);
 
                     _differenceOriginalWithdrawal := _totalOriginalAmount - _totalWithdrawalAmount; // Get the floating value
 
 
                     //Monthly interest depending on Interest Method
                     monthlyInterest := 0;
-                    _interestRate_Active := TrsyMgt.GetInterestRate(funderLoan."No.", 'RELATEDPARTY');
-                    /*if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
-                        _interestRate_Active := funderLoan.InterestRate;
-                    if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
-                        _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
+                    _interestRate_Active := TrsyMgt.GetInterestRate(relatedpartyLoan."No.", 'RELATEDPARTY');
+                    /*if (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Fixed Rate") then
+                        _interestRate_Active := relatedpartyLoan.InterestRate;
+                    if (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Floating Rate") then
+                        _interestRate_Active := (relatedpartyLoan."Reference Rate" + relatedpartyLoan.Margin);
                     if _interestRate_Active = 0 then
                         Error('Interest Rate is Zero');*/
 
                     _differenceOriginalWithdrawal := _currentPrincipalAmnt;
-                    if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
+                    if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"30/360" then begin
                         monthlyInterest := ((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (30 / 360);
-                    end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/360" then begin
+                    end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/360" then begin
                         monthlyInterest := ((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 360);
-                    end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/364" then begin
+                    end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/364" then begin
                         monthlyInterest := ((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 364);
-                    end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/365" then begin
+                    end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/365" then begin
                         monthlyInterest := ((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 365);
                     end;
 
                     //withholding on interest
                     //Depending on Tax Exceptions
                     witHldInterest := 0;
-                    if funderLoan.TaxStatus = funderLoan.TaxStatus::Taxable then begin
-                        funderLoan.TestField(Withldtax);
-                        witHldInterest := (funderLoan.Withldtax / 100) * monthlyInterest;
+                    if relatedpartyLoan.TaxStatus = relatedpartyLoan.TaxStatus::Taxable then begin
+                        relatedpartyLoan.TestField(Withldtax);
+                        witHldInterest := (relatedpartyLoan.Withldtax / 100) * monthlyInterest;
                     end;
 
                     //Get Posting groups
-                    // if not venPostingGroup.Get(funderLoan."Posting Group") then
-                    //     Error('Missing Posting Group: %1', funder."No.");
+                    // if not venPostingGroup.Get(relatedpartyLoan."Posting Group") then
+                    //     Error('Missing Posting Group: %1', relatedparty."No.");
 
 
-                    interestAccExpense := funderLoan."Interest Expense";
+                    interestAccIncome := relatedpartyLoan."Interest Expense";
 
-                    if funderLoan."Bank Ref. No." = '' then
-                        Error('Missing Bank Reference No for Funder Loan', funderLoan."No.");
+                    if relatedpartyLoan."Bank Ref. No." = '' then
+                        Error('Missing Bank Reference No for Funder Loan', relatedpartyLoan."No.");
 
-                    if interestAccExpense = '' then
-                        Error('Missing Expense Interest A/C: %1', funder."No.");
-                    principleAcc := funderLoan."Payables Account";
+                    if interestAccIncome = '' then
+                        Error('Missing Expense Interest A/C: %1', relatedparty."No.");
+                    principleAcc := relatedpartyLoan."Payables Account";
                     if principleAcc = '' then
-                        Error('Missing Principle A/C: %1', funder."No.");
-                    interestAccPayable := funderLoan."Interest Payable";
-                    if interestAccPayable = '' then
-                        Error('Missing Payable Interest A/C: %1', funder."No.");
+                        Error('Missing Principle A/C: %1', relatedparty."No.");
+                    interestAccReceivable := relatedpartyLoan."Interest Payable";
+                    if interestAccReceivable = '' then
+                        Error('Missing Payable Interest A/C: %1', relatedparty."No.");
 
-                    _funder.Reset();
-                    _funder.SetRange("No.", funderLoan."Funder No.");
-                    if not _funder.Find('-') then
-                        Error('Funder %1 not found _fl', funderLoan."Funder No.");
+                    _relatedParty.Reset();
+                    _relatedParty.SetRange("No.", relatedpartyLoan."RelatedParty No.");
+                    if not _relatedParty.Find('-') then
+                        Error('Funder %1 not found _fl', relatedpartyLoan."RelatedParty No.");
 
                     _portfolio.Reset();
-                    _portfolio.SetRange("No.", _funder.Portfolio);
+                    _portfolio.SetRange("No.", _relatedParty.Portfolio);
                     if not _portfolio.Find('-') then
-                        Error('Portfolio %1 not found _fl', _funder.Portfolio);
+                        Error('Portfolio %1 not found _fl', _relatedParty.Portfolio);
 
                     if not generalSetup.FindFirst() then
                         Error('Please Define Withholding Tax under General Setup');
-                    withholdingAcc := generalSetup.RelatedWithholdingAcc;
+                    withholdingAcc := generalSetup.FunderWithholdingAcc;
                     //Get the latest remaining amount
-                    funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Remaining Amount");
-                    if funderLegderEntry.FindLast() then
-                        latestRemainingAmount := funderLegderEntry."Remaining Amount";
+                    relatedPartyLegderEntry.SetRange(relatedPartyLegderEntry."Document Type", relatedPartyLegderEntry."Document Type"::"Remaining Amount");
+                    if relatedPartyLegderEntry.FindLast() then
+                        latestRemainingAmount := relatedPartyLegderEntry."Remaining Amount";
 
-                    //funderLegderEntry.LockTable();
-                    funderLegderEntry.Reset();
-                    if funderLegderEntry.FindLast() then
-                        NextEntryNo := funderLegderEntry."Entry No." + 1;
+                    //relatedPartyLegderEntry.LockTable();
+                    relatedPartyLegderEntry.Reset();
+                    if relatedPartyLegderEntry.FindLast() then
+                        NextEntryNo := relatedPartyLegderEntry."Entry No." + 1;
                     // else
                     //     NextEntryNo := 2;
 
-                    funderLegderEntry.Init();
-                    funderLegderEntry."Entry No." := NextEntryNo;
-                    funderLegderEntry."Funder No." := funder."No.";
-                    funderLegderEntry."Funder Name" := funder.Name;
-                    funderLegderEntry."Loan Name" := _loanName;
-                    funderLegderEntry."Loan No." := _loanNo;
-                    funderLegderEntry."Posting Date" := Today;
-                    funderLegderEntry."Document No." := _docNo;
-                    funderLegderEntry."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
-                    funderLegderEntry.Category := funderLoan.Category; // Funder Loan Category
-                    funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
-                    funderLegderEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>');
-                    funderLegderEntry.Amount := monthlyInterest;
-                    funderLegderEntry."Amount(LCY)" := monthlyInterest;
-                    funderLegderEntry."Remaining Amount" := (monthlyInterest - witHldInterest);
-                    funderLegderEntry.Insert();
-                    if (funderLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
-                        DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");//GROSS Interest
-                                                                                                                                                                                                                        //Commit();
-                    funderLegderEntry1.Init();
-                    funderLegderEntry1."Entry No." := NextEntryNo + 1;
-                    funderLegderEntry1."Funder No." := funder."No.";
-                    funderLegderEntry1."Funder Name" := funder.Name;
-                    funderLegderEntry1."Loan Name" := _loanName;
-                    funderLegderEntry1."Loan No." := _loanNo;
-                    funderLegderEntry1."Posting Date" := Today;
-                    funderLegderEntry1."Document No." := _docNo;
-                    funderLegderEntry1."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
-                    funderLegderEntry1.Category := funderLoan.Category; // Funder Loan Category
-                    funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
-                    funderLegderEntry1.Description := 'Withholding calculation ' + Format(Today);
-                    funderLegderEntry1.Amount := -witHldInterest;
-                    funderLegderEntry1."Amount(LCY)" := -witHldInterest;
-                    funderLegderEntry1.Insert();
+                    relatedPartyLegderEntry.Init();
+                    relatedPartyLegderEntry."Entry No." := NextEntryNo;
+                    relatedPartyLegderEntry."RelatedParty No." := relatedparty."No.";
+                    relatedPartyLegderEntry."Related  Name" := relatedparty.Name;
+                    relatedPartyLegderEntry."Loan Name" := _loanName;
+                    relatedPartyLegderEntry."Loan No." := _loanNo;
+                    relatedPartyLegderEntry."Posting Date" := Today;
+                    relatedPartyLegderEntry."Document No." := _docNo;
+                    relatedPartyLegderEntry."Shortcut Dimension 1 Code" := _relatedParty."Shortcut Dimension 1 Code";
+                    relatedPartyLegderEntry.Category := relatedpartyLoan.Category; // Funder Loan Category
+                    relatedPartyLegderEntry."Document Type" := relatedPartyLegderEntry."Document Type"::Interest;
+                    relatedPartyLegderEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>'), 1, 100);
 
-                    // if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
-                    //     DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
+                    relatedPartyLegderEntry.Amount := monthlyInterest;
+                    relatedPartyLegderEntry."Amount(LCY)" := monthlyInterest;
+                    relatedPartyLegderEntry."Interest Payable Amount" := (monthlyInterest - witHldInterest);
+                    relatedPartyLegderEntry."Interest Payable Amount (LCY)" := (monthlyInterest - witHldInterest);
+                    relatedPartyLegderEntry."Witholding Amount" := (-witHldInterest);
+                    relatedPartyLegderEntry."Witholding Amount (LCY)" := (-witHldInterest);
+
+                    relatedPartyLegderEntry."Account No." := interestAccIncome;
+                    relatedPartyLegderEntry."Account Type" := relatedPartyLegderEntry."Account Type"::"G/L Account";
+                    relatedPartyLegderEntry."Bal. Account No." := interestAccReceivable;
+                    relatedPartyLegderEntry."Bal. Account Type" := relatedPartyLegderEntry."Bal. Account Type"::"G/L Account";
+                    relatedPartyLegderEntry."Bal. Account No. 2" := withholdingAcc; // Wth
+                    relatedPartyLegderEntry."Bal. Account Type 2" := relatedPartyLegderEntry."Bal. Account Type"::"G/L Account"; //Wth
+
+                    relatedPartyLegderEntry.Insert();
+                    if (relatedpartyLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
+                        DirectGLPosting('interest', interestAccIncome, withholdingAcc, monthlyInterest, witHldInterest, 'Interest', relatedpartyLoan."No.", interestAccReceivable, '', '', '', relatedpartyLoan."Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code");//GROSS Interest
+                                                                                                                                                                                                                                                                            //Commit();
+                    relatedPartyLegderEntry1.Init();
+                    relatedPartyLegderEntry1."Entry No." := NextEntryNo + 1;
+                    relatedPartyLegderEntry1."RelatedParty No." := relatedparty."No.";
+                    relatedPartyLegderEntry1."Related  Name" := relatedparty.Name;
+                    relatedPartyLegderEntry1."Loan Name" := _loanName;
+                    relatedPartyLegderEntry1."Loan No." := _loanNo;
+                    relatedPartyLegderEntry1."Posting Date" := Today;
+                    relatedPartyLegderEntry1."Document No." := _docNo;
+                    relatedPartyLegderEntry1."Shortcut Dimension 1 Code" := _relatedParty."Shortcut Dimension 1 Code";
+                    relatedPartyLegderEntry1.Category := relatedpartyLoan.Category; // Funder Loan Category
+                    relatedPartyLegderEntry1."Document Type" := relatedPartyLegderEntry."Document Type"::Withholding;
+                    relatedPartyLegderEntry1.Description := CopyStr('Withholding calculation ' + Format(Today), 1, 100);
+                    relatedPartyLegderEntry1.Amount := -witHldInterest;
+                    relatedPartyLegderEntry1."Amount(LCY)" := -witHldInterest;
+                    relatedPartyLegderEntry1.Insert();
+
+                    // if (relatedpartyLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
+                    // DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', relatedpartyLoan."No.", interestAccReceivable, '', '', '', relatedpartyLoan."Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code");
                     //Commit();
 
-                    funderLegderEntry2.Init(); //
-                    funderLegderEntry2."Entry No." := NextEntryNo + 2;
-                    funderLegderEntry2."Funder No." := funder."No.";
-                    funderLegderEntry2."Funder Name" := funder.Name;
-                    funderLegderEntry2."Loan Name" := _loanName;
-                    funderLegderEntry2."Loan No." := _loanNo;
-                    funderLegderEntry2."Document No." := _docNo;
-                    funderLegderEntry2."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
-                    funderLegderEntry2.Category := funderLoan.Category; // Funder Loan Category
-                    funderLegderEntry2."Posting Date" := Today;
-                    funderLegderEntry2."Document Type" := funderLegderEntry."Document Type"::"Remaining Amount";
-                    funderLegderEntry2.Description := 'Remaining Amount' + Format(Today);
-                    funderLegderEntry2.Amount := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
-                    funderLegderEntry2."Amount(LCY)" := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
+                    /*
+                    relatedPartyLegderEntry2.Init(); //
+                    relatedPartyLegderEntry2."Entry No." := NextEntryNo + 2;
+                    relatedPartyLegderEntry2."RelatedParty No." := relatedparty."No.";
+                    relatedPartyLegderEntry2."Related  Name" := relatedparty.Name;
+                    relatedPartyLegderEntry2."Loan Name" := _loanName;
+                    relatedPartyLegderEntry2."Loan No." := _loanNo;
+                    relatedPartyLegderEntry2."Document No." := _docNo;
+                    relatedPartyLegderEntry2."Shortcut Dimension 1 Code" := _relatedParty."Shortcut Dimension 1 Code";
+                    relatedPartyLegderEntry2.Category := relatedpartyLoan.Category; // Funder Loan Category
+                    relatedPartyLegderEntry2."Posting Date" := Today;
+                    relatedPartyLegderEntry2."Document Type" := relatedPartyLegderEntry."Document Type"::"Remaining Amount";
+                    relatedPartyLegderEntry2.Description := 'Remaining Amount' + Format(Today);
+                    relatedPartyLegderEntry2.Amount := ((monthlyInterest - witHldInterest) + relatedpartyLoan.DisbursedCurrency);
+                    relatedPartyLegderEntry2."Amount(LCY)" := ((monthlyInterest - witHldInterest) + relatedpartyLoan.DisbursedCurrency);
                     if latestRemainingAmount = 0 then begin
-                        funderLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
+                        relatedPartyLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + relatedpartyLoan.DisbursedCurrency);
                     end
                     else begin
-                        funderLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + latestRemainingAmount);
+                        relatedPartyLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + latestRemainingAmount);
                     end;
-                    funderLegderEntry2.Insert();
+                    relatedPartyLegderEntry2.Insert();
+                    */
 
                     Message('Interest Calculated');
                 end else begin
                     Message('Select Interest Rate Type');
                 end;
-            until funderLoan.Next() = 0;
+            until relatedpartyLoan.Next() = 0;
             // Message('Interest Calculated');
         end;
 
     end;
 
 
-    procedure CalculateInterest(FunderLoanNo: Code[100])
+    procedure CalculateInterest(RelatedpartyLoanNo: Code[100])
     var
         myLocalCounter: Integer;
         monthlyInterest: Decimal;
         witHldInterest: Decimal;
         principleAcc: Code[20];
-        interestAccExpense: Code[20];
-        interestAccPayable: Code[20];
+        interestAccIncome: Code[20];
+        interestAccReceivable: Code[20];
         withholdingAcc: Code[20];
         NextEntryNo: Integer;
-        funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry3: Record FunderLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry1: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry2: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry3: Record RelatedLedgerEntry;//Calculate every month
         venPostingGroup: Record "Treasury Posting Group";
         latestRemainingAmount: Decimal;
         remainingDays: Integer;
@@ -262,57 +277,70 @@ codeunit 50243 RelatepartyMgtCU
 
         _interestComputationTimes: Integer;
 
-        _funder: Record RelatedParty;
+        _relatedParty: Record RelatedParty;
         _portfolio: Record "Portfolio RelatedParty";
     begin
-        //Interest Rate Type (Fixed/Float)
-        //Interest Rate value
-        //***Interest Method
-        // (Annual Rate / 12) * Principal
-        //Funder Ldger Entry
-        latestRemainingAmount := 0;
-        funderLoan.Reset();
-        funderLoan.SetRange(funderLoan."No.", FunderLoanNo);
-        //funderLoan.SetFilter("Type of Vendor", '=%1', funderLoan."Type of Vendor"::Funder);
-        _docNo := TrsyMgt.GenerateDocumentNumber();
-        if funderLoan.Find('-') then begin
-            _loanName := funderLoan."Loan Name";
-            _loanNo := funderLoan."No.";
-            funderLoan.CalcFields(OutstandingAmntDisbLCY);
-            _currentPrincipalAmnt := funderLoan.OutstandingAmntDisbLCY;
-            if not funder.Get(funderLoan."Funder No.") then
-                Error('Relatedparty %1 not found', funderLoan."Funder No.");
-            // repeat
-            if funderLoan.Status <> funderLoan.Status::Approved then
-                Error('Loan Status is %1', funderLoan.Status);
 
-            _funder.Reset();
-            _funder.SetRange("No.", funderLoan."Funder No.");
-            if not _funder.Find('-') then
-                Error('Relatedparty %1 not found _fl', funderLoan."Funder No.");
+
+
+        latestRemainingAmount := 0;
+        relatedpartyLoan.Reset();
+        relatedpartyLoan.SetRange(relatedpartyLoan."No.", RelatedpartyLoanNo);
+        //relatedpartyLoan.SetFilter("Type of Vendor", '=%1', relatedpartyLoan."Type of Vendor"::Funder);
+        _docNo := TrsyMgt.GenerateDocumentNumber();
+        if relatedpartyLoan.Find('-') then begin
+            _loanName := relatedpartyLoan."Loan Name";
+            _loanNo := relatedpartyLoan."No.";
+            relatedpartyLoan.CalcFields(OutstandingAmntDisbLCY);
+            _currentPrincipalAmnt := relatedpartyLoan.OutstandingAmntDisbLCY;
+            if not relatedparty.Get(relatedpartyLoan."RelatedParty No.") then
+                Error('Funder %1 not found', relatedpartyLoan."RelatedParty No.");
+            // repeat
+            if relatedpartyLoan.Status <> relatedpartyLoan.Status::Approved then
+                Error('Loan Status is %1', relatedpartyLoan.Status);
+
+            _relatedParty.Reset();
+            _relatedParty.SetRange("No.", relatedpartyLoan."RelatedParty No.");
+            if not _relatedParty.Find('-') then
+                Error('Funder %1 not found _fl', relatedpartyLoan."RelatedParty No.");
 
             _portfolio.Reset();
-            _portfolio.SetRange("No.", _funder.Portfolio);
+            _portfolio.SetRange("No.", _relatedParty.Portfolio);
             if not _portfolio.Find('-') then
-                Error('Portfolio %1 not found _fl', _funder.Portfolio);
+                Error('Portfolio %1 not found _fl', _relatedParty.Portfolio);
 
+
+            relatedPartyLegderEntry3.Reset();
+            relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+            relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Loan No.", relatedpartyLoan."No.");
+            relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::Interest);
+            relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Posting Date", CALCDATE('<CM>', Today));
+            if relatedPartyLegderEntry3.Find('-') then
+                exit;
 
             //Fixed Interest Type
-            if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") OR (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
-                funderLoan.TestField(PlacementDate);
+            if (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Fixed Rate") OR (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Floating Rate") then begin
+                relatedpartyLoan.TestField(PlacementDate);
                 // vendor.TestField(InterestMethod);
-                // funderLoan.TestField(TaxStatus);
+                // relatedpartyLoan.TestField(TaxStatus);
 
-                funderLegderEntry3.Reset();
-                funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Loan No.", funderLoan."No.");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::Interest);
-                _interestComputationTimes := funderLegderEntry3.Count();
+                relatedPartyLegderEntry3.Reset();
+                relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Loan No.", relatedpartyLoan."No.");
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::Interest);
+                _interestComputationTimes := relatedPartyLegderEntry3.Count();
 
-                // endYearDate := CALCDATE('CY', Today);
+
                 if _interestComputationTimes = 0 then begin
-                    endMonthDate := CALCDATE('<+CM>', Today);
-                    remainingDays := endMonthDate - funderLoan.PlacementDate + 0;
+                    // endMonthDate := CALCDATE('<+CM>', Today);
+                    // remainingDays := endMonthDate - relatedpartyLoan.PlacementDate + 0;
+                    if CALCDATE('<+CM>', Today) = CALCDATE('<+CM>', relatedpartyLoan.PlacementDate) then begin
+                        endMonthDate := CALCDATE('<+CM>', Today);
+                        remainingDays := endMonthDate - relatedpartyLoan.PlacementDate + 1;
+                    end else begin
+                        endMonthDate := CALCDATE('<+CM>', Today);
+                        remainingDays := CALCDATE('<CM>', Today) - CALCDATE('<-CM>', Today) + 1
+                    end;
                 end else begin
                     endMonthDate := CALCDATE('<+CM>', Today);
                     remainingDays := CALCDATE('<CM>', Today) - CALCDATE('<-CM>', Today) + 1
@@ -321,173 +349,195 @@ codeunit 50243 RelatepartyMgtCU
 
 
                 // Get Total of Original Amount (Principal)
-                funderLegderEntry3.Reset();
-                funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                funderLegderEntry3.SetRange("Loan No.", FunderLoanNo);
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Original Amount");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Secondary Amount");
-                funderLegderEntry3.CalcSums(Amount);
-                _totalOriginalAmount := funderLegderEntry3.Amount;
+                relatedPartyLegderEntry3.Reset();
+                relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                relatedPartyLegderEntry3.SetRange("Loan No.", RelatedpartyLoanNo);
+                relatedPartyLegderEntry3.SetFilter(relatedPartyLegderEntry3."Document Type", '=%1|=%2', relatedPartyLegderEntry2."Document Type"::"Original Amount", relatedPartyLegderEntry2."Document Type"::"Secondary Amount");
 
-                funderLegderEntry3.Reset();
-                funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                funderLegderEntry3.SetRange("Loan No.", FunderLoanNo);
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::Repayment);
-                funderLegderEntry3.CalcSums(Amount);
-                _totalWithdrawalAmount := Abs(funderLegderEntry3.Amount);
+                //relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", );
+                relatedPartyLegderEntry3.CalcSums(Amount);
+                _totalOriginalAmount := relatedPartyLegderEntry3.Amount;
+
+                relatedPartyLegderEntry3.Reset();
+                relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                relatedPartyLegderEntry3.SetRange("Loan No.", RelatedpartyLoanNo);
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::Repayment);
+                relatedPartyLegderEntry3.CalcSums(Amount);
+                _totalWithdrawalAmount := Abs(relatedPartyLegderEntry3.Amount);
 
                 _differenceOriginalWithdrawal := _totalOriginalAmount - _totalWithdrawalAmount; // Get the floating value
 
 
                 //Monthly interest depending on Interest Method
                 monthlyInterest := 0;
-                _interestRate_Active := TrsyMgt.GetInterestRate(funderLoan."No.", 'RELATEDPARTY');
-                /*if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
-                    _interestRate_Active := funderLoan.InterestRate;
-                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
-                    _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
-                if _interestRate_Active = 0 then
-                    Error('Interest Rate is Zero');*/
+                _interestRate_Active := TrsyMgt.GetInterestRate(relatedpartyLoan."No.", 'RELATEDPARTY');
 
-                _differenceOriginalWithdrawal := _currentPrincipalAmnt;
-                if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
+                if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"30/360" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (30 / 360), 0.0001, '=');
-                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/360" then begin
+                end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/360" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 360), 0.0001, '=');
-                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/364" then begin
+                end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/364" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 364), 0.0001, '=');
-                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/365" then begin
+                end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/365" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 365), 0.0001, '=');
+                end
+                else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"30/365" then begin
+                    monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (30 / 365), 0.0001, '=');
                 end;
+
 
                 //withholding on interest
                 //Depending on Tax Exceptions
                 witHldInterest := 0;
-                if funderLoan.TaxStatus = funderLoan.TaxStatus::Taxable then begin
-                    funderLoan.TestField(Withldtax);
-                    witHldInterest := (funderLoan.Withldtax / 100) * monthlyInterest;
+                if relatedpartyLoan.TaxStatus = relatedpartyLoan.TaxStatus::Taxable then begin
+                    relatedpartyLoan.TestField(Withldtax);
+                    witHldInterest := (relatedpartyLoan.Withldtax / 100) * monthlyInterest;
                 end;
 
                 //Get Posting groups
-                // if not venPostingGroup.Get(funderLoan."Posting Group") then
-                //     Error('Missing Posting Group: %1', funder."No.");
+                // if not venPostingGroup.Get(relatedpartyLoan."Posting Group") then
+                //     Error('Missing Posting Group: %1', relatedparty."No.");
 
-                principleAcc := funderLoan."Payables Account";
-                interestAccExpense := funderLoan."Interest Expense";
-                interestAccPayable := funderLoan."Interest Payable";
-                if funderLoan."Bank Ref. No." = '' then
-                    Error('Missing Bank Reference No for Funder Loan', funderLoan."No.");
+                principleAcc := relatedpartyLoan."Payables Account";
+                interestAccIncome := relatedpartyLoan."Interest Expense";
+                interestAccReceivable := relatedpartyLoan."Interest Payable";
+                if relatedpartyLoan."Bank Ref. No." = '' then
+                    Error('Missing Bank Reference No for Funder Loan', relatedpartyLoan."No.");
 
-                if interestAccExpense = '' then
-                    Error('Missing Expense Interest A/C: %1', funder."No.");
+                if interestAccIncome = '' then
+                    Error('Missing  Income Interest A/C: %1', relatedparty."No.");
                 if principleAcc = '' then
-                    Error('Missing Principle A/C: %1', funder."No.");
-                if interestAccPayable = '' then
-                    Error('Missing Payable Interest A/C: %1', funder."No.");
+                    Error('Missing Principle A/C: %1', relatedparty."No.");
+                if interestAccReceivable = '' then
+                    Error('Missing Receivable Interest A/C: %1', relatedparty."No.");
 
                 if not generalSetup.FindFirst() then
                     Error('Please Define Withholding Tax under General Setup');
-                withholdingAcc := generalSetup.RelatedWithholdingAcc;
+                withholdingAcc := generalSetup.FunderWithholdingAcc;
                 if withholdingAcc = '' then
                     Error('Withholding Account Missing under General Setup');
 
                 //Get the latest remaining amount
-                funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Remaining Amount");
-                if funderLegderEntry.FindLast() then
-                    latestRemainingAmount := funderLegderEntry."Remaining Amount";
+                relatedPartyLegderEntry.SetRange(relatedPartyLegderEntry."Document Type", relatedPartyLegderEntry."Document Type"::"Remaining Amount");
+                if relatedPartyLegderEntry.FindLast() then
+                    latestRemainingAmount := relatedPartyLegderEntry."Remaining Amount";
 
-                //funderLegderEntry.LockTable();
-                funderLegderEntry.Reset();
-                if funderLegderEntry.FindLast() then
-                    NextEntryNo := funderLegderEntry."Entry No." + 1;
+                //relatedPartyLegderEntry.LockTable();
+                relatedPartyLegderEntry.Reset();
+                if relatedPartyLegderEntry.FindLast() then
+                    NextEntryNo := relatedPartyLegderEntry."Entry No." + 1;
                 // else
                 //     NextEntryNo := 2;
 
-                funderLegderEntry.Init();
-                funderLegderEntry."Entry No." := NextEntryNo;
-                funderLegderEntry."Funder No." := funder."No.";
-                funderLegderEntry."Funder Name" := funder.Name;
-                funderLegderEntry."Loan Name" := _loanName;
-                funderLegderEntry."Loan No." := _loanNo;
-                funderLegderEntry."Posting Date" := Today;
-                funderLegderEntry."Document No." := _docNo;
-                funderLegderEntry."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
-                funderLegderEntry.Category := funderLoan.Category; // Funder Loan Category
-                funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
-                funderLegderEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>');
-                funderLegderEntry.Amount := monthlyInterest;
-                funderLegderEntry."Amount(LCY)" := monthlyInterest;
-                funderLegderEntry."Remaining Amount" := (monthlyInterest - witHldInterest);
-                funderLegderEntry.Insert();
-                if (funderLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
-                    DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");//GROSS Interest
-                                                                                                                                                                                                                    //Commit();
-                funderLegderEntry1.Init();
-                funderLegderEntry1."Entry No." := NextEntryNo + 1;
-                funderLegderEntry1."Funder No." := funder."No.";
-                funderLegderEntry1."Funder Name" := funder.Name;
-                funderLegderEntry1."Loan Name" := _loanName;
-                funderLegderEntry1."Loan No." := _loanNo;
-                funderLegderEntry1."Posting Date" := Today;
-                funderLegderEntry1.Category := funderLoan.Category; // Funder Loan Category
-                funderLegderEntry1."Document No." := _docNo;
-                funderLegderEntry1."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
-                funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
-                funderLegderEntry1.Description := 'Withholding calculation' + Format(Today);
-                funderLegderEntry1.Amount := -witHldInterest;
-                funderLegderEntry1."Amount(LCY)" := -witHldInterest;
-                funderLegderEntry1.Insert();
+                relatedPartyLegderEntry.Init();
+                relatedPartyLegderEntry."Entry No." := NextEntryNo;
+                relatedPartyLegderEntry."RelatedParty No." := relatedparty."No.";
+                relatedPartyLegderEntry."Related  Name" := relatedparty.Name;
+                relatedPartyLegderEntry."Loan Name" := _loanName;
+                relatedPartyLegderEntry."Loan No." := _loanNo;
+                relatedPartyLegderEntry."Posting Date" := CALCDATE('<CM>', Today);
+                relatedPartyLegderEntry."Document Date" := Today;
+                relatedPartyLegderEntry."Document No." := _docNo;
+                relatedPartyLegderEntry."External Document No." := _docNo + ' Interest ' + Format(Today, 0, '<Month Text> <Year4>');
+                relatedPartyLegderEntry."Shortcut Dimension 1 Code" := _relatedParty."Shortcut Dimension 1 Code";
+                relatedPartyLegderEntry.Category := relatedpartyLoan.Category; // Funder Loan Category
+                relatedPartyLegderEntry."Document Type" := relatedPartyLegderEntry."Document Type"::Interest;
+                relatedPartyLegderEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + ' - ' + Format(Today, 0, '<Month Text> <Year4>'), 1, 100);
 
-                // if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
-                //     DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
-                // //Commit();
+                relatedPartyLegderEntry.Amount := monthlyInterest;
+                relatedPartyLegderEntry."Amount(LCY)" := monthlyInterest;
+                relatedPartyLegderEntry."Interest Payable Amount" := (monthlyInterest - witHldInterest);
+                relatedPartyLegderEntry."Interest Payable Amount (LCY)" := (monthlyInterest - witHldInterest);
+                relatedPartyLegderEntry."Witholding Amount" := (-witHldInterest);
+                relatedPartyLegderEntry."Witholding Amount (LCY)" := (-witHldInterest);
 
-                funderLegderEntry2.Init(); //
-                funderLegderEntry2."Entry No." := NextEntryNo + 2;
-                funderLegderEntry2."Funder No." := funder."No.";
-                funderLegderEntry2."Funder Name" := funder.Name;
-                funderLegderEntry2."Loan Name" := _loanName;
-                funderLegderEntry2."Loan No." := _loanNo;
-                funderLegderEntry2."Document No." := _docNo;
-                funderLegderEntry2.Category := funderLoan.Category; // Funder Loan Category
-                funderLegderEntry2."Posting Date" := Today;
-                funderLegderEntry2."Document Type" := funderLegderEntry."Document Type"::"Remaining Amount";
-                funderLegderEntry2.Description := 'Remaining Amount' + Format(Today);
-                funderLegderEntry2.Amount := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
-                funderLegderEntry2."Amount(LCY)" := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
+                relatedPartyLegderEntry."Account No." := interestAccIncome;
+                relatedPartyLegderEntry."Account Type" := relatedPartyLegderEntry."Account Type"::"G/L Account";
+                relatedPartyLegderEntry."Bal. Account No." := interestAccReceivable;
+                relatedPartyLegderEntry."Bal. Account Type" := relatedPartyLegderEntry."Bal. Account Type"::"G/L Account";
+                relatedPartyLegderEntry."Bal. Account No. 2" := withholdingAcc; // Wth
+                relatedPartyLegderEntry."Bal. Account Type 2" := relatedPartyLegderEntry."Bal. Account Type"::"G/L Account"; //Wth
+
+
+                relatedPartyLegderEntry.Insert();
+                if (relatedpartyLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
+                    DirectGLPosting('interest', interestAccIncome, withholdingAcc, monthlyInterest, witHldInterest, 'Interest', relatedpartyLoan."No.", interestAccReceivable, relatedpartyLoan.Currency, '', '', relatedPartyLegderEntry."External Document No.", _relatedParty."Shortcut Dimension 1 Code");//GROSS Interest
+                                                                                                                                                                                                                                                                                                              //Commit();
+                relatedPartyLegderEntry1.Init();
+                relatedPartyLegderEntry1."Entry No." := NextEntryNo + 1;
+                relatedPartyLegderEntry1."RelatedParty No." := relatedparty."No.";
+                relatedPartyLegderEntry1."Related  Name" := relatedparty.Name;
+                relatedPartyLegderEntry1."Loan Name" := _loanName;
+                relatedPartyLegderEntry1."Loan No." := _loanNo;
+                relatedPartyLegderEntry1."Document Type" := relatedPartyLegderEntry."Document Type"::Withholding;
+                relatedPartyLegderEntry1."Posting Date" := CALCDATE('<CM>', Today);
+                relatedPartyLegderEntry1."Document Date" := Today;
+                relatedPartyLegderEntry1.Category := relatedpartyLoan.Category; // Funder Loan Category
+                relatedPartyLegderEntry1."Document No." := _docNo;
+                relatedPartyLegderEntry1."External Document No." := _docNo + ' Withhlding ' + Format(Today, 0, '<Month Text> <Year4>');
+                relatedPartyLegderEntry1."Shortcut Dimension 1 Code" := _relatedParty."Shortcut Dimension 1 Code";
+                relatedPartyLegderEntry1.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + ' - ' + relatedpartyLoan."Bank Ref. No." + ' - ' + Format(Today, 0, '<Month Text> <Year4>') + ' Withholding Calculation', 1, 100);
+                relatedPartyLegderEntry1.Amount := -witHldInterest;
+                relatedPartyLegderEntry1."Amount(LCY)" := -witHldInterest;
+
+                relatedPartyLegderEntry1."Bal. Account No." := withholdingAcc;
+                relatedPartyLegderEntry1."Bal. Account Type" := relatedPartyLegderEntry."Bal. Account Type"::"G/L Account";
+                relatedPartyLegderEntry1."Account No." := interestAccReceivable;
+                relatedPartyLegderEntry1."Account Type" := relatedPartyLegderEntry."Account Type"::"G/L Account";
+
+                relatedPartyLegderEntry1.Insert();
+
+                // if (relatedpartyLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
+                // DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', relatedpartyLoan."No.", interestAccReceivable, '', '', '', relatedpartyLoan."Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code");
+
+                /*
+                relatedPartyLegderEntry2.Init(); //
+                relatedPartyLegderEntry2."Entry No." := NextEntryNo + 2;
+                relatedPartyLegderEntry2."RelatedParty No." := relatedparty."No.";
+                relatedPartyLegderEntry2."Related  Name" := relatedparty.Name;
+                relatedPartyLegderEntry2."Loan Name" := _loanName;
+                relatedPartyLegderEntry2."Loan No." := _loanNo;
+                relatedPartyLegderEntry2."Document No." := _docNo;
+                relatedPartyLegderEntry2.Category := relatedpartyLoan.Category; // Funder Loan Category
+                relatedPartyLegderEntry2."Posting Date" := Today;
+                relatedPartyLegderEntry2."Document Type" := relatedPartyLegderEntry."Document Type"::"Remaining Amount";
+                relatedPartyLegderEntry2.Description := 'Remaining Amount' + Format(Today);
+                relatedPartyLegderEntry2.Amount := ((monthlyInterest - witHldInterest) + relatedpartyLoan.DisbursedCurrency);
+                relatedPartyLegderEntry2."Amount(LCY)" := ((monthlyInterest - witHldInterest) + relatedpartyLoan.DisbursedCurrency);
                 if latestRemainingAmount = 0 then begin
-                    funderLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
+                    relatedPartyLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + relatedpartyLoan.DisbursedCurrency);
                 end
                 else begin
-                    funderLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + latestRemainingAmount);
+                    relatedPartyLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + latestRemainingAmount);
                 end;
-                funderLegderEntry2.Insert();
+                relatedPartyLegderEntry2.Insert();*/
+
 
                 Message('Interest Calculated');
             end else begin
                 Message('Select Interest Rate Type');
             end;
-            // until funderLoan.Next() = 0;
+            // until relatedpartyLoan.Next() = 0;
 
         end;
 
     end;
 
-    procedure CalculateInterest(FunderLoanNo: Code[100]; RedemptionDate: Date; PayingBankCode: Code[50])
+    procedure CalculateInterest(RelatedpartyLoanNo: Code[100]; RedemptionDate: Date; PayingBankCode: Code[50])
     var
         myLocalCounter: Integer;
         monthlyInterest: Decimal;
         witHldInterest: Decimal;
         principleAcc: Code[20];
-        interestAccExpense: Code[20];
-        interestAccPayable: Code[20];
+        interestAccIncome: Code[20];
+        interestAccReceivable: Code[20];
         withholdingAcc: Code[20];
         NextEntryNo: Integer;
-        funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry3: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry4: Record FunderLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry1: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry2: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry3: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry4: Record RelatedLedgerEntry;//Calculate every month
         venPostingGroup: Record "Treasury Posting Group";
         latestRemainingAmount: Decimal;
         remainingDays: Integer;
@@ -505,251 +555,247 @@ codeunit 50243 RelatepartyMgtCU
 
         _interestComputationTimes: Integer;
 
-        _funder: Record RelatedParty;
+        _relatedParty: Record RelatedParty;
         _portfolio: Record "Portfolio RelatedParty";
+        GenSetup: Record "Treasury General Setup";
     begin
         //Interest Rate Type (Fixed/Float)
         //Interest Rate value
         //***Interest Method
         // (Annual Rate / 12) * Principal
         //Funder Ldger Entry
+        GenSetup.get();
         latestRemainingAmount := 0;
-        funderLoan.Reset();
-        funderLoan.SetRange(funderLoan."No.", FunderLoanNo);
-        //funderLoan.SetFilter("Type of Vendor", '=%1', funderLoan."Type of Vendor"::Funder);
+        relatedpartyLoan.Reset();
+        relatedpartyLoan.SetRange(relatedpartyLoan."No.", RelatedpartyLoanNo);
+        //relatedpartyLoan.SetFilter("Type of Vendor", '=%1', relatedpartyLoan."Type of Vendor"::Funder);
         _docNo := TrsyMgt.GenerateDocumentNumber();
-        if funderLoan.Find('-') then begin
-            _loanName := funderLoan."Loan Name";
-            _loanNo := funderLoan."No.";
-            funderLoan.CalcFields(OutstandingAmntDisbLCY);
-            _currentPrincipalAmnt := funderLoan.OutstandingAmntDisbLCY;
-            if not funder.Get(funderLoan."Funder No.") then
-                Error('Funder %1 not found', funderLoan."Funder No.");
+        if relatedpartyLoan.Find('-') then begin
+            _loanName := relatedpartyLoan."Loan Name";
+            _loanNo := relatedpartyLoan."No.";
+            relatedpartyLoan.CalcFields(OutstandingAmntDisbLCY);
+            _currentPrincipalAmnt := relatedpartyLoan.OutstandingAmntDisbLCY;
+            if not relatedparty.Get(relatedpartyLoan."RelatedParty No.") then
+                Error('Funder %1 not found', relatedpartyLoan."RelatedParty No.");
             // repeat
-            if funderLoan.Status <> funderLoan.Status::Approved then
-                Error('Loan Status is %1', funderLoan.Status);
+            if relatedpartyLoan.Status <> relatedpartyLoan.Status::Approved then
+                Error('Loan Status is %1', relatedpartyLoan.Status);
 
-            _funder.Reset();
-            _funder.SetRange("No.", funderLoan."Funder No.");
-            if not _funder.Find('-') then
-                Error('Funder %1 not found _fl', funderLoan."Funder No.");
+            _relatedParty.Reset();
+            _relatedParty.SetRange("No.", relatedpartyLoan."RelatedParty No.");
+            if not _relatedParty.Find('-') then
+                Error('Funder %1 not found _fl', relatedpartyLoan."RelatedParty No.");
 
             _portfolio.Reset();
-            _portfolio.SetRange("No.", _funder.Portfolio);
+            _portfolio.SetRange("No.", _relatedParty.Portfolio);
             if not _portfolio.Find('-') then
-                Error('Portfolio %1 not found _fl', _funder.Portfolio);
+                Error('Portfolio %1 not found _fl', _relatedParty.Portfolio);
 
             //Fixed Interest Type
-            if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") OR (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
-                funderLoan.TestField(PlacementDate);
-                // vendor.TestField(InterestMethod);
-                // funderLoan.TestField(TaxStatus);
+            if (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Fixed Rate") OR (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Floating Rate") then begin
+                relatedpartyLoan.TestField(PlacementDate);
 
-                funderLegderEntry3.Reset();
-                funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Loan No.", funderLoan."No.");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::Interest);
-                _interestComputationTimes := funderLegderEntry3.Count();
 
-                // endYearDate := CALCDATE('CY', Today);
+                relatedPartyLegderEntry3.Reset();
+                relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Loan No.", relatedpartyLoan."No.");
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::Interest);
+                _interestComputationTimes := relatedPartyLegderEntry3.Count();
+
+
                 if _interestComputationTimes = 0 then begin // Check for first operation
                     endMonthDate := CALCDATE('<+CM>', Today);
-                    remainingDays := endMonthDate - funderLoan.PlacementDate + 0;
+                    remainingDays := endMonthDate - relatedpartyLoan.PlacementDate + 0;
                 end else begin
                     startMonthDate := CALCDATE('<-CM>', Today);
-                    remainingDays := RedemptionDate - startMonthDate + 1;
+                    remainingDays := RedemptionDate - startMonthDate + 0;
                     // remainingDays := CALCDATE('<CM>', RedemptionDate) - CALCDATE('<-CM>', RedemptionDate) + 1;// No of Days in that Month
                 end;
 
 
                 // Get Total of Original Amount (Principal)
-                funderLegderEntry3.Reset();
-                funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                funderLegderEntry3.SetRange("Loan No.", FunderLoanNo);
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Original Amount");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Secondary Amount");
-                funderLegderEntry3.CalcSums(Amount);
-                _totalOriginalAmount := funderLegderEntry3.Amount;
+                relatedPartyLegderEntry3.Reset();
+                relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                relatedPartyLegderEntry3.SetRange("Loan No.", RelatedpartyLoanNo);
+                relatedPartyLegderEntry3.SetFilter(relatedPartyLegderEntry3."Document Type", '=%1|=%2', relatedPartyLegderEntry2."Document Type"::"Original Amount", relatedPartyLegderEntry2."Document Type"::"Secondary Amount");
+                //relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::"Secondary Amount");
+                relatedPartyLegderEntry3.CalcSums(Amount);
+                _totalOriginalAmount := relatedPartyLegderEntry3.Amount;
 
-                funderLegderEntry3.Reset();
-                funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                funderLegderEntry3.SetRange("Loan No.", FunderLoanNo);
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::Repayment);
-                funderLegderEntry3.CalcSums(Amount);
-                _totalWithdrawalAmount := Abs(funderLegderEntry3.Amount);
+                relatedPartyLegderEntry3.Reset();
+                relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                relatedPartyLegderEntry3.SetRange("Loan No.", RelatedpartyLoanNo);
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::Repayment);
+                relatedPartyLegderEntry3.CalcSums(Amount);
+                _totalWithdrawalAmount := Abs(relatedPartyLegderEntry3.Amount);
 
                 _differenceOriginalWithdrawal := _totalOriginalAmount - _totalWithdrawalAmount; // Get the floating value
 
 
                 //Monthly interest depending on Interest Method
                 monthlyInterest := 0;
-                _interestRate_Active := TrsyMgt.GetInterestRate(funderLoan."No.", 'RELATEDPARTY');
-                /*if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
-                    _interestRate_Active := funderLoan.InterestRate;
-                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
-                    _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
-                if _interestRate_Active = 0 then
-                    Error('Interest Rate is Zero');*/
+                _interestRate_Active := TrsyMgt.GetInterestRate(relatedpartyLoan."No.", 'RELATEDPARTY');
+
 
                 _differenceOriginalWithdrawal := _currentPrincipalAmnt;
-                if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
+                if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"30/360" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (30 / 360), 0.0001, '=');
-                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/360" then begin
+                end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/360" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 360), 0.0001, '=');
-                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/364" then begin
+                end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/364" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 364), 0.0001, '=');
-                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/365" then begin
+                end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/365" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 365), 0.0001, '=');
                 end;
 
                 //withholding on interest
                 //Depending on Tax Exceptions
                 witHldInterest := 0;
-                if funderLoan.TaxStatus = funderLoan.TaxStatus::Taxable then begin
-                    funderLoan.TestField(Withldtax);
-                    witHldInterest := (funderLoan.Withldtax / 100) * monthlyInterest;
+                if relatedpartyLoan.TaxStatus = relatedpartyLoan.TaxStatus::Taxable then begin
+                    relatedpartyLoan.TestField(Withldtax);
+                    witHldInterest := (relatedpartyLoan.Withldtax / 100) * monthlyInterest;
                 end;
 
                 //Get Posting groups
-                // if not venPostingGroup.Get(funderLoan."Posting Group") then
-                //     Error('Missing Posting Group: %1', funder."No.");
+                // if not venPostingGroup.Get(relatedpartyLoan."Posting Group") then
+                //     Error('Missing Posting Group: %1', relatedparty."No.");
 
-                principleAcc := funderLoan."Payables Account";
-                interestAccExpense := funderLoan."Interest Expense";
-                interestAccPayable := funderLoan."Interest Payable";
-                if funderLoan."Bank Ref. No." = '' then
-                    Error('Missing Bank Reference No for Funder Loan', funderLoan."No.");
+                principleAcc := relatedpartyLoan."Payables Account";
+                interestAccIncome := relatedpartyLoan."Interest Expense";
+                interestAccReceivable := relatedpartyLoan."Interest Payable";
+                if relatedpartyLoan."Bank Ref. No." = '' then
+                    Error('Missing Bank Reference No for Funder Loan', relatedpartyLoan."No.");
 
-                if interestAccExpense = '' then
-                    Error('Missing Expense Interest A/C: %1', funder."No.");
+                if interestAccIncome = '' then
+                    Error('Missing Expense Interest A/C: %1', relatedparty."No.");
                 if principleAcc = '' then
-                    Error('Missing Principle A/C: %1', funder."No.");
-                if interestAccPayable = '' then
-                    Error('Missing Payable Interest A/C: %1', funder."No.");
+                    Error('Missing Principle A/C: %1', relatedparty."No.");
+                if interestAccReceivable = '' then
+                    Error('Missing Payable Interest A/C: %1', relatedparty."No.");
 
                 if not generalSetup.FindFirst() then
                     Error('Please Define Withholding Tax under General Setup');
-                withholdingAcc := generalSetup.RelatedWithholdingAcc;
+                withholdingAcc := generalSetup.FunderWithholdingAcc;
                 if withholdingAcc = '' then
                     Error('Withholding Account Missing under General Setup');
 
                 //Get the latest remaining amount
-                funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Remaining Amount");
-                if funderLegderEntry.FindLast() then
-                    latestRemainingAmount := funderLegderEntry."Remaining Amount";
+                relatedPartyLegderEntry.SetRange(relatedPartyLegderEntry."Document Type", relatedPartyLegderEntry."Document Type"::"Remaining Amount");
+                if relatedPartyLegderEntry.FindLast() then
+                    latestRemainingAmount := relatedPartyLegderEntry."Remaining Amount";
 
-                //funderLegderEntry.LockTable();
-                funderLegderEntry.Reset();
-                if funderLegderEntry.FindLast() then
-                    NextEntryNo := funderLegderEntry."Entry No." + 1;
+                relatedPartyLegderEntry.LockTable();
+                relatedPartyLegderEntry.Reset();
+                if relatedPartyLegderEntry.FindLast() then
+                    NextEntryNo := relatedPartyLegderEntry."Entry No." + 1;
                 // else
                 //     NextEntryNo := 2;
 
-                funderLegderEntry.Init();
-                funderLegderEntry."Entry No." := NextEntryNo;
-                funderLegderEntry."Funder No." := funder."No.";
-                funderLegderEntry."Funder Name" := funder.Name;
-                funderLegderEntry."Loan Name" := _loanName;
-                funderLegderEntry."Loan No." := _loanNo;
-                funderLegderEntry."Posting Date" := RedemptionDate;
-                funderLegderEntry."Document No." := _docNo;
-                funderLegderEntry."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
-                funderLegderEntry.Category := funderLoan.Category; // Funder Loan Category
-                funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
-                funderLegderEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>');
-                funderLegderEntry.Amount := monthlyInterest;
-                funderLegderEntry."Amount(LCY)" := monthlyInterest;
-                funderLegderEntry."Remaining Amount" := (monthlyInterest - witHldInterest);
-                funderLegderEntry.Insert();
-                if (funderLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
-                    DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");//GROSS Interest
-                                                                                                                                                                                                                    //Commit();
-                funderLegderEntry1.Init();
-                funderLegderEntry1."Entry No." := NextEntryNo + 1;
-                funderLegderEntry1."Funder No." := funder."No.";
-                funderLegderEntry1."Funder Name" := funder.Name;
-                funderLegderEntry1."Loan Name" := _loanName;
-                funderLegderEntry1."Loan No." := _loanNo;
-                funderLegderEntry1."Posting Date" := RedemptionDate;
-                funderLegderEntry1.Category := funderLoan.Category; // Funder Loan Category
-                funderLegderEntry1."Document No." := _docNo;
-                funderLegderEntry1."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
-                funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
-                funderLegderEntry1.Description := 'Withholding calculation' + Format(RedemptionDate);
-                funderLegderEntry1.Amount := -witHldInterest;
-                funderLegderEntry1."Amount(LCY)" := -witHldInterest;
-                funderLegderEntry1.Insert();
+                relatedPartyLegderEntry.Init();
+                relatedPartyLegderEntry."Entry No." := NextEntryNo;
+                relatedPartyLegderEntry."RelatedParty No." := relatedparty."No.";
+                relatedPartyLegderEntry."Related  Name" := relatedparty.Name;
+                relatedPartyLegderEntry."Loan Name" := _loanName;
+                relatedPartyLegderEntry."Loan No." := _loanNo;
+                relatedPartyLegderEntry."Posting Date" := RedemptionDate;
+                relatedPartyLegderEntry."Document No." := _docNo;
+                relatedPartyLegderEntry."Shortcut Dimension 1 Code" := _relatedParty."Shortcut Dimension 1 Code";
+                relatedPartyLegderEntry.Category := relatedpartyLoan.Category; // Funder Loan Category
+                relatedPartyLegderEntry."Document Type" := relatedPartyLegderEntry."Document Type"::Interest;
+                relatedPartyLegderEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>'), 1, 100);
 
-                // if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
-                //     DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
-                // //Commit();
+                relatedPartyLegderEntry.Amount := monthlyInterest;
+                relatedPartyLegderEntry."Amount(LCY)" := monthlyInterest;
+                // relatedPartyLegderEntry."Remaining Amount" := (monthlyInterest - witHldInterest);
+                relatedPartyLegderEntry."Interest Payable Amount" := (monthlyInterest - witHldInterest);
+                relatedPartyLegderEntry."Interest Payable Amount (LCY)" := (monthlyInterest - witHldInterest);
+                relatedPartyLegderEntry."Witholding Amount" := (-witHldInterest);
+                relatedPartyLegderEntry."Witholding Amount (LCY)" := (-witHldInterest);
 
-                funderLegderEntry3.Init();
-                funderLegderEntry3."Entry No." := NextEntryNo + 2;
-                funderLegderEntry3."Funder No." := funder."No.";
-                funderLegderEntry3."Funder Name" := funder.Name;
-                funderLegderEntry3."Loan Name" := _loanName;
-                funderLegderEntry3."Loan No." := _loanNo;
-                funderLegderEntry3."Posting Date" := RedemptionDate;
-                funderLegderEntry3.Category := funderLoan.Category; // Funder Loan Category
-                funderLegderEntry3."Document No." := _docNo;
-                funderLegderEntry3."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
-                funderLegderEntry3."Document Type" := funderLegderEntry."Document Type"::Repayment;
-                funderLegderEntry3.Description := 'Redemption Repayment calculation' + Format(RedemptionDate);
-                funderLegderEntry3.Amount := -_differenceOriginalWithdrawal;
-                funderLegderEntry3."Amount(LCY)" := -_differenceOriginalWithdrawal;
-                funderLegderEntry3.Insert();
-                if (funderLoan.EnableGLPosting = true) and (_differenceOriginalWithdrawal <> 0) then
-                    DirectGLPosting('redemption', withholdingAcc, witHldInterest, 'Redemption Repayment', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code"); // Debit Paying Bank
+                relatedPartyLegderEntry."Account No." := interestAccIncome;
+                relatedPartyLegderEntry."Account Type" := relatedPartyLegderEntry."Account Type"::"G/L Account";
+                relatedPartyLegderEntry."Bal. Account No." := interestAccReceivable;
+                relatedPartyLegderEntry."Bal. Account Type" := relatedPartyLegderEntry."Bal. Account Type"::"G/L Account";
+                relatedPartyLegderEntry."Bal. Account No. 2" := withholdingAcc; // Wth
+                relatedPartyLegderEntry."Bal. Account Type 2" := relatedPartyLegderEntry."Bal. Account Type"::"G/L Account"; //Wth
+
+                relatedPartyLegderEntry.Insert();
+                if (relatedpartyLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
+                    DirectGLPosting('interest', interestAccIncome, withholdingAcc, monthlyInterest, witHldInterest, 'Interest', relatedpartyLoan."No.", interestAccReceivable, '', '', '', relatedpartyLoan."Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code");//GROSS Interest
+                                                                                                                                                                                                                                                                        //Commit();
+                relatedPartyLegderEntry1.Init();
+                relatedPartyLegderEntry1."Entry No." := NextEntryNo + 1;
+                relatedPartyLegderEntry1."RelatedParty No." := relatedparty."No.";
+                relatedPartyLegderEntry1."Related  Name" := relatedparty.Name;
+                relatedPartyLegderEntry1."Loan Name" := _loanName;
+                relatedPartyLegderEntry1."Loan No." := _loanNo;
+                relatedPartyLegderEntry1."Document Type" := relatedPartyLegderEntry."Document Type"::Withholding;
+                relatedPartyLegderEntry1."Posting Date" := RedemptionDate;
+                relatedPartyLegderEntry1.Category := relatedpartyLoan.Category; // Funder Loan Category
+                relatedPartyLegderEntry1."Document No." := _docNo;
+                relatedPartyLegderEntry1."Shortcut Dimension 1 Code" := _relatedParty."Shortcut Dimension 1 Code";
+                relatedPartyLegderEntry1.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + 'Withholding calculation Redemption' + Format(RedemptionDate), 1, 100);
+                relatedPartyLegderEntry1.Amount := -witHldInterest;
+                relatedPartyLegderEntry1."Amount(LCY)" := -witHldInterest;
+                relatedPartyLegderEntry1."Bal. Account No. 2" := withholdingAcc; // Wth
+                relatedPartyLegderEntry1."Bal. Account Type 2" := relatedPartyLegderEntry1."Bal. Account Type"::"G/L Account"; //Wth
+
+                relatedPartyLegderEntry1.Insert();
+                // if (relatedpartyLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
+                // DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', relatedpartyLoan."No.", interestAccReceivable, '', '', '', relatedpartyLoan."Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code");
                 //Commit();
 
+                //Remove/Deduct from the Principal Amount
+                relatedPartyLegderEntry3.Init();
+                relatedPartyLegderEntry3."Entry No." := NextEntryNo + 2;
+                relatedPartyLegderEntry3."RelatedParty No." := relatedparty."No.";
+                relatedPartyLegderEntry3."Related  Name" := relatedparty.Name;
+                relatedPartyLegderEntry3."Loan Name" := _loanName;
+                relatedPartyLegderEntry3."Loan No." := _loanNo;
+                relatedPartyLegderEntry3."Document Type" := relatedPartyLegderEntry."Document Type"::Repayment;
+                relatedPartyLegderEntry3."Posting Date" := RedemptionDate;
+                relatedPartyLegderEntry3.Category := relatedpartyLoan.Category; // Funder Loan Category
+                relatedPartyLegderEntry3."Document No." := _docNo;
+                relatedPartyLegderEntry3."Shortcut Dimension 1 Code" := _relatedParty."Shortcut Dimension 1 Code";
+                relatedPartyLegderEntry3.Description := CopyStr('Redemption Repayment calculation' + Format(RedemptionDate), 1, 100);
+                relatedPartyLegderEntry3.Amount := -_differenceOriginalWithdrawal;
+                relatedPartyLegderEntry3."Amount(LCY)" := -_differenceOriginalWithdrawal;
 
-                funderLegderEntry2.Init(); //
-                funderLegderEntry2."Entry No." := NextEntryNo + 3;
-                funderLegderEntry2."Funder No." := funder."No.";
-                funderLegderEntry2."Funder Name" := funder.Name;
-                funderLegderEntry2."Loan Name" := _loanName;
-                funderLegderEntry2."Loan No." := _loanNo;
-                funderLegderEntry2."Document No." := _docNo;
-                funderLegderEntry2.Category := funderLoan.Category; // Funder Loan Category
-                funderLegderEntry2."Posting Date" := RedemptionDate;
-                funderLegderEntry2."Document Type" := funderLegderEntry."Document Type"::"Remaining Amount";
-                funderLegderEntry2.Description := 'Remaining Amount' + Format(RedemptionDate);
-                funderLegderEntry2.Amount := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
-                funderLegderEntry2."Amount(LCY)" := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
-                if latestRemainingAmount = 0 then begin
-                    funderLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + funderLoan.DisbursedCurrency);
-                end
-                else begin
-                    funderLegderEntry2."Remaining Amount" := ((monthlyInterest - witHldInterest) + latestRemainingAmount);
-                end;
-                funderLegderEntry2.Insert();
+                relatedPartyLegderEntry3."Account No." := principleAcc;
+                relatedPartyLegderEntry3."Account Type" := relatedPartyLegderEntry3."Account Type"::"G/L Account";
+                relatedPartyLegderEntry3."Bal. Account No." := PayingBankCode;
+                relatedPartyLegderEntry3."Bal. Account Type" := relatedPartyLegderEntry3."Bal. Account Type"::"Bank Account";
+
+
+                relatedPartyLegderEntry3.Insert();
+                if (relatedpartyLoan.EnableGLPosting = true) and (_differenceOriginalWithdrawal <> 0) then
+                    DirectGLPosting('redemption', principleAcc, withholdingAcc, _differenceOriginalWithdrawal, 0, 'Redemption Repayment', relatedpartyLoan."No.", PayingBankCode, '', '', '', relatedpartyLoan."Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code"); // Debit Paying Bank
 
                 Message('Interest Calculated (non-partial)');
             end else begin
                 Message('Select Interest Rate Type');
             end;
-            // until funderLoan.Next() = 0;
+            // until relatedpartyLoan.Next() = 0;
 
         end;
 
     end;
 
-    procedure CalculateInterestForPartial(FunderLoanNo: Code[100]; RedemptionDate: Date; PayingBankCode: Code[50])
+    procedure CalculateInterestForPartial(RelatedpartyLoanNo: Code[100]; RedemptionDate: Date; PayingBankCode: Code[50])
     var
         myLocalCounter: Integer;
         monthlyInterest: Decimal;
         witHldInterest: Decimal;
         principleAcc: Code[20];
-        interestAccExpense: Code[20];
-        interestAccPayable: Code[20];
+        interestAccIncome: Code[20];
+        interestAccReceivable: Code[20];
         withholdingAcc: Code[20];
         NextEntryNo: Integer;
-        funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry3: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry4: Record FunderLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry1: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry2: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry3: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry4: Record RelatedLedgerEntry;//Calculate every month
         venPostingGroup: Record "Treasury Posting Group";
         latestRemainingAmount: Decimal;
         remainingDays: Integer;
@@ -767,57 +813,59 @@ codeunit 50243 RelatepartyMgtCU
 
         _interestComputationTimes: Integer;
 
-        _funder: Record RelatedParty;
+        _relatedParty: Record RelatedParty;
         _portfolio: Record "Portfolio RelatedParty";
+        GenSetup: Record "Treasury General Setup";
     begin
         //Interest Rate Type (Fixed/Float)
         //Interest Rate value
         //***Interest Method
         // (Annual Rate / 12) * Principal
         //Funder Ldger Entry
+        GenSetup.Get();
         latestRemainingAmount := 0;
-        funderLoan.Reset();
-        funderLoan.SetRange(funderLoan."No.", FunderLoanNo);
-        //funderLoan.SetFilter("Type of Vendor", '=%1', funderLoan."Type of Vendor"::Funder);
+        relatedpartyLoan.Reset();
+        relatedpartyLoan.SetRange(relatedpartyLoan."No.", RelatedpartyLoanNo);
+        //relatedpartyLoan.SetFilter("Type of Vendor", '=%1', relatedpartyLoan."Type of Vendor"::Funder);
         _docNo := TrsyMgt.GenerateDocumentNumber();
-        if funderLoan.Find('-') then begin
-            _loanName := funderLoan."Loan Name";
-            _loanNo := funderLoan."No.";
-            funderLoan.CalcFields(OutstandingAmntDisbLCY);
-            _currentPrincipalAmnt := funderLoan.OutstandingAmntDisbLCY;
-            if not funder.Get(funderLoan."Funder No.") then
-                Error('Funder %1 not found', funderLoan."Funder No.");
+        if relatedpartyLoan.Find('-') then begin
+            _loanName := relatedpartyLoan."Loan Name";
+            _loanNo := relatedpartyLoan."No.";
+            relatedpartyLoan.CalcFields(OutstandingAmntDisbLCY);
+            _currentPrincipalAmnt := relatedpartyLoan.OutstandingAmntDisbLCY;
+            if not relatedparty.Get(relatedpartyLoan."RelatedParty No.") then
+                Error('Funder %1 not found', relatedpartyLoan."RelatedParty No.");
             // repeat
-            if funderLoan.Status <> funderLoan.Status::Approved then
-                Error('Loan Status is %1', funderLoan.Status);
+            if relatedpartyLoan.Status <> relatedpartyLoan.Status::Approved then
+                Error('Loan Status is %1', relatedpartyLoan.Status);
 
 
-            _funder.Reset();
-            _funder.SetRange("No.", funderLoan."Funder No.");
-            if not _funder.Find('-') then
-                Error('Funder %1 not found _fl', funderLoan."Funder No.");
+            _relatedParty.Reset();
+            _relatedParty.SetRange("No.", relatedpartyLoan."RelatedParty No.");
+            if not _relatedParty.Find('-') then
+                Error('Funder %1 not found _fl', relatedpartyLoan."RelatedParty No.");
 
             _portfolio.Reset();
-            _portfolio.SetRange("No.", _funder.Portfolio);
+            _portfolio.SetRange("No.", _relatedParty.Portfolio);
             if not _portfolio.Find('-') then
-                Error('Portfolio %1 not found _fl', _funder.Portfolio);
+                Error('Portfolio %1 not found _fl', _relatedParty.Portfolio);
 
             //Fixed Interest Type
-            if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") OR (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
-                funderLoan.TestField(PlacementDate);
+            if (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Fixed Rate") OR (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Floating Rate") then begin
+                relatedpartyLoan.TestField(PlacementDate);
                 // vendor.TestField(InterestMethod);
-                // funderLoan.TestField(TaxStatus);
+                // relatedpartyLoan.TestField(TaxStatus);
 
-                funderLegderEntry3.Reset();
-                funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Loan No.", funderLoan."No.");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::Interest);
-                _interestComputationTimes := funderLegderEntry3.Count();
+                relatedPartyLegderEntry3.Reset();
+                relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Loan No.", relatedpartyLoan."No.");
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::Interest);
+                _interestComputationTimes := relatedPartyLegderEntry3.Count();
 
                 // endYearDate := CALCDATE('CY', Today);
                 if _interestComputationTimes = 0 then begin // Check for first operation
                     endMonthDate := CALCDATE('<+CM>', Today);
-                    remainingDays := endMonthDate - funderLoan.PlacementDate + 1;
+                    remainingDays := endMonthDate - relatedpartyLoan.PlacementDate + 1;
                 end else begin
                     startMonthDate := CALCDATE('<-CM>', Today);
                     remainingDays := RedemptionDate - startMonthDate + 1;
@@ -826,133 +874,146 @@ codeunit 50243 RelatepartyMgtCU
 
 
                 // Get Total of Original Amount (Principal)
-                funderLegderEntry3.Reset();
-                funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                funderLegderEntry3.SetRange("Loan No.", FunderLoanNo);
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Original Amount");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Secondary Amount");
-                funderLegderEntry3.CalcSums(Amount);
-                _totalOriginalAmount := funderLegderEntry3.Amount;
+                relatedPartyLegderEntry3.Reset();
+                relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                relatedPartyLegderEntry3.SetRange("Loan No.", RelatedpartyLoanNo);
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::"Original Amount");
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::"Secondary Amount");
+                relatedPartyLegderEntry3.CalcSums(Amount);
+                _totalOriginalAmount := relatedPartyLegderEntry3.Amount;
 
-                funderLegderEntry3.Reset();
-                funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                funderLegderEntry3.SetRange("Loan No.", FunderLoanNo);
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::Repayment);
-                funderLegderEntry3.CalcSums(Amount);
-                _totalWithdrawalAmount := Abs(funderLegderEntry3.Amount);
+                relatedPartyLegderEntry3.Reset();
+                relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                relatedPartyLegderEntry3.SetRange("Loan No.", RelatedpartyLoanNo);
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::Repayment);
+                relatedPartyLegderEntry3.CalcSums(Amount);
+                _totalWithdrawalAmount := Abs(relatedPartyLegderEntry3.Amount);
 
                 _differenceOriginalWithdrawal := _totalOriginalAmount - _totalWithdrawalAmount; // Get the floating value
 
 
                 //Monthly interest depending on Interest Method
                 monthlyInterest := 0;
-                _interestRate_Active := TrsyMgt.GetInterestRate(funderLoan."No.", 'RELATEDPARTY');
-                /*if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
-                    _interestRate_Active := funderLoan.InterestRate;
-                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
-                    _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
+                _interestRate_Active := TrsyMgt.GetInterestRate(relatedpartyLoan."No.", 'RELATEDPARTY');
+                /*if (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Fixed Rate") then
+                    _interestRate_Active := relatedpartyLoan.InterestRate;
+                if (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Floating Rate") then
+                    _interestRate_Active := (relatedpartyLoan."Reference Rate" + relatedpartyLoan.Margin);
                 if _interestRate_Active = 0 then
                     Error('Interest Rate is Zero');*/
 
                 _differenceOriginalWithdrawal := _currentPrincipalAmnt;
-                if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
+                if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"30/360" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (30 / 360), 0.0001, '=');
-                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/360" then begin
+                end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/360" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 360), 0.0001, '=');
-                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/364" then begin
+                end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/364" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 364), 0.0001, '=');
-                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/365" then begin
+                end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/365" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 365), 0.0001, '=');
                 end;
 
                 //withholding on interest
                 //Depending on Tax Exceptions
                 witHldInterest := 0;
-                if funderLoan.TaxStatus = funderLoan.TaxStatus::Taxable then begin
-                    funderLoan.TestField(Withldtax);
-                    witHldInterest := (funderLoan.Withldtax / 100) * monthlyInterest;
+                if relatedpartyLoan.TaxStatus = relatedpartyLoan.TaxStatus::Taxable then begin
+                    relatedpartyLoan.TestField(Withldtax);
+                    witHldInterest := (relatedpartyLoan.Withldtax / 100) * monthlyInterest;
                 end;
 
                 //Get Posting groups
-                // if not venPostingGroup.Get(funderLoan."Posting Group") then
-                //     Error('Missing Posting Group: %1', funder."No.");
+                // if not venPostingGroup.Get(relatedpartyLoan."Posting Group") then
+                //     Error('Missing Posting Group: %1', relatedparty."No.");
 
-                principleAcc := funderLoan."Payables Account";
-                interestAccExpense := funderLoan."Interest Expense";
-                interestAccPayable := funderLoan."Interest Payable";
-                if funderLoan."Bank Ref. No." = '' then
-                    Error('Missing Bank Reference No for Funder Loan', funderLoan."No.");
+                principleAcc := relatedpartyLoan."Payables Account";
+                interestAccIncome := relatedpartyLoan."Interest Expense";
+                interestAccReceivable := relatedpartyLoan."Interest Payable";
+                if relatedpartyLoan."Bank Ref. No." = '' then
+                    Error('Missing Bank Reference No for Funder Loan', relatedpartyLoan."No.");
 
-                if interestAccExpense = '' then
-                    Error('Missing Expense Interest A/C: %1', funder."No.");
+                if interestAccIncome = '' then
+                    Error('Missing Expense Interest A/C: %1', relatedparty."No.");
                 if principleAcc = '' then
-                    Error('Missing Principle A/C: %1', funder."No.");
-                if interestAccPayable = '' then
-                    Error('Missing Payable Interest A/C: %1', funder."No.");
+                    Error('Missing Principle A/C: %1', relatedparty."No.");
+                if interestAccReceivable = '' then
+                    Error('Missing Payable Interest A/C: %1', relatedparty."No.");
 
                 if not generalSetup.FindFirst() then
                     Error('Please Define Withholding Tax under General Setup');
-                withholdingAcc := generalSetup.RelatedWithholdingAcc;
+                withholdingAcc := generalSetup.FunderWithholdingAcc;
                 if withholdingAcc = '' then
                     Error('Withholding Account Missing under General Setup');
 
                 //Get the latest remaining amount
-                funderLegderEntry.SetRange(funderLegderEntry."Document Type", funderLegderEntry."Document Type"::"Remaining Amount");
-                if funderLegderEntry.FindLast() then
-                    latestRemainingAmount := funderLegderEntry."Remaining Amount";
+                relatedPartyLegderEntry.SetRange(relatedPartyLegderEntry."Document Type", relatedPartyLegderEntry."Document Type"::"Remaining Amount");
+                if relatedPartyLegderEntry.FindLast() then
+                    latestRemainingAmount := relatedPartyLegderEntry."Remaining Amount";
 
-                //funderLegderEntry.LockTable();
-                funderLegderEntry.Reset();
-                if funderLegderEntry.FindLast() then
-                    NextEntryNo := funderLegderEntry."Entry No." + 1;
+                //relatedPartyLegderEntry.LockTable();
+                relatedPartyLegderEntry.Reset();
+                if relatedPartyLegderEntry.FindLast() then
+                    NextEntryNo := relatedPartyLegderEntry."Entry No." + 1;
                 // else
                 //     NextEntryNo := 2;
 
-                funderLegderEntry.Init();
-                funderLegderEntry."Entry No." := NextEntryNo;
-                funderLegderEntry."Funder No." := funder."No.";
-                funderLegderEntry."Funder Name" := funder.Name;
-                funderLegderEntry."Loan Name" := _loanName;
-                funderLegderEntry."Loan No." := _loanNo;
-                funderLegderEntry."Posting Date" := RedemptionDate;
-                funderLegderEntry."Document No." := _docNo;
-                funderLegderEntry."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
-                funderLegderEntry.Category := funderLoan.Category; // Funder Loan Category
-                funderLegderEntry."Document Type" := funderLegderEntry."Document Type"::Interest;
-                funderLegderEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>');
-                funderLegderEntry.Amount := monthlyInterest;
-                funderLegderEntry."Amount(LCY)" := monthlyInterest;
-                funderLegderEntry."Remaining Amount" := (monthlyInterest - witHldInterest);
-                funderLegderEntry.Insert();
-                if (funderLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
-                    DirectGLPosting('interest', interestAccExpense, monthlyInterest, 'Interest', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");//GROSS Interest
-                                                                                                                                                                                                                    //Commit();
-                funderLegderEntry1.Init();
-                funderLegderEntry1."Entry No." := NextEntryNo + 1;
-                funderLegderEntry1."Funder No." := funder."No.";
-                funderLegderEntry1."Funder Name" := funder.Name;
-                funderLegderEntry1."Loan Name" := _loanName;
-                funderLegderEntry1."Loan No." := _loanNo;
-                funderLegderEntry1."Posting Date" := RedemptionDate;
-                funderLegderEntry1.Category := funderLoan.Category; // Funder Loan Category
-                funderLegderEntry1."Document No." := _docNo;
-                funderLegderEntry1."Shortcut Dimension 1 Code" := _funder."Shortcut Dimension 1 Code";
-                funderLegderEntry1."Document Type" := funderLegderEntry."Document Type"::Withholding;
-                funderLegderEntry1.Description := 'Withholding calculation' + Format(RedemptionDate);
-                funderLegderEntry1.Amount := -witHldInterest;
-                funderLegderEntry1."Amount(LCY)" := -witHldInterest;
-                funderLegderEntry1.Insert();
+                relatedPartyLegderEntry.Init();
+                relatedPartyLegderEntry."Entry No." := NextEntryNo;
+                relatedPartyLegderEntry."RelatedParty No." := relatedparty."No.";
+                relatedPartyLegderEntry."Related  Name" := relatedparty.Name;
+                relatedPartyLegderEntry."Loan Name" := _loanName;
+                relatedPartyLegderEntry."Loan No." := _loanNo;
+                relatedPartyLegderEntry."Posting Date" := RedemptionDate;
+                relatedPartyLegderEntry."Document Type" := relatedPartyLegderEntry."Document Type"::Interest;
+                relatedPartyLegderEntry."Document No." := _docNo;
+                relatedPartyLegderEntry."Shortcut Dimension 1 Code" := _relatedParty."Shortcut Dimension 1 Code";
+                relatedPartyLegderEntry.Category := relatedpartyLoan.Category; // Funder Loan Category
+                relatedPartyLegderEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4> Partial Redemtion Intre. Calc'), 1, 100);
 
-                // if (funderLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
-                //     DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', funderLoan."No.", interestAccPayable, '', '', '', funderLoan."Bank Ref. No.", _funder."Shortcut Dimension 1 Code");
-                // //Commit();
+
+                relatedPartyLegderEntry.Amount := monthlyInterest;
+                relatedPartyLegderEntry."Amount(LCY)" := monthlyInterest;
+                relatedPartyLegderEntry."Interest Payable Amount" := (monthlyInterest - witHldInterest);
+                relatedPartyLegderEntry."Interest Payable Amount (LCY)" := (monthlyInterest - witHldInterest);
+                relatedPartyLegderEntry."Witholding Amount" := (-witHldInterest);
+                relatedPartyLegderEntry."Witholding Amount (LCY)" := (-witHldInterest);
+
+                relatedPartyLegderEntry."Account No." := interestAccIncome;
+                relatedPartyLegderEntry."Account Type" := relatedPartyLegderEntry."Account Type"::"G/L Account";
+                relatedPartyLegderEntry."Bal. Account No." := interestAccReceivable;
+                relatedPartyLegderEntry."Bal. Account Type" := relatedPartyLegderEntry."Bal. Account Type"::"G/L Account";
+                relatedPartyLegderEntry."Bal. Account No. 2" := withholdingAcc; // Wth
+                relatedPartyLegderEntry."Bal. Account Type 2" := relatedPartyLegderEntry."Bal. Account Type"::"G/L Account"; //Wth
+
+
+                relatedPartyLegderEntry.Insert();
+                if (relatedpartyLoan.EnableGLPosting = true) and (monthlyInterest <> 0) then
+                    DirectGLPosting('interest', interestAccIncome, withholdingAcc, monthlyInterest, witHldInterest, 'Interest', relatedpartyLoan."No.", interestAccReceivable, '', '', '', relatedpartyLoan."Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code");
+
+                relatedPartyLegderEntry1.Init();
+                relatedPartyLegderEntry1."Entry No." := NextEntryNo + 1;
+                relatedPartyLegderEntry1."RelatedParty No." := relatedparty."No.";
+                relatedPartyLegderEntry1."Related  Name" := relatedparty.Name;
+                relatedPartyLegderEntry1."Loan Name" := _loanName;
+                relatedPartyLegderEntry1."Loan No." := _loanNo;
+                relatedPartyLegderEntry1."Posting Date" := RedemptionDate;
+                relatedPartyLegderEntry1.Category := relatedpartyLoan.Category; // Funder Loan Category
+                relatedPartyLegderEntry1."Document Type" := relatedPartyLegderEntry."Document Type"::Withholding;
+                relatedPartyLegderEntry1."Document No." := _docNo;
+                relatedPartyLegderEntry1."Shortcut Dimension 1 Code" := _relatedParty."Shortcut Dimension 1 Code";
+                relatedPartyLegderEntry1.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4> Partial Redemtion Withholding Calc'), 1, 100);
+                relatedPartyLegderEntry1.Amount := -witHldInterest;
+                relatedPartyLegderEntry1."Amount(LCY)" := -witHldInterest;
+                relatedPartyLegderEntry1.Insert();
+                // if (relatedpartyLoan.EnableGLPosting = true) and (witHldInterest <> 0) then
+                //     DirectGLPosting('withholding', withholdingAcc, witHldInterest, 'Withholding Tax', relatedpartyLoan."No.", interestAccReceivable, '', '', '', relatedpartyLoan."Bank Ref. No.", _relatedParty."Shortcut Dimension 1 Code");
+
 
 
                 Message('Interest  Calculated (partial)');
             end else begin
                 Message('Select Interest Rate Type');
             end;
-            // until funderLoan.Next() = 0;
+            // until relatedpartyLoan.Next() = 0;
 
         end;
 
@@ -964,15 +1025,15 @@ codeunit 50243 RelatepartyMgtCU
         monthlyInterest: Decimal;
         witHldInterest: Decimal;
         principleAcc: Code[20];
-        interestAccExpense: Code[20];
-        interestAccPayable: Code[20];
+        interestAccIncome: Code[20];
+        interestAccReceivable: Code[20];
         withholdingAcc: Code[20];
         NextEntryNo: Integer;
-        funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry3: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry4: Record FunderLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry1: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry2: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry3: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry4: Record RelatedLedgerEntry;//Calculate every month
         venPostingGroup: Record "Treasury Posting Group";
         latestRemainingAmount: Decimal;
         remainingDays: Integer;
@@ -990,103 +1051,97 @@ codeunit 50243 RelatepartyMgtCU
 
         _interestComputationTimes: Integer;
 
-        _funder: Record RelatedParty;
+        _relatedParty: Record RelatedParty;
         _portfolio: Record "Portfolio RelatedParty";
     begin
 
         latestRemainingAmount := 0;
-        funderLoan.Reset();
-        funderLoan.SetRange(funderLoan."No.", RelatedpartyLoanNo);
-        if funderLoan.Find('-') then begin
-            _loanName := funderLoan."Loan Name";
-            _loanNo := funderLoan."No.";
-            funderLoan.CalcFields(OutstandingAmntDisbLCY);
-            _currentPrincipalAmnt := funderLoan.OutstandingAmntDisbLCY;
-            if not funder.Get(funderLoan."Funder No.") then
-                Error('Funder %1 not found', funderLoan."Funder No.");
+        relatedpartyLoan.Reset();
+        relatedpartyLoan.SetRange(relatedpartyLoan."No.", RelatedpartyLoanNo);
+        if relatedpartyLoan.Find('-') then begin
+            _loanName := relatedpartyLoan."Loan Name";
+            _loanNo := relatedpartyLoan."No.";
+            relatedpartyLoan.CalcFields(OutstandingAmntDisbLCY);
+            _currentPrincipalAmnt := relatedpartyLoan.OutstandingAmntDisbLCY;
+            if not relatedparty.Get(relatedpartyLoan."RelatedParty No.") then
+                Error('Funder %1 not found', relatedpartyLoan."RelatedParty No.");
             // repeat
-            if funderLoan.Status <> funderLoan.Status::Approved then
-                Error('Loan Status is %1', funderLoan.Status);
+            if relatedpartyLoan.Status <> relatedpartyLoan.Status::Approved then
+                Error('Loan Status is %1', relatedpartyLoan.Status);
 
-            _funder.Reset();
-            _funder.SetRange("No.", funderLoan."Funder No.");
-            if not _funder.Find('-') then
-                Error('Funder %1 not found _fl', funderLoan."Funder No.");
+            _relatedParty.Reset();
+            _relatedParty.SetRange("No.", relatedpartyLoan."RelatedParty No.");
+            if not _relatedParty.Find('-') then
+                Error('Funder %1 not found _fl', relatedpartyLoan."RelatedParty No.");
 
             _portfolio.Reset();
-            _portfolio.SetRange("No.", _funder.Portfolio);
+            _portfolio.SetRange("No.", _relatedParty.Portfolio);
             if not _portfolio.Find('-') then
-                Error('Portfolio %1 not found _fl', _funder.Portfolio);
+                Error('Portfolio %1 not found _fl', _relatedParty.Portfolio);
 
             //Fixed Interest Type
-            if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") OR (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then begin
-                funderLoan.TestField(PlacementDate);
-                // vendor.TestField(InterestMethod);
-                // funderLoan.TestField(TaxStatus);
+            if (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Fixed Rate") OR (relatedpartyLoan.InterestRateType = relatedpartyLoan.InterestRateType::"Floating Rate") then begin
+                relatedpartyLoan.TestField(PlacementDate);
 
-                funderLegderEntry3.Reset();
-                funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Loan No.", funderLoan."No.");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::Interest);
-                _interestComputationTimes := funderLegderEntry3.Count();
+                //Check whether intrest has been calculated for this loan
+                relatedPartyLegderEntry3.Reset();
+                relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Loan No.", relatedpartyLoan."No.");
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::Interest);
+                _interestComputationTimes := relatedPartyLegderEntry3.Count();
 
-                // endYearDate := CALCDATE('CY', Today);
+                // If its the first interest accrual, calculate to, the redemption date.
                 if _interestComputationTimes = 0 then begin // Check for first operation
                     endMonthDate := CALCDATE('<+CM>', Today);
-                    remainingDays := endMonthDate - funderLoan.PlacementDate + 1;
+                    remainingDays := RedemptionDate - relatedpartyLoan.PlacementDate + 0;
                 end else begin
                     startMonthDate := CALCDATE('<-CM>', Today);
-                    remainingDays := RedemptionDate - startMonthDate + 1;
+                    remainingDays := RedemptionDate - startMonthDate + 0;
                     // remainingDays := CALCDATE('<CM>', RedemptionDate) - CALCDATE('<-CM>', RedemptionDate) + 1;// No of Days in that Month
                 end;
 
 
                 // Get Total of Original Amount (Principal)
-                funderLegderEntry3.Reset();
-                funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                funderLegderEntry3.SetRange("Loan No.", RelatedpartyLoanNo);
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Original Amount");
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::"Secondary Amount");
-                funderLegderEntry3.CalcSums(Amount);
-                _totalOriginalAmount := funderLegderEntry3.Amount;
+                relatedPartyLegderEntry3.Reset();
+                relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                relatedPartyLegderEntry3.SetRange("Loan No.", RelatedpartyLoanNo);
+                relatedPartyLegderEntry3.SetFilter(relatedPartyLegderEntry3."Document Type", '=%1|=%2', relatedPartyLegderEntry2."Document Type"::"Original Amount", relatedPartyLegderEntry2."Document Type"::"Secondary Amount");
+                // relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::"Secondary Amount");
+                relatedPartyLegderEntry3.CalcSums(Amount);
+                _totalOriginalAmount := relatedPartyLegderEntry3.Amount;
 
-                funderLegderEntry3.Reset();
-                funderLegderEntry3.SetRange("Funder No.", funder."No.");
-                funderLegderEntry3.SetRange("Loan No.", RelatedpartyLoanNo);
-                funderLegderEntry3.SetRange(funderLegderEntry3."Document Type", funderLegderEntry2."Document Type"::Repayment);
-                funderLegderEntry3.CalcSums(Amount);
-                _totalWithdrawalAmount := Abs(funderLegderEntry3.Amount);
+                relatedPartyLegderEntry3.Reset();
+                relatedPartyLegderEntry3.SetRange("RelatedParty No.", relatedparty."No.");
+                relatedPartyLegderEntry3.SetRange("Loan No.", RelatedpartyLoanNo);
+                relatedPartyLegderEntry3.SetRange(relatedPartyLegderEntry3."Document Type", relatedPartyLegderEntry2."Document Type"::Repayment);
+                relatedPartyLegderEntry3.CalcSums(Amount);
+                _totalWithdrawalAmount := Abs(relatedPartyLegderEntry3.Amount);
 
                 _differenceOriginalWithdrawal := _totalOriginalAmount - _totalWithdrawalAmount; // Get the floating value
 
 
                 //Monthly interest depending on Interest Method
                 monthlyInterest := 0;
-                _interestRate_Active := TrsyMgt.GetInterestRate(funderLoan."No.", 'RELATEDPARTY');
-                /*if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Fixed Rate") then
-                    _interestRate_Active := funderLoan.InterestRate;
-                if (funderLoan.InterestRateType = funderLoan.InterestRateType::"Floating Rate") then
-                    _interestRate_Active := (funderLoan."Reference Rate" + funderLoan.Margin);
-                if _interestRate_Active = 0 then
-                    Error('Interest Rate is Zero');*/
+                _interestRate_Active := TrsyMgt.GetInterestRate(relatedpartyLoan."No.", 'RELATEDPARTY');
+
 
                 _differenceOriginalWithdrawal := _currentPrincipalAmnt;
-                if funderLoan.InterestMethod = funderLoan.InterestMethod::"30/360" then begin
+                if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"30/360" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (30 / 360), 0.0001, '=');
-                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/360" then begin
+                end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/360" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 360), 0.0001, '=');
-                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/364" then begin
+                end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/364" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 364), 0.0001, '=');
-                end else if funderLoan.InterestMethod = funderLoan.InterestMethod::"Actual/365" then begin
+                end else if relatedpartyLoan.InterestMethod = relatedpartyLoan.InterestMethod::"Actual/365" then begin
                     monthlyInterest := Round(((_interestRate_Active / 100) * _differenceOriginalWithdrawal) * (remainingDays / 365), 0.0001, '=');
                 end;
 
                 //withholding on interest
                 //Depending on Tax Exceptions
                 witHldInterest := 0;
-                if funderLoan.TaxStatus = funderLoan.TaxStatus::Taxable then begin
-                    funderLoan.TestField(Withldtax);
-                    witHldInterest := (funderLoan.Withldtax / 100) * monthlyInterest;
+                if relatedpartyLoan.TaxStatus = relatedpartyLoan.TaxStatus::Taxable then begin
+                    relatedpartyLoan.TestField(Withldtax);
+                    witHldInterest := (relatedpartyLoan.Withldtax / 100) * monthlyInterest;
                 end;
 
                 exit(monthlyInterest - witHldInterest);
@@ -1097,25 +1152,22 @@ codeunit 50243 RelatepartyMgtCU
     end;
 
 
-    procedure DirectGLPosting(Origin: Text[100]; GLAcc: Code[100]; Amount: Decimal; Desc: Text[100]; FunderLoanNo: Code[20]; BankAc: Code[100]; Currency: Code[20]; PostingGroup: Code[50]; DocNo: Code[20]; ExtDocNo: text[250]; ShortcutDim1: Code[20])
+    procedure DirectGLPosting(Origin: Text[100]; GLAcc: Code[100]; WthholdingAc: Code[20]; Amount: Decimal; WthholdingAmount: Decimal; Desc: Text[100]; RelatedpartyLoanNo: Code[20]; BankAc: Code[100]; Currency: Code[20]; PostingGroup: Code[50]; DocNo: Code[20]; ExtDocNo: text[250]; ShortcutDim1: Code[20])
     var
         GLEntry: Record "G/L Entry";
         NextEntryNo: Integer;
         JournalEntry: Record "Gen. Journal Line";
         GLPost: Codeunit "Gen. Jnl.-Post Line";
 
-        // principleAcc: Code[100];
-        // interestAccExpense: Code[100];
-        // interestAccPay: Code[100];
         withholdingAcc: Code[20];
         monthlyInterest: Decimal;
         witHldInterest: Decimal;
         venPostingGroup: Record "Treasury Posting Group";
-        funderLoan: Record "RelatedParty Loan";
+        relatedpartyLoan: Record "RelatedParty Loan";
 
         _ConvertedCurrency: Decimal;
 
-        _funder: Record RelatedParty;
+        _relatedParty: Record RelatedParty;
         _portfolio: Record "Portfolio RelatedParty";
     begin
         JournalEntry.LockTable();
@@ -1124,138 +1176,335 @@ codeunit 50243 RelatepartyMgtCU
         else
             NextEntryNo := 1;
 
-        //**********************************************
-        //          Get Posting groups & Posting Accounts
-        //**********************************************
+        relatedpartyLoan.Reset();
+        relatedpartyLoan.SetRange("No.", RelatedpartyLoanNo);
+        if not relatedpartyLoan.Find('-') then
+            Error('Funder Loan %1 not found', RelatedpartyLoanNo);
 
-        funderLoan.Reset();
-        funderLoan.SetRange("No.", FunderLoanNo);
-        if not funderLoan.Find('-') then
-            Error('Relatedparty Loan %1 not found', FunderLoanNo);
-        // interestAccExpense := funderLoan."Interest Expense";
-        // if interestAccExpense = '' then
-        //     Error('Missing Interest Expense A/C: %1', funderLoan."No.");
-        // interestAccPay := funderLoan."Interest Payable";
-        // if interestAccPay = '' then
-        //     Error('Missing Interest Payable A/C: %1', funderLoan."No.");
-        // principleAcc := funderLoan."Payables Account";
-        // if principleAcc = '' then
-        //     Error('Missing Principle A/C: %1', funderLoan."No.");
-
-        // end;
-        _funder.Reset();
-        _funder.SetRange("No.", funderLoan."Funder No.");
-        if not _funder.Find('-') then
-            Error('Relatedparty %1 not found _fl', funderLoan."Funder No.");
+        _relatedParty.Reset();
+        _relatedParty.SetRange("No.", relatedpartyLoan."RelatedParty No.");
+        if not _relatedParty.Find('-') then
+            Error('Funder %1 not found _fl', relatedpartyLoan."RelatedParty No.");
 
         _portfolio.Reset();
-        _portfolio.SetRange("No.", _funder.Portfolio);
+        _portfolio.SetRange("No.", _relatedParty.Portfolio);
         if not _portfolio.Find('-') then
-            Error('Portfolio %1 not found _fl', _funder.Portfolio);
+            Error('Portfolio %1 not found _fl', _relatedParty.Portfolio);
 
         if not generalSetup.FindFirst() then
             Error('Please Define Withholding Tax under General Setup');
-        withholdingAcc := generalSetup.RelatedWithholdingAcc;
+        withholdingAcc := generalSetup.FunderWithholdingAcc;
         if Currency <> '' then
-            _ConvertedCurrency := ConvertCurrencyAmount(Currency, Amount, funderLoan.CustomFX)
+            _ConvertedCurrency := ConvertCurrencyAmount(Currency, Amount, relatedpartyLoan.CustomFX)
         else
             _ConvertedCurrency := Amount;
-        JournalEntry.Init();
-        JournalEntry."Journal Template Name" := 'GENERAL';
-        JournalEntry."Journal Batch Name" := 'TREASURY';
-        JournalEntry."Line No." := NextEntryNo;
-        JournalEntry.Entry_ID := NextEntryNo;
-        JournalEntry."External Document No." := ExtDocNo;
 
-        //JournalEntry.Validate(JournalEntry.Amount);
-        JournalEntry."Posting Date" := Today;
-        JournalEntry.Creation_Date := Today;
-        JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
-        JournalEntry.Validate("Shortcut Dimension 1 Code");
-        if DocNo <> '' then
-            JournalEntry."Document No." := DocNo
-        else
-            JournalEntry."Document No." := FunderLoanNo + Format(Today);
+        if (Origin = 'init') then begin
+            JournalEntry.Init();
+            JournalEntry."Journal Template Name" := 'GENERAL';
+            JournalEntry."Journal Batch Name" := 'TREASURY';
+            JournalEntry."Line No." := NextEntryNo;
+            JournalEntry.Entry_ID := NextEntryNo;
+            JournalEntry."External Document No." := ExtDocNo;
+            JournalEntry."Posting Date" := Today;
+            JournalEntry.Creation_Date := Today;
+            JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
+            JournalEntry.Validate("Shortcut Dimension 1 Code");
+            if DocNo <> '' then
+                JournalEntry."Document No." := DocNo
+            else
+                JournalEntry."Document No." := RelatedpartyLoanNo + Format(Today);
+            JournalEntry."Currency Code" := Currency;
+            JournalEntry.Validate("Currency Code");
 
-        JournalEntry."Currency Code" := Currency;
-        if Origin = 'init' then begin  //*
-            JournalEntry.Description := funderLoan.Name + ' ' + ExtDocNo;
-            JournalEntry."Account Type" := JournalEntry."Account Type"::"Bank Account";
-            JournalEntry."Account No." := BankAc;
-            JournalEntry.Amount := Round(Amount, 0.01, '=');
-            JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
-            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
-            JournalEntry."Bal. Account No." := GLAcc;
-        end;
-        if Origin = 'interest' then begin
-            JournalEntry.Description := funderLoan."No." + ' ' + funderLoan.Name + ' ' + _portfolio.Code + '-' + funderLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>');
+            JournalEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Original Principal', 1, 100);
             JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
             JournalEntry."Account No." := GLAcc;
-            JournalEntry.Amount := Round(Amount, 0.01, '=');
-            JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
-            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
-            JournalEntry."Bal. Account No." := BankAc;//interestAccPayable
-        end;
-        if Origin = 'interest-payment' then begin
-            JournalEntry.Description := funderLoan.Name + ' ' + funderLoan."No." + ' ' + Format(Today);
-            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
-            JournalEntry."Account No." := GLAcc;
-            JournalEntry.Amount := -Round(Amount, 0.01, '=');
-            JournalEntry."Amount (LCY)" := -Round(_ConvertedCurrency, 0.01, '=');
-            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
-            JournalEntry."Bal. Account No." := BankAc;//interestAccPayable
-        end;
-        if Origin = 'reverse-interest' then begin
-            JournalEntry.Description := funderLoan.Name + ' ' + funderLoan."No." + ' ' + Format(Today);
-            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
-            JournalEntry."Account No." := GLAcc;
-            JournalEntry.Amount := -Round(Amount, 0.01, '=');
-            JournalEntry."Amount (LCY)" := -Round(_ConvertedCurrency, 0.01, '=');
-            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
-            JournalEntry."Bal. Account No." := BankAc;//interestAccPayable
-        end;
-        if Origin = 'withholding' then begin
-            JournalEntry.Description := Desc;
-            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
-            JournalEntry."Account No." := GLAcc;
-            JournalEntry.Amount := Round(Amount, 0.01, '=');
-            JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
-            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
-            JournalEntry."Bal. Account No." := BankAc;//interestAccPayable
-        end;
-        if Origin = 'redemption' then begin
-            JournalEntry.Description := Desc + ' _Full Redemption';
-            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
-            JournalEntry."Account No." := GLAcc;
-            JournalEntry.Amount := Round(Amount, 0.01, '=');
-            JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
-            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"G/L Account";
-            JournalEntry."Bal. Account No." := BankAc;//Intrest Payable
-        end;
-        if Origin = 'partial-redemption' then begin
-            JournalEntry.Description := Desc + ' _Partial Redemption';
-            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
-            JournalEntry."Account No." := GLAcc;
-            JournalEntry.Amount := Round(Amount, 0.01, '=');
-            JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
-            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
-            JournalEntry."Bal. Account No." := BankAc;//Bank Acc
-        end;
-        if Origin = 'tranch-fee' then begin
-            JournalEntry.Description := Desc + ' _Tranch fee';
-            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
-            JournalEntry."Account No." := GLAcc;
-            JournalEntry.Amount := Round(Amount, 0.01, '=');
-            JournalEntry."Amount (LCY)" := Round(_ConvertedCurrency, 0.01, '=');
+            JournalEntry.Amount := (Round(Amount, 0.01, '='));
             JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
             JournalEntry."Bal. Account No." := BankAc;
+            JournalEntry.Validate(Amount);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
+
+        end;
+        if (Origin = 'interest') then begin
+
+            JournalEntry.Init();
+            JournalEntry."Journal Template Name" := 'GENERAL';
+            JournalEntry."Journal Batch Name" := 'TREASURY';
+            JournalEntry."Line No." := NextEntryNo;
+            JournalEntry.Entry_ID := NextEntryNo;
+            JournalEntry."External Document No." := ExtDocNo;
+            JournalEntry."Posting Date" := Today;
+            JournalEntry.Creation_Date := Today;
+            JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
+            JournalEntry.Validate("Shortcut Dimension 1 Code");
+            if DocNo <> '' then
+                JournalEntry."Document No." := DocNo
+            else
+                JournalEntry."Document No." := RelatedpartyLoanNo + Format(Today);
+            JournalEntry."Currency Code" := Currency;
+            JournalEntry.Validate("Currency Code");
+
+            JournalEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Accrual _Intr. Expens', 1, 100);
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Account No." := BankAc; // Inter. Receivable Acc
+            JournalEntry.Amount := Round(Amount, 0.01, '=');
+            JournalEntry.Validate(Amount);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
+
+            JournalEntry.Init();
+            JournalEntry."Journal Template Name" := 'GENERAL';
+            JournalEntry."Journal Batch Name" := 'TREASURY';
+            JournalEntry."Line No." := NextEntryNo + 1;
+            JournalEntry.Entry_ID := NextEntryNo + 1;
+            JournalEntry."External Document No." := ExtDocNo;
+            JournalEntry."Posting Date" := Today;
+            JournalEntry.Creation_Date := Today;
+            JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
+            JournalEntry.Validate("Shortcut Dimension 1 Code");
+            if DocNo <> '' then
+                JournalEntry."Document No." := DocNo
+            else
+                JournalEntry."Document No." := RelatedpartyLoanNo + Format(Today);
+            JournalEntry."Currency Code" := Currency;
+            JournalEntry.Validate("Currency Code");
+
+            JournalEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Accrual _Intr. Payable', 1, 100);
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Account No." := GLAcc; // Interest Income.
+            JournalEntry.Amount := -(Round(Amount, 0.01, '=') - Round(WthholdingAmount, 0.01, '='));
+            JournalEntry.Validate(Amount);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
+
+            if WthholdingAmount > 0 then begin
+                JournalEntry.Init();
+                JournalEntry."Journal Template Name" := 'GENERAL';
+                JournalEntry."Journal Batch Name" := 'TREASURY';
+                JournalEntry."Line No." := NextEntryNo + 2;
+                JournalEntry.Entry_ID := NextEntryNo + 2;
+                JournalEntry."External Document No." := ExtDocNo;
+                JournalEntry."Posting Date" := Today;
+                JournalEntry.Creation_Date := Today;
+                JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
+                JournalEntry.Validate("Shortcut Dimension 1 Code");
+                if DocNo <> '' then
+                    JournalEntry."Document No." := DocNo
+                else
+                    JournalEntry."Document No." := RelatedpartyLoanNo + Format(Today);
+                JournalEntry."Currency Code" := Currency;
+                JournalEntry.Validate("Currency Code");
+
+                JournalEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Accrual _Wtholding', 1, 100);
+                JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+                JournalEntry."Account No." := withholdingAcc;
+                JournalEntry.Amount := -Round(WthholdingAmount, 0.01, '=');
+                JournalEntry.Validate(Amount);
+                if JournalEntry.Amount <> 0 then
+                    GLPost.RunWithCheck(JournalEntry);
+            end;
+
+        end;
+        if (Origin = 'reverse-interest') then begin
+
+            JournalEntry.Init();
+            JournalEntry."Journal Template Name" := 'GENERAL';
+            JournalEntry."Journal Batch Name" := 'TREASURY';
+            JournalEntry."Line No." := NextEntryNo;
+            JournalEntry.Entry_ID := NextEntryNo;
+            JournalEntry."External Document No." := ExtDocNo;
+            JournalEntry."Posting Date" := Today;
+            JournalEntry.Creation_Date := Today;
+            JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
+            JournalEntry.Validate("Shortcut Dimension 1 Code");
+            if DocNo <> '' then
+                JournalEntry."Document No." := DocNo
+            else
+                JournalEntry."Document No." := RelatedpartyLoanNo + Format(Today);
+            JournalEntry."Currency Code" := Currency;
+            JournalEntry.Validate("Currency Code");
+
+            JournalEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Reversal _Intr. Expens', 1, 100);
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Account No." := GLAcc; // Intr. Expen Ac
+            JournalEntry.Amount := -Round(Amount, 0.01, '=');
+            JournalEntry.Validate(Amount);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
+
+            JournalEntry.Init();
+            JournalEntry."Journal Template Name" := 'GENERAL';
+            JournalEntry."Journal Batch Name" := 'TREASURY';
+            JournalEntry."Line No." := NextEntryNo + 1;
+            JournalEntry.Entry_ID := NextEntryNo + 1;
+            JournalEntry."External Document No." := ExtDocNo;
+            JournalEntry."Posting Date" := Today;
+            JournalEntry.Creation_Date := Today;
+            JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
+            JournalEntry.Validate("Shortcut Dimension 1 Code");
+            if DocNo <> '' then
+                JournalEntry."Document No." := DocNo
+            else
+                JournalEntry."Document No." := RelatedpartyLoanNo + Format(Today);
+            JournalEntry."Currency Code" := Currency;
+            JournalEntry.Validate("Currency Code");
+
+            JournalEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Reverse Intr _Intr. Payab', 1, 100);
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Account No." := BankAc; // Interest Payable.
+            JournalEntry.Amount := (Round(Amount, 0.01, '=') - Round(WthholdingAmount, 0.01, '='));
+            JournalEntry.Validate(Amount);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
+
+            JournalEntry.Init();
+            JournalEntry."Journal Template Name" := 'GENERAL';
+            JournalEntry."Journal Batch Name" := 'TREASURY';
+            JournalEntry."Line No." := NextEntryNo + 2;
+            JournalEntry.Entry_ID := NextEntryNo + 2;
+            JournalEntry."External Document No." := ExtDocNo;
+            JournalEntry."Posting Date" := Today;
+            JournalEntry.Creation_Date := Today;
+            JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
+            JournalEntry.Validate("Shortcut Dimension 1 Code");
+            if DocNo <> '' then
+                JournalEntry."Document No." := DocNo
+            else
+                JournalEntry."Document No." := RelatedpartyLoanNo + Format(Today);
+            JournalEntry."Currency Code" := Currency;
+            JournalEntry.Validate("Currency Code");
+
+            JournalEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Reverse Intr. Witholding', 1, 100);
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Account No." := withholdingAcc;
+            JournalEntry.Amount := Round(WthholdingAmount, 0.01, '=');
+            JournalEntry.Validate(Amount);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
         end;
 
-        GLPost.RunWithCheck(JournalEntry);
+        if (Origin = 'interest-payment') then begin
+            JournalEntry.Init();
+            JournalEntry."Journal Template Name" := 'GENERAL';
+            JournalEntry."Journal Batch Name" := 'TREASURY';
+            JournalEntry."Line No." := NextEntryNo;
+            JournalEntry.Entry_ID := NextEntryNo;
+            JournalEntry."External Document No." := ExtDocNo;
+            JournalEntry."Posting Date" := Today;
+            JournalEntry.Creation_Date := Today;
+            JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
+            JournalEntry.Validate("Shortcut Dimension 1 Code");
+            if DocNo <> '' then
+                JournalEntry."Document No." := DocNo
+            else
+                JournalEntry."Document No." := RelatedpartyLoanNo + Format(Today);
+            JournalEntry."Currency Code" := Currency;
+            JournalEntry.Validate("Currency Code");
+
+            JournalEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Interest Payment', 1, 100);
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Account No." := GLAcc;
+            JournalEntry.Amount := Round(Amount, 0.01, '=');
+            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
+            JournalEntry."Bal. Account No." := BankAc;
+            JournalEntry.Validate(Amount);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
+
+        end;
+        if Origin = 'redemption' then begin
+            JournalEntry.Init();
+            JournalEntry."Journal Template Name" := 'GENERAL';
+            JournalEntry."Journal Batch Name" := 'TREASURY';
+            JournalEntry."Line No." := NextEntryNo;
+            JournalEntry.Entry_ID := NextEntryNo;
+            JournalEntry."External Document No." := ExtDocNo;
+            JournalEntry."Posting Date" := Today;
+            JournalEntry.Creation_Date := Today;
+            JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
+            JournalEntry.Validate("Shortcut Dimension 1 Code");
+            if DocNo <> '' then
+                JournalEntry."Document No." := DocNo
+            else
+                JournalEntry."Document No." := RelatedpartyLoanNo + Format(Today);
+            JournalEntry."Currency Code" := Currency;
+            JournalEntry.Validate("Currency Code");
+
+            JournalEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Full Principal Redemption', 1, 100);
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Account No." := GLAcc;
+            JournalEntry.Amount := Round(Amount, 0.01, '=');
+            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
+            JournalEntry."Bal. Account No." := BankAc;
+            JournalEntry.Validate(Amount);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
+        end;
+        if Origin = 'partial-redemption' then begin
+            JournalEntry.Init();
+            JournalEntry."Journal Template Name" := 'GENERAL';
+            JournalEntry."Journal Batch Name" := 'TREASURY';
+            JournalEntry."Line No." := NextEntryNo;
+            JournalEntry.Entry_ID := NextEntryNo;
+            JournalEntry."External Document No." := ExtDocNo;
+            JournalEntry."Posting Date" := Today;
+            JournalEntry.Creation_Date := Today;
+            JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
+            JournalEntry.Validate("Shortcut Dimension 1 Code");
+            if DocNo <> '' then
+                JournalEntry."Document No." := DocNo
+            else
+                JournalEntry."Document No." := RelatedpartyLoanNo + Format(Today);
+            JournalEntry."Currency Code" := Currency;
+            JournalEntry.Validate("Currency Code");
+
+            JournalEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Partial Principal Redemption', 1, 100);
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Account No." := GLAcc;
+            JournalEntry.Amount := Round(Amount, 0.01, '=');
+            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
+            JournalEntry."Bal. Account No." := BankAc;
+            JournalEntry.Validate(Amount);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
+        end;
+        if Origin = 'tranch-fee' then begin
+            JournalEntry.Init();
+            JournalEntry."Journal Template Name" := 'GENERAL';
+            JournalEntry."Journal Batch Name" := 'TREASURY';
+            JournalEntry."Line No." := NextEntryNo;
+            JournalEntry.Entry_ID := NextEntryNo;
+            JournalEntry."External Document No." := ExtDocNo;
+            JournalEntry."Posting Date" := Today;
+            JournalEntry.Creation_Date := Today;
+            JournalEntry."Shortcut Dimension 1 Code" := ShortcutDim1;
+            JournalEntry.Validate("Shortcut Dimension 1 Code");
+            if DocNo <> '' then
+                JournalEntry."Document No." := DocNo
+            else
+                JournalEntry."Document No." := RelatedpartyLoanNo + Format(Today);
+            JournalEntry."Currency Code" := Currency;
+            JournalEntry.Validate("Currency Code");
+
+            JournalEntry.Description := CopyStr(relatedpartyLoan."No." + ' ' + relatedpartyLoan.Name + ' ' + _portfolio.Code + '-' + relatedpartyLoan."Bank Ref. No." + '-' + Format(Today, 0, '<Month Text> <Year4>') + ' :Tranch fee', 1, 100);
+            JournalEntry."Account Type" := JournalEntry."Account Type"::"G/L Account";
+            JournalEntry."Account No." := GLAcc;
+            JournalEntry.Amount := Round(Amount, 0.01, '=');
+            JournalEntry."Bal. Account Type" := JournalEntry."Bal. Account Type"::"Bank Account";
+            JournalEntry."Bal. Account No." := BankAc;
+            JournalEntry.Validate(Amount);
+            if JournalEntry.Amount <> 0 then
+                GLPost.RunWithCheck(JournalEntry);
+        end;
 
 
 
     end;
+
+
     // Converts Currency to Local
     procedure ConvertCurrencyAmount(var CurrencyCode: Code[10]; var Amount: Decimal; FXSource: boolean): Decimal
     var
@@ -1353,15 +1602,15 @@ codeunit 50243 RelatepartyMgtCU
 
     procedure PartialRedemptionDuplicateRecord(SourceRecordID: Code[20]): Code[20]
     var
-        SourceRecord: Record "Funder Loan";
-        NewRecord: Record "Funder Loan";
-        NewRecord1: Record "Funder Loan";
+        SourceRecord: Record "RelatedParty Loan";
+        NewRecord: Record "RelatedParty Loan";
+        NewRecord1: Record "RelatedParty Loan";
         GenSetup: Record "Treasury General Setup";
         NoSer: Codeunit "No. Series";
-        funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry3: Record FunderLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry1: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry2: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry3: Record RelatedLedgerEntry;//Calculate every month
         _interestValue: Decimal;
         _principalValue: Decimal;
         _nextEntryNo: Integer;
@@ -1382,7 +1631,7 @@ codeunit 50243 RelatepartyMgtCU
         if SourceRecord.Status <> SourceRecord.Status::Approved then
             Error('Record Not Approved');
         if SourceRecord."Bank Ref. No." = '' then
-            Error('Missing Bank Reference No for Funder Loan', funderLoan."No.");
+            Error('Missing Bank Reference No for Funder Loan', relatedpartyLoan."No.");
 
 
         // Step 2: Create a new record and copy fields
@@ -1417,10 +1666,10 @@ codeunit 50243 RelatepartyMgtCU
         NewRecord1: Record "RelatedParty Loan";
         GenSetup: Record "Treasury General Setup";
         NoSer: Codeunit "No. Series";
-        funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry1: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry2: Record FunderLedgerEntry;//Calculate every month
-        funderLegderEntry3: Record FunderLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry1: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry2: Record RelatedLedgerEntry;//Calculate every month
+        relatedPartyLegderEntry3: Record RelatedLedgerEntry;//Calculate every month
         _interestValue: Decimal;
         _principalValue: Decimal;
         _nextEntryNo: Integer;
@@ -1440,7 +1689,7 @@ codeunit 50243 RelatepartyMgtCU
         if SourceRecord.Status <> SourceRecord.Status::Approved then
             Error('Record Not Approved');
         if SourceRecord."Bank Ref. No." = '' then
-            Error('Missing Bank Reference No for Relatedparty Loan', funderLoan."No.");
+            Error('Missing Bank Reference No for Relatedparty Loan', relatedpartyLoan."No.");
 
 
         if SourceRecord.PlacementMaturity = SourceRecord.PlacementMaturity::Interest then begin
@@ -1545,7 +1794,7 @@ codeunit 50243 RelatepartyMgtCU
         monthlyInterest: Decimal;
         witHldInterest: Decimal;
         venPostingGroup: Record "Treasury Posting Group";
-        funderLoan: Record "Funder Loan";
+        relatedpartyLoan: Record "RelatedParty Loan";
 
         _ConvertedCurrency: Decimal;
     begin
@@ -1612,7 +1861,7 @@ codeunit 50243 RelatepartyMgtCU
         RelatedSelectedLoans.SetRange(Processed, false);
         if RelatedSelectedLoans.Find('-') then begin
             repeat
-                //Skip if funder is missing
+                //Skip if relatedparty is missing
                 if RelatedSelectedLoans.Funder = '' then
                     continue;
                 // Find a customer
@@ -1702,10 +1951,10 @@ codeunit 50243 RelatepartyMgtCU
 
     var
         myGlobalCounter: Integer;
-        funderLoan: Record "RelatedParty Loan";
-        funder: Record RelatedParty;
+        relatedpartyLoan: Record "RelatedParty Loan";
+        relatedparty: Record RelatedParty;
         // debtor: Record Debtor;
-        // funderLegderEntry: Record FunderLedgerEntry;//Calculate every month
+        // relatedPartyLegderEntry: Record RelatedLedgerEntry;//Calculate every month
         funderPostingGroup: Record 93;
         generalSetup: Record "Treasury General Setup";
         _docNo: Code[20];

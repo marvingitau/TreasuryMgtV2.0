@@ -144,8 +144,8 @@ report 50233 "Capitalize Interest"
             TrsyJnlTbl."Posting Date" := Today;
             TrsyJnlTbl."Document No." := DocNo;
             TrsyJnlTbl.Description := FunderLoan."No." + ' ' + FunderLoan.Name + '-' + FunderLoan."Bank Ref. No." + '-' + Format(FunderLoan.PlacementDate) + ' ' + Format(FunderLoan.MaturityDate) + ' ::' + 'Capitalization Interest';
-            TrsyJnlTbl."Bal. Account Type" := TrsyJnlTbl."Bal. Account Type"::"Bank Account";
-            TrsyJnlTbl."Bal. Account No." := FunderLoan.FundSource;
+            TrsyJnlTbl."Bal. Account Type" := TrsyJnlTbl."Bal. Account Type"::"G/L Account";
+            TrsyJnlTbl."Bal. Account No." := FunderLoan."Payables Account";
             TrsyJnlTbl."Transaction Nature" := TrsyJnlTbl."Transaction Nature"::"Capitalized Interest";
             TrsyJnlTbl."Currency Code" := FunderLoan.Currency;
             TrsyJnlTbl.Amount := AmountSum;
